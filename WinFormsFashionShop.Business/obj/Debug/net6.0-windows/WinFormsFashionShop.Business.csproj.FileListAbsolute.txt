@@ -1,0 +1,15 @@
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.GeneratedMSBuildEditorConfig.editorconfig
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.AssemblyInfoInputs.cache
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.AssemblyInfo.cs
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.csproj.CoreCompileInputs.cache
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\bin\Debug\net6.0-windows\WinFormsFashionShop.Business.deps.json
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\bin\Debug\net6.0-windows\WinFormsFashionShop.Business.dll
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\bin\Debug\net6.0-windows\WinFormsFashionShop.Business.pdb
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\bin\Debug\net6.0-windows\WinFormsFashionShop.Data.dll
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\bin\Debug\net6.0-windows\WinFormsFashionShop.Data.pdb
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.csproj.AssemblyReference.cache
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinForms.3FF8061B.Up2Date
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.dll
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\refint\WinFormsFashionShop.Business.dll
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\WinFormsFashionShop.Business.pdb
+D:\dev\winforms-shop-fashion\WinFormsFashionShop.Business\obj\Debug\net6.0-windows\ref\WinFormsFashionShop.Business.dll

@@ -1,0 +1,11 @@
+using System;
+using System.Windows.Forms;
+using WinFormsFashionShop.Business.Services;
+using WinFormsFashionShop.Data.Entities;
+using System.Collections.Generic;
+
+namespace WinFormsFashionShop.Presentation.Forms
+{
+    public class ProductManagementForm : Form
+    {
+        private readonly IProductService _productService;        private DataGridView _grid = new DataGridView { Dock = DockStyle.Top, Height = 400 };        private Button _btnRefresh = new Button { Text = "Refresh" };        private Button _btnAdd = new Button { Text = "Add" };        public ProductManagementForm(IProductService productService)        {            _productService = productService ?? throw new ArgumentNullException(nameof(productService));            Text = "Product Management";            Width = 900;            Height = 600;            InitializeControls();            LoadProductsIntoGrid();        }        private void InitializeControls()        {            _btnRefresh.Top = 420; _btnRefresh.Left = 20; _btnRefresh.Click += OnRefreshClicked;            _btnAdd.Top = 420; _btnAdd.Left = 120; _btnAdd.Click += OnAddClicked;            Controls.Add(_grid);            Controls.Add(_btnRefresh);            Controls.Add(_btnAdd);        }        private void OnRefreshClicked(object? sender, EventArgs e)        {            LoadProductsIntoGrid();        }        private void OnAddClicked(object? sender, EventArgs e)        {            var newProduct = new Product { Name = "New Product", Price = 0m, CategoryId = 1 };            try            {                _productService.CreateProduct(newProduct);                LoadProductsIntoGrid();            }            catch (Exception ex)            {                MessageBox.Show($"Error adding product: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);            }        }        private void LoadProductsIntoGrid()        {            try            {                var products = _productService.GetAllProducts();                var list = new List<Product>(products);                _grid.DataSource = list;            }            catch (Exception ex)            {                MessageBox.Show($"Failed to load products: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);            }        }    }}
