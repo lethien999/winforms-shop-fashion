@@ -12,6 +12,7 @@ namespace WinFormsFashionShop.DTO
         public string? CategoryName { get; set; } // For display purposes
         public decimal UnitPrice { get; set; }
         public string Unit { get; set; } = "cái";
+        public string? ImagePath { get; set; } // Đường dẫn ảnh sản phẩm
         public bool IsActive { get; set; } = true;
     }
 
@@ -25,6 +26,7 @@ namespace WinFormsFashionShop.DTO
         public int CategoryId { get; set; }
         public decimal UnitPrice { get; set; }
         public string Unit { get; set; } = "cái";
+        public string? ImagePath { get; set; } // Đường dẫn ảnh sản phẩm (optional khi tạo mới)
     }
 
     /// <summary>
@@ -38,6 +40,7 @@ namespace WinFormsFashionShop.DTO
         public int CategoryId { get; set; }
         public decimal UnitPrice { get; set; }
         public string Unit { get; set; } = "cái";
+        public string? ImagePath { get; set; } // Đường dẫn ảnh sản phẩm (optional khi cập nhật)
         public bool IsActive { get; set; } = true;
     }
 }

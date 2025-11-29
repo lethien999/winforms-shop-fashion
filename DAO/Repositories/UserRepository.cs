@@ -32,6 +32,22 @@ namespace WinFormsFashionShop.Data.Repositories
             return null;
         }
 
+        /// <summary>
+        /// Gets a user by username (case-insensitive search).
+        /// </summary>
+        public User? GetByUsername(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                return null;
+
+            using var conn = CreateOpenConnection();
+            using var cmd = new SqlCommand($"SELECT Id, Username, PasswordHash, FullName, Role, IsActive, CreatedAt, UpdatedAt FROM {TableName} WHERE LOWER(Username) = LOWER(@Username)", conn);
+            cmd.Parameters.AddWithValue("@Username", username);
+            using var rdr = cmd.ExecuteReader();
+            if (rdr.Read()) return MapReaderToUser(rdr);
+            return null;
+        }
+
         public void Insert(User entity)
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));

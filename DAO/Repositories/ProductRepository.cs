@@ -13,7 +13,7 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             var list = new List<Product>();
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, ProductCode, Name, CategoryId, UnitPrice, Unit, IsActive, CreatedAt, UpdatedAt FROM {TableName}", conn);
+            using var cmd = new SqlCommand($"SELECT Id, ProductCode, Name, CategoryId, UnitPrice, Unit, ImagePath, IsActive, CreatedAt, UpdatedAt FROM {TableName}", conn);
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read()) list.Add(MapReaderToProduct(rdr));
             return list;
@@ -22,7 +22,7 @@ namespace WinFormsFashionShop.Data.Repositories
         public Product? GetById(int id)
         {
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, ProductCode, Name, CategoryId, UnitPrice, Unit, IsActive, CreatedAt, UpdatedAt FROM {TableName} WHERE Id = @Id", conn);
+            using var cmd = new SqlCommand($"SELECT Id, ProductCode, Name, CategoryId, UnitPrice, Unit, ImagePath, IsActive, CreatedAt, UpdatedAt FROM {TableName} WHERE Id = @Id", conn);
             cmd.Parameters.AddWithValue("@Id", id);
             using var rdr = cmd.ExecuteReader();
             if (rdr.Read()) return MapReaderToProduct(rdr);
@@ -33,12 +33,13 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"INSERT INTO {TableName} (ProductCode, Name, CategoryId, UnitPrice, Unit, IsActive, CreatedAt) VALUES (@ProductCode, @Name, @CategoryId, @UnitPrice, @Unit, @IsActive, @CreatedAt); SELECT SCOPE_IDENTITY();", conn);
+            using var cmd = new SqlCommand($"INSERT INTO {TableName} (ProductCode, Name, CategoryId, UnitPrice, Unit, ImagePath, IsActive, CreatedAt) VALUES (@ProductCode, @Name, @CategoryId, @UnitPrice, @Unit, @ImagePath, @IsActive, @CreatedAt); SELECT SCOPE_IDENTITY();", conn);
             cmd.Parameters.AddWithValue("@ProductCode", entity.ProductCode);
             cmd.Parameters.AddWithValue("@Name", entity.Name);
             cmd.Parameters.AddWithValue("@CategoryId", entity.CategoryId);
             cmd.Parameters.AddWithValue("@UnitPrice", entity.UnitPrice);
             cmd.Parameters.AddWithValue("@Unit", entity.Unit);
+            cmd.Parameters.AddWithValue("@ImagePath", (object?)entity.ImagePath ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@IsActive", entity.IsActive);
             cmd.Parameters.AddWithValue("@CreatedAt", entity.CreatedAt);
             entity.Id = Convert.ToInt32(cmd.ExecuteScalar());
@@ -48,12 +49,13 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"UPDATE {TableName} SET ProductCode=@ProductCode, Name=@Name, CategoryId=@CategoryId, UnitPrice=@UnitPrice, Unit=@Unit, IsActive=@IsActive, UpdatedAt=@UpdatedAt WHERE Id=@Id", conn);
+            using var cmd = new SqlCommand($"UPDATE {TableName} SET ProductCode=@ProductCode, Name=@Name, CategoryId=@CategoryId, UnitPrice=@UnitPrice, Unit=@Unit, ImagePath=@ImagePath, IsActive=@IsActive, UpdatedAt=@UpdatedAt WHERE Id=@Id", conn);
             cmd.Parameters.AddWithValue("@ProductCode", entity.ProductCode);
             cmd.Parameters.AddWithValue("@Name", entity.Name);
             cmd.Parameters.AddWithValue("@CategoryId", entity.CategoryId);
             cmd.Parameters.AddWithValue("@UnitPrice", entity.UnitPrice);
             cmd.Parameters.AddWithValue("@Unit", entity.Unit);
+            cmd.Parameters.AddWithValue("@ImagePath", (object?)entity.ImagePath ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@IsActive", entity.IsActive);
             cmd.Parameters.AddWithValue("@UpdatedAt", (object?)entity.UpdatedAt ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Id", entity.Id);
@@ -78,6 +80,10 @@ namespace WinFormsFashionShop.Data.Repositories
             deleteCmd.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// Maps SQL data reader to Product entity.
+        /// Single responsibility: only maps data from reader to entity.
+        /// </summary>
         private Product MapReaderToProduct(SqlDataReader rdr)
         {
             return new Product
@@ -88,9 +94,10 @@ namespace WinFormsFashionShop.Data.Repositories
                 CategoryId = rdr.GetInt32(3),
                 UnitPrice = rdr.GetDecimal(4),
                 Unit = rdr.IsDBNull(5) ? "cái" : rdr.GetString(5),
-                IsActive = !rdr.IsDBNull(6) && rdr.GetBoolean(6),
-                CreatedAt = rdr.IsDBNull(7) ? DateTime.Now : rdr.GetDateTime(7),
-                UpdatedAt = rdr.IsDBNull(8) ? null : rdr.GetDateTime(8)
+                ImagePath = rdr.IsDBNull(6) ? null : rdr.GetString(6),
+                IsActive = !rdr.IsDBNull(7) && rdr.GetBoolean(7),
+                CreatedAt = rdr.IsDBNull(8) ? DateTime.Now : rdr.GetDateTime(8),
+                UpdatedAt = rdr.IsDBNull(9) ? null : rdr.GetDateTime(9)
             };
         }
     }

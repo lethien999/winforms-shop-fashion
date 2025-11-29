@@ -10,6 +10,7 @@ namespace WinFormsFashionShop.Data.Entities
         public int CategoryId { get; set; }
         public decimal UnitPrice { get; set; } // Price -> UnitPrice
         public string Unit { get; set; } = "cái"; // đơn vị tính
+        public string? ImagePath { get; set; } // Đường dẫn ảnh sản phẩm
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }

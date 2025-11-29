@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using BCrypt.Net;
@@ -16,7 +15,7 @@ namespace WinFormsFashionShop.Business.Services
 
         public AuthService(IUserRepository userRepository)
         {
-            _userRepository = userRepository;
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         /// <summary>
@@ -27,8 +26,7 @@ namespace WinFormsFashionShop.Business.Services
             if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("username is required", nameof(username));
             if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("password is required", nameof(password));
 
-            var user = _userRepository.GetAll().FirstOrDefault(u => 
-                string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
+            var user = _userRepository.GetByUsername(username);
             if (user == null) return false;
 
             // Check if user is active
@@ -71,8 +69,7 @@ namespace WinFormsFashionShop.Business.Services
         public UserDTO? GetUserByUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("username is required", nameof(username));
-            var user = _userRepository.GetAll().FirstOrDefault(u => 
-                string.Equals(u.Username, username, StringComparison.OrdinalIgnoreCase));
+            var user = _userRepository.GetByUsername(username);
             return user == null ? null : UserMapper.ToDTO(user);
         }
 

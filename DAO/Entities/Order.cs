@@ -11,6 +11,7 @@ namespace WinFormsFashionShop.Data.Entities
         public int? CustomerId { get; set; } // nullable - cho phép hóa đơn không gắn khách
         public int UserId { get; set; } // Nhân viên lập hóa đơn
         public decimal TotalAmount { get; set; } // Total -> TotalAmount
+        public string? PaymentMethod { get; set; } // Phương thức thanh toán (Tiền mặt, Thẻ, Chuyển khoản...)
         public string? Notes { get; set; }
         public string Status { get; set; } = "Paid"; // Paid, Cancelled
         public List<OrderItem> Items { get; set; } = new List<OrderItem>();

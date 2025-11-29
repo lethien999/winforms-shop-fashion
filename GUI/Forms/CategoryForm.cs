@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -55,7 +56,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải danh mục: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -68,11 +69,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 {
                     _categoryService.CreateCategory(dialog.CreateCategoryDTO);
                     LoadCategories();
-                    MessageBox.Show("Thêm danh mục thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Thêm danh mục thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi thêm danh mục: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -81,7 +82,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (grid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn danh mục cần sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Vui lòng chọn danh mục cần sửa!");
                 return;
             }
 
@@ -89,7 +90,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             var category = _categoryService.GetCategoryById(id);
             if (category == null)
             {
-                MessageBox.Show("Không tìm thấy danh mục!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError("Không tìm thấy danh mục!");
                 return;
             }
 
@@ -100,11 +101,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 {
                     _categoryService.UpdateCategory(dialog.UpdateCategoryDTO);
                     LoadCategories();
-                    MessageBox.Show("Cập nhật danh mục thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Cập nhật danh mục thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi cập nhật danh mục: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -113,25 +114,24 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (grid.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn danh mục cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Vui lòng chọn danh mục cần xóa!");
                 return;
             }
 
             var id = (int)grid.SelectedRows[0].Cells["Id"].Value;
             var categoryName = grid.SelectedRows[0].Cells["CategoryName"].Value?.ToString() ?? "";
 
-            if (MessageBox.Show($"Bạn có chắc muốn xóa danh mục '{categoryName}'?", "Xác nhận", 
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (ErrorHandler.ShowConfirmation($"Bạn có chắc muốn xóa danh mục '{categoryName}'?"))
             {
                 try
                 {
                     _categoryService.DeleteCategory(id);
                     LoadCategories();
-                    MessageBox.Show("Xóa danh mục thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Xóa danh mục thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xóa danh mục: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -175,7 +175,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             {
                 if (string.IsNullOrWhiteSpace(_txtName.Text))
                 {
-                    MessageBox.Show("Vui lòng nhập tên danh mục!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ErrorHandler.ShowWarning("Vui lòng nhập tên danh mục!");
                     DialogResult = DialogResult.None;
                     return;
                 }

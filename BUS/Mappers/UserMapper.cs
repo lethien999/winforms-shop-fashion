@@ -1,3 +1,4 @@
+using System;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.DTO;
 

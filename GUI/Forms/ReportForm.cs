@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -56,7 +57,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải báo cáo doanh thu: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -96,7 +97,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải báo cáo tồn kho: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -117,7 +118,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải báo cáo khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
     }

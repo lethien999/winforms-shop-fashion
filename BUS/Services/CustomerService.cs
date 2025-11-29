@@ -13,7 +13,7 @@ namespace WinFormsFashionShop.Business.Services
 
         public CustomerService(ICustomerRepository customerRepository)
         {
-            _customerRepository = customerRepository;
+            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
         }
 
         public IEnumerable<CustomerDTO> GetAllCustomers()

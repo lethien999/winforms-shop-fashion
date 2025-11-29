@@ -2,6 +2,7 @@ using System;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -56,8 +57,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                 if (!user.IsActive)
                 {
                     lblStatus.Text = "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.";
-                    MessageBox.Show("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.", 
-                        "Tài khoản bị khóa", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ErrorHandler.ShowWarning("Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
                     return;
                 }
 
@@ -68,8 +68,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                     lblStatus.ForeColor = System.Drawing.Color.Green;
                     
                     // Show success message with role
-                    MessageBox.Show($"Đăng nhập thành công!\n\nTên: {user.FullName}\nVai trò: {user.Role}", 
-                        "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowInfo($"Đăng nhập thành công!\n\nTên: {user.FullName}\nVai trò: {user.Role}");
                     
                     DialogResult = DialogResult.OK;
                     Close();
@@ -82,7 +81,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             catch (Exception ex)
             {
                 lblStatus.Text = $"Lỗi: {ex.Message}";
-                MessageBox.Show($"Lỗi đăng nhập: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 

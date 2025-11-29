@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -55,14 +56,13 @@ namespace WinFormsFashionShop.Presentation.Forms
                     c.CustomerName,
                     c.Phone,
                     c.Email,
-                    c.Address,
                     c.IsActive,
                     TrạngThái = c.IsActive ? "Hoạt động" : "Ngừng"
                 }).ToList();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -91,7 +91,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải lịch sử mua hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -104,11 +104,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 {
                     _customerService.CreateCustomer(dialog.CreateCustomerDTO);
                     LoadCustomers();
-                    MessageBox.Show("Thêm khách hàng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Thêm khách hàng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi thêm khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -117,7 +117,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (gridCustomers.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn khách hàng cần sửa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Vui lòng chọn khách hàng cần sửa!");
                 return;
             }
 
@@ -125,7 +125,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             var customer = _customerService.GetCustomerById(id);
             if (customer == null)
             {
-                MessageBox.Show("Không tìm thấy khách hàng!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError("Không tìm thấy khách hàng!");
                 return;
             }
 
@@ -136,11 +136,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 {
                     _customerService.UpdateCustomer(dialog.UpdateCustomerDTO);
                     LoadCustomers();
-                    MessageBox.Show("Cập nhật khách hàng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Cập nhật khách hàng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi cập nhật khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -149,25 +149,24 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (gridCustomers.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Vui lòng chọn khách hàng cần xóa!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Vui lòng chọn khách hàng cần xóa!");
                 return;
             }
 
             var id = (int)gridCustomers.SelectedRows[0].Cells["Id"].Value;
             var customerName = gridCustomers.SelectedRows[0].Cells["CustomerName"].Value?.ToString() ?? "";
 
-            if (MessageBox.Show($"Bạn có chắc muốn xóa khách hàng '{customerName}'?", "Xác nhận", 
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            if (ErrorHandler.ShowConfirmation($"Bạn có chắc muốn xóa khách hàng '{customerName}'?"))
             {
                 try
                 {
                     _customerService.DeleteCustomer(id);
                     LoadCustomers();
-                    MessageBox.Show("Xóa khách hàng thành công!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess("Xóa khách hàng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Lỗi xóa khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ErrorHandler.ShowError(ex);
                 }
             }
         }
@@ -176,7 +175,7 @@ namespace WinFormsFashionShop.Presentation.Forms
     // Dialog for editing customer
     public class CustomerEditDialog : Form
     {
-        private TextBox? _txtName, _txtPhone, _txtEmail, _txtAddress;
+        private TextBox? _txtName, _txtPhone, _txtEmail;
         private CheckBox? _chkIsActive;
         private Button? _btnOK, _btnCancel;
         public CreateCustomerDTO? CreateCustomerDTO { get; private set; }
@@ -189,7 +188,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             _existingCustomer = customer;
             Text = customer == null ? "Thêm khách hàng mới" : "Sửa khách hàng";
             Width = 450;
-            Height = 300;
+            Height = 250;
             StartPosition = FormStartPosition.CenterParent;
             InitializeControls();
         }
@@ -205,19 +204,16 @@ namespace WinFormsFashionShop.Presentation.Forms
             var lblEmail = new Label { Text = "Email:", Left = 10, Top = 100, Width = 120 };
             _txtEmail = new TextBox { Left = 140, Top = 100, Width = 250, Text = _existingCustomer?.Email ?? "" };
 
-            var lblAddress = new Label { Text = "Địa chỉ:", Left = 10, Top = 140, Width = 120 };
-            _txtAddress = new TextBox { Left = 140, Top = 140, Width = 250, Text = _existingCustomer?.Address ?? "" };
+            _chkIsActive = new CheckBox { Text = "Hoạt động", Left = 140, Top = 140, Checked = _existingCustomer?.IsActive ?? true };
 
-            _chkIsActive = new CheckBox { Text = "Hoạt động", Left = 140, Top = 180, Checked = _existingCustomer?.IsActive ?? true };
-
-            _btnOK = new Button { Text = "OK", Left = 140, Top = 220, Width = 100, DialogResult = DialogResult.OK };
-            _btnCancel = new Button { Text = "Hủy", Left = 250, Top = 220, Width = 100, DialogResult = DialogResult.Cancel };
+            _btnOK = new Button { Text = "OK", Left = 140, Top = 180, Width = 100, DialogResult = DialogResult.OK };
+            _btnCancel = new Button { Text = "Hủy", Left = 250, Top = 180, Width = 100, DialogResult = DialogResult.Cancel };
 
             _btnOK.Click += (s, e) =>
             {
                 if (string.IsNullOrWhiteSpace(_txtName.Text))
                 {
-                    MessageBox.Show("Vui lòng nhập tên khách hàng!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ErrorHandler.ShowWarning("Vui lòng nhập tên khách hàng!");
                     DialogResult = DialogResult.None;
                     return;
                 }
@@ -229,8 +225,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                     {
                         CustomerName = _txtName?.Text.Trim() ?? "",
                         Phone = string.IsNullOrWhiteSpace(_txtPhone?.Text) ? null : _txtPhone.Text.Trim(),
-                        Email = string.IsNullOrWhiteSpace(_txtEmail?.Text) ? null : _txtEmail.Text.Trim(),
-                        Address = string.IsNullOrWhiteSpace(_txtAddress?.Text) ? null : _txtAddress.Text.Trim()
+                        Email = string.IsNullOrWhiteSpace(_txtEmail?.Text) ? null : _txtEmail.Text.Trim()
                     };
                 }
                 else
@@ -242,7 +237,6 @@ namespace WinFormsFashionShop.Presentation.Forms
                         CustomerName = _txtName?.Text.Trim() ?? "",
                         Phone = string.IsNullOrWhiteSpace(_txtPhone?.Text) ? null : _txtPhone.Text.Trim(),
                         Email = string.IsNullOrWhiteSpace(_txtEmail?.Text) ? null : _txtEmail.Text.Trim(),
-                        Address = string.IsNullOrWhiteSpace(_txtAddress?.Text) ? null : _txtAddress.Text.Trim(),
                         IsActive = _chkIsActive?.Checked ?? true
                     };
                 }
@@ -250,7 +244,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
             Controls.AddRange(new Control[] { 
                 lblName, _txtName, lblPhone, _txtPhone, lblEmail, _txtEmail,
-                lblAddress, _txtAddress, _chkIsActive, _btnOK, _btnCancel 
+                _chkIsActive, _btnOK, _btnCancel 
             });
         }
     }

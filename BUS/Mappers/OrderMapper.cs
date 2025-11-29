@@ -25,6 +25,7 @@ namespace WinFormsFashionShop.Business.Mappers
                 UserId = entity.UserId,
                 UserName = userName,
                 TotalAmount = entity.TotalAmount,
+                PaymentMethod = entity.PaymentMethod,
                 Notes = entity.Notes,
                 Status = entity.Status,
                 Items = entity.Items?.Select(item => OrderItemMapper.ToDTO(item)).ToList() ?? new List<OrderItemDTO>()
@@ -41,6 +42,7 @@ namespace WinFormsFashionShop.Business.Mappers
                 OrderDate = DateTime.Now,
                 CustomerId = dto.CustomerId,
                 UserId = dto.UserId,
+                PaymentMethod = dto.PaymentMethod,
                 Notes = dto.Notes,
                 Status = dto.Status,
                 Items = new List<OrderItem>()

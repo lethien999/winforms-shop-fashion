@@ -32,7 +32,7 @@ namespace WinFormsFashionShop.Business.Mappers
                 CustomerName = dto.CustomerName,
                 Phone = dto.Phone,
                 Email = dto.Email,
-                Address = dto.Address,
+                Address = null, // Address field removed from UI
                 IsActive = true,
                 CreatedAt = DateTime.Now
             };
@@ -46,7 +46,8 @@ namespace WinFormsFashionShop.Business.Mappers
             existingEntity.CustomerName = dto.CustomerName;
             existingEntity.Phone = dto.Phone;
             existingEntity.Email = dto.Email;
-            existingEntity.Address = dto.Address;
+            // Address field removed from UI - keep existing value or set to null
+            existingEntity.Address = null;
             existingEntity.IsActive = dto.IsActive;
             existingEntity.UpdatedAt = DateTime.Now;
             

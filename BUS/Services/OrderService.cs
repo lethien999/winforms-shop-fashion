@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.Business.Mappers;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.Data.Repositories;
@@ -25,12 +26,12 @@ namespace WinFormsFashionShop.Business.Services
             ICustomerRepository customerRepository,
             IUserRepository userRepository)
         {
-            _orderRepository = orderRepository;
-            _orderItemRepository = orderItemRepository;
-            _inventoryService = inventoryService;
-            _productRepository = productRepository;
-            _customerRepository = customerRepository;
-            _userRepository = userRepository;
+            _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
+            _orderItemRepository = orderItemRepository ?? throw new ArgumentNullException(nameof(orderItemRepository));
+            _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
+            _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
+            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
         public IEnumerable<OrderDTO> GetAllOrders()
@@ -50,37 +51,69 @@ namespace WinFormsFashionShop.Business.Services
             return MapToDTO(order);
         }
 
+        /// <summary>
+        /// Creates a new order with items and updates inventory.
+        /// Orchestrates the flow but delegates to smaller methods.
+        /// </summary>
         public void CreateOrder(CreateOrderDTO dto)
+        {
+            ValidateCreateOrderRequest(dto);
+            ValidateStockAvailabilityForItems(dto.Items);
+            
+            var orderCode = GenerateOrderCode();
+            var order = CreateOrderEntity(dto, orderCode);
+            
+            SaveOrderAndItems(order, dto);
+        }
+
+        /// <summary>
+        /// Validates the create order request.
+        /// Single responsibility: only validates request.
+        /// </summary>
+        private void ValidateCreateOrderRequest(CreateOrderDTO dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             if (dto.Items == null || dto.Items.Count == 0) 
                 throw new ArgumentException("Order must have items", nameof(dto.Items));
             if (dto.UserId <= 0) 
                 throw new ArgumentException("UserId is required", nameof(dto.UserId));
+        }
 
-            // Check stock availability for all items before creating order
-            foreach (var item in dto.Items)
+        /// <summary>
+        /// Validates stock availability for all items in the order.
+        /// Single responsibility: only validates stock.
+        /// </summary>
+        private void ValidateStockAvailabilityForItems(List<CreateOrderItemDTO> items)
+        {
+            foreach (var item in items)
             {
                 if (!CheckStockAvailability(item.ProductId, item.Quantity))
                 {
                     throw new InvalidOperationException($"Insufficient stock for product ID {item.ProductId}");
                 }
             }
+        }
 
-            // Generate order code
-            var orderCode = GenerateOrderCode();
-
-            // Convert DTO to Entity
+        /// <summary>
+        /// Creates the order entity from DTO and calculates totals.
+        /// Single responsibility: only creates and calculates order entity.
+        /// </summary>
+        private Order CreateOrderEntity(CreateOrderDTO dto, string orderCode)
+        {
             var order = OrderMapper.ToEntity(dto, orderCode);
-            
-            // Calculate line totals and order total
             CalculateLineTotals(order.Items);
             order.TotalAmount = CalculateOrderTotal(order.Items, dto.DiscountPercent, dto.DiscountAmount);
+            return order;
+        }
 
-            // Insert order
+        /// <summary>
+        /// Saves the order and items, then decreases inventory.
+        /// Single responsibility: only saves to database and updates inventory.
+        /// </summary>
+        private void SaveOrderAndItems(Order order, CreateOrderDTO dto)
+        {
             _orderRepository.Insert(order);
 
-            // Insert items and decrease inventory
             foreach (var item in order.Items)
             {
                 item.OrderId = order.Id;
@@ -178,6 +211,33 @@ namespace WinFormsFashionShop.Business.Services
             var existingOrders = _orderRepository.GetByDateRange(DateTime.Now.Date, DateTime.Now.Date.AddDays(1)).ToList();
             var sequence = existingOrders.Count + 1;
             return $"ORD{datePrefix}{sequence:D4}";
+        }
+
+        /// <summary>
+        /// Cancels an order and restores inventory stock.
+        /// Single responsibility: only cancels order and restores stock.
+        /// </summary>
+        public void CancelOrder(int orderId)
+        {
+            if (orderId <= 0) throw new ArgumentOutOfRangeException(nameof(orderId));
+            
+            var order = _orderRepository.GetById(orderId)
+                ?? throw new InvalidOperationException("Order not found");
+            
+            if (order.Status == Constants.OrderStatus.Cancelled)
+                throw new InvalidOperationException("Order is already cancelled");
+            
+            PopulateOrderItems(new List<Order> { order });
+            
+            // Restore inventory for each item
+            foreach (var item in order.Items)
+            {
+                _inventoryService.IncreaseStock(item.ProductId, item.Quantity);
+            }
+            
+            // Update order status to Cancelled
+            order.Status = Constants.OrderStatus.Cancelled;
+            _orderRepository.Update(order);
         }
 
         private void PopulateOrderItems(List<Order> orders)

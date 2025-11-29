@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.Data.Repositories;
 
@@ -53,7 +54,7 @@ namespace WinFormsFashionShop.Business.Services
             return report;
         }
 
-        public InventoryReport GetInventoryReport(int lowStockThreshold = 10)
+        public InventoryReport GetInventoryReport(int lowStockThreshold = InventoryConstants.DefaultLowStockThreshold)
         {
             var inventories = _inventoryRepository.GetAll().ToList();
             var products = _productRepository.GetAll().ToList();

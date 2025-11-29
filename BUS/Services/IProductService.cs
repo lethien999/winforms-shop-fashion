@@ -39,5 +39,10 @@ namespace WinFormsFashionShop.Business.Services
         /// Deactivates a product so it is not shown to customers.
         /// </summary>
         void DeactivateProduct(int productId);
+
+        /// <summary>
+        /// Generates a unique product code automatically.
+        /// </summary>
+        string GenerateProductCode();
     }
 }

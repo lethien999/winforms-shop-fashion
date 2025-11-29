@@ -12,7 +12,7 @@ namespace WinFormsFashionShop.Business.Services
 
         public InventoryService(IInventoryRepository inventoryRepository)
         {
-            _inventoryRepository = inventoryRepository;
+            _inventoryRepository = inventoryRepository ?? throw new ArgumentNullException(nameof(inventoryRepository));
         }
 
         public IEnumerable<Inventory> GetAllInventories()

@@ -13,6 +13,7 @@ namespace WinFormsFashionShop.DTO
         public int UserId { get; set; }
         public string? UserName { get; set; } // For display
         public decimal TotalAmount { get; set; }
+        public string? PaymentMethod { get; set; } // Phương thức thanh toán
         public string? Notes { get; set; }
         public string Status { get; set; } = "Paid";
         public List<OrderItemDTO> Items { get; set; } = new List<OrderItemDTO>();
@@ -25,6 +26,7 @@ namespace WinFormsFashionShop.DTO
     {
         public int? CustomerId { get; set; }
         public int UserId { get; set; }
+        public string? PaymentMethod { get; set; } // Phương thức thanh toán
         public string? Notes { get; set; }
         public string Status { get; set; } = "Paid";
         public List<CreateOrderItemDTO> Items { get; set; } = new List<CreateOrderItemDTO>();

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -101,7 +102,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải tồn kho: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -110,7 +111,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             var searchText = txtProductSearch.Text.Trim();
             if (string.IsNullOrWhiteSpace(searchText))
             {
-                MessageBox.Show("Vui lòng nhập mã hoặc tên sản phẩm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Vui lòng nhập mã hoặc tên sản phẩm!");
                 return;
             }
 
@@ -124,7 +125,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
                 if (products.Count == 0)
                 {
-                    MessageBox.Show("Không tìm thấy sản phẩm!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ErrorHandler.ShowWarning("Không tìm thấy sản phẩm!");
                     return;
                 }
 
@@ -172,7 +173,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi thêm sản phẩm: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
 
@@ -200,7 +201,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (grid.Rows.Count == 0)
             {
-                MessageBox.Show("Không có sản phẩm nào để cập nhật!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                ErrorHandler.ShowWarning("Không có sản phẩm nào để cập nhật!");
                 return;
             }
 
@@ -224,17 +225,17 @@ namespace WinFormsFashionShop.Presentation.Forms
 
                 if (successCount > 0)
                 {
-                    MessageBox.Show($"Cập nhật tồn kho thành công cho {successCount} sản phẩm!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    ErrorHandler.ShowSuccess($"Cập nhật tồn kho thành công cho {successCount} sản phẩm!");
                     LoadInventory();
                 }
                 else
                 {
-                    MessageBox.Show("Không có sản phẩm nào được cập nhật!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    ErrorHandler.ShowWarning("Không có sản phẩm nào được cập nhật!");
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi cập nhật tồn kho: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                ErrorHandler.ShowError(ex);
             }
         }
     }

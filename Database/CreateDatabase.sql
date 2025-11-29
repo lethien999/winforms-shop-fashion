@@ -112,6 +112,7 @@ BEGIN
         CategoryId INT NOT NULL,                        -- FK -> Categories.Id
         UnitPrice DECIMAL(18,2) NOT NULL,               -- Giá bán
         Unit NVARCHAR(20) NOT NULL DEFAULT 'cái',       -- Đơn vị tính (cái, bộ, chiếc...)
+        ImagePath NVARCHAR(500) NULL,                    -- Đường dẫn ảnh sản phẩm
         IsActive BIT NOT NULL DEFAULT 1,
         CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
         UpdatedAt DATETIME NULL,
@@ -170,6 +171,7 @@ BEGIN
         CustomerId INT NULL,                            -- FK -> Customers.Id (nullable - cho phép hóa đơn không gắn khách)
         UserId INT NOT NULL,                             -- FK -> Users.Id (Nhân viên lập hóa đơn)
         TotalAmount DECIMAL(18,2) NOT NULL,              -- Tổng tiền
+        PaymentMethod NVARCHAR(50) NULL,                 -- Phương thức thanh toán (Tiền mặt, Thẻ, Chuyển khoản...)
         Notes NVARCHAR(255) NULL,                        -- Ghi chú
         Status NVARCHAR(20) NOT NULL DEFAULT 'Paid',     -- Trạng thái: Paid, Cancelled
         FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
@@ -324,7 +326,7 @@ BEGIN
     --
     -- Hash mẫu (có thể không hoạt động, cần thay thế bằng hash thật):
     INSERT INTO Users (Username, PasswordHash, FullName, Role, IsActive, CreatedAt)
-    VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Administrator', 'Admin', 1, GETDATE());
+    VALUES ('admin', '$2a$10$2BO5J.fLXKIfGsdMm.g/pOjrwVwBueeDHbpdK368SArJrelBnnFpm', 'Administrator', 'Admin', 1, GETDATE());
     PRINT '✓ Đã tạo user Admin mặc định.';
     PRINT '  - Username: admin';
     PRINT '  - Password: admin123';
@@ -340,9 +342,10 @@ END
 IF NOT EXISTS (SELECT * FROM Users WHERE Username = 'staff')
 BEGIN
     -- Password: admin123 (cùng password với admin để dễ test)
-    -- Tạm thời dùng SHA256 hash (ứng dụng sẽ tự migrate sang BCrypt khi đăng nhập)
+    -- BCrypt hash với workFactor = 10
+    -- Hash này được tạo bằng: BCrypt.HashPassword("admin123", workFactor: 10)
     INSERT INTO Users (Username, PasswordHash, FullName, Role, IsActive, CreatedAt)
-    VALUES ('staff', 'jGl25bVBBBW96Qi9Te4V37Fnqchz/Eu4qB9vKrRIqRg=', 'Nhân viên bán hàng', 'Staff', 1, GETDATE());
+    VALUES ('staff', '$2a$10$2BO5J.fLXKIfGsdMm.g/pOjrwVwBueeDHbpdK368SArJrelBnnFpm', 'Nhân viên bán hàng', 'Staff', 1, GETDATE());
     PRINT '✓ Đã tạo user Staff mẫu.';
     PRINT '  - Username: staff';
     PRINT '  - Password: admin123';

@@ -13,7 +13,7 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             var list = new List<Order>();
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status FROM {TableName}", conn);
+            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status FROM {TableName}", conn);
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
             {
@@ -25,7 +25,7 @@ namespace WinFormsFashionShop.Data.Repositories
         public Order? GetById(int id)
         {
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status FROM {TableName} WHERE Id=@Id", conn);
+            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status FROM {TableName} WHERE Id=@Id", conn);
             cmd.Parameters.AddWithValue("@Id", id);
             using var rdr = cmd.ExecuteReader();
             if (rdr.Read())
@@ -39,12 +39,13 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"INSERT INTO {TableName} (OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status) VALUES (@OrderCode, @OrderDate, @CustomerId, @UserId, @TotalAmount, @Notes, @Status); SELECT SCOPE_IDENTITY();", conn);
+            using var cmd = new SqlCommand($"INSERT INTO {TableName} (OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status) VALUES (@OrderCode, @OrderDate, @CustomerId, @UserId, @TotalAmount, @PaymentMethod, @Notes, @Status); SELECT SCOPE_IDENTITY();", conn);
             cmd.Parameters.AddWithValue("@OrderCode", entity.OrderCode);
             cmd.Parameters.AddWithValue("@OrderDate", entity.OrderDate);
             cmd.Parameters.AddWithValue("@CustomerId", (object?)entity.CustomerId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@UserId", entity.UserId);
             cmd.Parameters.AddWithValue("@TotalAmount", entity.TotalAmount);
+            cmd.Parameters.AddWithValue("@PaymentMethod", (object?)entity.PaymentMethod ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Notes", (object?)entity.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Status", entity.Status);
             entity.Id = Convert.ToInt32(cmd.ExecuteScalar());
@@ -54,12 +55,13 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"UPDATE {TableName} SET OrderCode=@OrderCode, OrderDate=@OrderDate, CustomerId=@CustomerId, UserId=@UserId, TotalAmount=@TotalAmount, Notes=@Notes, Status=@Status WHERE Id=@Id", conn);
+            using var cmd = new SqlCommand($"UPDATE {TableName} SET OrderCode=@OrderCode, OrderDate=@OrderDate, CustomerId=@CustomerId, UserId=@UserId, TotalAmount=@TotalAmount, PaymentMethod=@PaymentMethod, Notes=@Notes, Status=@Status WHERE Id=@Id", conn);
             cmd.Parameters.AddWithValue("@OrderCode", entity.OrderCode);
             cmd.Parameters.AddWithValue("@OrderDate", entity.OrderDate);
             cmd.Parameters.AddWithValue("@CustomerId", (object?)entity.CustomerId ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@UserId", entity.UserId);
             cmd.Parameters.AddWithValue("@TotalAmount", entity.TotalAmount);
+            cmd.Parameters.AddWithValue("@PaymentMethod", (object?)entity.PaymentMethod ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Notes", (object?)entity.Notes ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@Status", entity.Status);
             cmd.Parameters.AddWithValue("@Id", entity.Id);
@@ -70,7 +72,7 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             var list = new List<Order>();
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status FROM {TableName} WHERE OrderDate >= @From AND OrderDate <= @To", conn);
+            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status FROM {TableName} WHERE OrderDate >= @From AND OrderDate <= @To", conn);
             cmd.Parameters.AddWithValue("@From", from.Date);
             cmd.Parameters.AddWithValue("@To", to.Date.AddDays(1).AddSeconds(-1)); // End of day
             using var rdr = cmd.ExecuteReader();
@@ -85,7 +87,7 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             var list = new List<Order>();
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status FROM {TableName} WHERE CustomerId = @CustomerId", conn);
+            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status FROM {TableName} WHERE CustomerId = @CustomerId", conn);
             cmd.Parameters.AddWithValue("@CustomerId", customerId);
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
@@ -99,7 +101,7 @@ namespace WinFormsFashionShop.Data.Repositories
         {
             var list = new List<Order>();
             using var conn = CreateOpenConnection();
-            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, Notes, Status FROM {TableName} WHERE UserId = @UserId", conn);
+            using var cmd = new SqlCommand($"SELECT Id, OrderCode, OrderDate, CustomerId, UserId, TotalAmount, PaymentMethod, Notes, Status FROM {TableName} WHERE UserId = @UserId", conn);
             cmd.Parameters.AddWithValue("@UserId", userId);
             using var rdr = cmd.ExecuteReader();
             while (rdr.Read())
@@ -109,6 +111,10 @@ namespace WinFormsFashionShop.Data.Repositories
             return list;
         }
 
+        /// <summary>
+        /// Maps SQL data reader to Order entity.
+        /// Single responsibility: only maps data from reader to entity.
+        /// </summary>
         private Order MapReaderToOrder(SqlDataReader rdr)
         {
             return new Order
@@ -119,8 +125,9 @@ namespace WinFormsFashionShop.Data.Repositories
                 CustomerId = rdr.IsDBNull(3) ? null : rdr.GetInt32(3),
                 UserId = rdr.GetInt32(4),
                 TotalAmount = rdr.GetDecimal(5),
-                Notes = rdr.IsDBNull(6) ? null : rdr.GetString(6),
-                Status = rdr.IsDBNull(7) ? "Paid" : rdr.GetString(7)
+                PaymentMethod = rdr.IsDBNull(6) ? null : rdr.GetString(6),
+                Notes = rdr.IsDBNull(7) ? null : rdr.GetString(7),
+                Status = rdr.IsDBNull(8) ? "Paid" : rdr.GetString(8)
             };
         }
 

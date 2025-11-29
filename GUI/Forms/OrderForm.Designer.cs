@@ -38,6 +38,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.btnAddProduct = new System.Windows.Forms.Button();
             this.gridOrderItems = new System.Windows.Forms.DataGridView();
             this.pnlTotal = new System.Windows.Forms.Panel();
+            this.lblPaymentMethod = new System.Windows.Forms.Label();
+            this.cmbPaymentMethod = new System.Windows.Forms.ComboBox();
             this.lblDiscount = new System.Windows.Forms.Label();
             this.txtDiscountPercent = new System.Windows.Forms.TextBox();
             this.lblDiscountAmount = new System.Windows.Forms.Label();
@@ -138,6 +140,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlTotal
             // 
+            this.pnlTotal.Controls.Add(this.lblPaymentMethod);
+            this.pnlTotal.Controls.Add(this.cmbPaymentMethod);
             this.pnlTotal.Controls.Add(this.lblDiscount);
             this.pnlTotal.Controls.Add(this.txtDiscountPercent);
             this.pnlTotal.Controls.Add(this.lblDiscountAmount);
@@ -150,6 +154,24 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.pnlTotal.Name = "pnlTotal";
             this.pnlTotal.Size = new System.Drawing.Size(1000, 120);
             this.pnlTotal.TabIndex = 3;
+            // 
+            // lblPaymentMethod
+            // 
+            this.lblPaymentMethod.AutoSize = true;
+            this.lblPaymentMethod.Location = new System.Drawing.Point(520, 43);
+            this.lblPaymentMethod.Name = "lblPaymentMethod";
+            this.lblPaymentMethod.Size = new System.Drawing.Size(120, 15);
+            this.lblPaymentMethod.TabIndex = 7;
+            this.lblPaymentMethod.Text = "Phương thức thanh toán:";
+            // 
+            // cmbPaymentMethod
+            // 
+            this.cmbPaymentMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbPaymentMethod.FormattingEnabled = true;
+            this.cmbPaymentMethod.Location = new System.Drawing.Point(650, 40);
+            this.cmbPaymentMethod.Name = "cmbPaymentMethod";
+            this.cmbPaymentMethod.Size = new System.Drawing.Size(150, 23);
+            this.cmbPaymentMethod.TabIndex = 8;
             // 
             // lblDiscount
             // 
@@ -249,6 +271,8 @@ namespace WinFormsFashionShop.Presentation.Forms
         private System.Windows.Forms.Button btnAddProduct;
         private System.Windows.Forms.DataGridView gridOrderItems;
         private System.Windows.Forms.Panel pnlTotal;
+        private System.Windows.Forms.Label lblPaymentMethod;
+        private System.Windows.Forms.ComboBox cmbPaymentMethod;
         private System.Windows.Forms.Label lblDiscount;
         private System.Windows.Forms.TextBox txtDiscountPercent;
         private System.Windows.Forms.Label lblDiscountAmount;

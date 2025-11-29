@@ -1,7 +1,9 @@
 using System;
 using System.Windows.Forms;
+using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -62,6 +64,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             manageMenu.DropDownItems.Add(ordersMenu);
             manageMenu.DropDownItems.Add(inventoryMenu);
 
+            // Bán hàng menu
+            var salesMenu = new ToolStripMenuItem("Bán hàng");
+            var createOrderMenu = new ToolStripMenuItem("Lập hóa đơn");
+            createOrderMenu.Click += (s, e) => OpenCreateOrder();
+            salesMenu.DropDownItems.Add(createOrderMenu);
+
             // Báo cáo menu
             var reportsMenu = new ToolStripMenuItem("Báo cáo");
             reportsMenu.Click += (s, e) => OpenReports();
@@ -72,12 +80,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             usersMenu.Click += (s, e) => OpenUserManagement();
             
             // Chỉ hiển thị menu Admin nếu user là Admin
-            if (_currentUser.Role == "Admin")
+            if (_currentUser.Role == UserRole.Admin)
             {
                 adminMenu.DropDownItems.Add(usersMenu);
                 menuStrip.Items.Add(adminMenu);
             }
 
+            menuStrip.Items.Add(salesMenu);
             menuStrip.Items.Add(manageMenu);
             menuStrip.Items.Add(reportsMenu);
 
@@ -109,6 +118,12 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void OpenOrderManagement()
         {
+            var frm = new OrderManagementForm(_orderService);
+            frm.ShowDialog(this);
+        }
+
+        private void OpenCreateOrder()
+        {
             var frm = new OrderForm(_orderService, _productService, _customerService, _inventoryService, _currentUser);
             frm.ShowDialog(this);
         }
@@ -127,8 +142,8 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void OpenUserManagement()
         {
-            // TODO: Create UserManagementForm
-            MessageBox.Show("Chức năng quản lý người dùng sẽ được triển khai sau.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            var frm = new UserManagementForm(_userService);
+            frm.ShowDialog(this);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace WinFormsFashionShop.Business.Composition
 
             // Instantiate services (Business layer) using constructor injection
             var authService = new AuthService(userRepo);
-            var productService = new ProductService(productRepo, categoryRepo);
+            var productService = new ProductService(productRepo, categoryRepo, inventoryRepo);
             var categoryService = new CategoryService(categoryRepo);
             var customerService = new CustomerService(customerRepo);
             var inventoryService = new InventoryService(inventoryRepo);

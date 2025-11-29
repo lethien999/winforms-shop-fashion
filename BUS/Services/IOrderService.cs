@@ -16,5 +16,6 @@ namespace WinFormsFashionShop.Business.Services
         IEnumerable<OrderDTO> GetOrdersByUserId(int userId);
         bool CheckStockAvailability(int productId, int quantity);
         string GenerateOrderCode();
+        void CancelOrder(int orderId);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.DTO;
 
@@ -21,6 +22,7 @@ namespace WinFormsFashionShop.Business.Mappers
                 CategoryName = categoryName,
                 UnitPrice = entity.UnitPrice,
                 Unit = entity.Unit,
+                ImagePath = entity.ImagePath,
                 IsActive = entity.IsActive
             };
         }
@@ -36,6 +38,7 @@ namespace WinFormsFashionShop.Business.Mappers
                 CategoryId = dto.CategoryId,
                 UnitPrice = dto.UnitPrice,
                 Unit = dto.Unit,
+                ImagePath = dto.ImagePath,
                 IsActive = true,
                 CreatedAt = DateTime.Now
             };
@@ -51,6 +54,7 @@ namespace WinFormsFashionShop.Business.Mappers
             existingEntity.CategoryId = dto.CategoryId;
             existingEntity.UnitPrice = dto.UnitPrice;
             existingEntity.Unit = dto.Unit;
+            existingEntity.ImagePath = dto.ImagePath;
             existingEntity.IsActive = dto.IsActive;
             existingEntity.UpdatedAt = DateTime.Now;
             
