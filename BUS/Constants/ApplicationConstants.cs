@@ -6,6 +6,7 @@ namespace WinFormsFashionShop.Business.Constants
     /// </summary>
     public static class OrderStatus
     {
+        public const string Pending = "Pending";
         public const string Paid = "Paid";
         public const string Cancelled = "Cancelled";
     }
@@ -38,6 +39,7 @@ namespace WinFormsFashionShop.Business.Constants
         public const string Cash = "Tiền mặt";
         public const string Card = "Thẻ";
         public const string Transfer = "Chuyển khoản";
+        public const string VietQR = "VietQR (PayOS)";
         public const string Other = "Khác";
     }
 }

@@ -54,13 +54,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.pnlAdd.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlAdd.Location = new System.Drawing.Point(0, 0);
             this.pnlAdd.Name = "pnlAdd";
-            this.pnlAdd.Size = new System.Drawing.Size(1000, 60);
+            this.pnlAdd.Padding = new System.Windows.Forms.Padding(15, 10, 15, 10);
+            this.pnlAdd.Size = new System.Drawing.Size(900, 70);
             this.pnlAdd.TabIndex = 0;
             // 
             // lblProduct
             // 
             this.lblProduct.AutoSize = true;
-            this.lblProduct.Location = new System.Drawing.Point(10, 23);
+            this.lblProduct.Location = new System.Drawing.Point(15, 25);
             this.lblProduct.Name = "lblProduct";
             this.lblProduct.Size = new System.Drawing.Size(62, 15);
             this.lblProduct.TabIndex = 0;
@@ -68,16 +69,18 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // txtProductSearch
             // 
-            this.txtProductSearch.Location = new System.Drawing.Point(100, 20);
+            this.txtProductSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtProductSearch.Location = new System.Drawing.Point(90, 22);
             this.txtProductSearch.Name = "txtProductSearch";
             this.txtProductSearch.PlaceholderText = "Nhập mã hoặc tên sản phẩm...";
-            this.txtProductSearch.Size = new System.Drawing.Size(300, 23);
+            this.txtProductSearch.Size = new Size(450, 23);
             this.txtProductSearch.TabIndex = 1;
             // 
             // lblQuantity
             // 
             this.lblQuantity.AutoSize = true;
-            this.lblQuantity.Location = new System.Drawing.Point(420, 23);
+            this.lblQuantity.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
+            this.lblQuantity.Location = new System.Drawing.Point(560, 25);
             this.lblQuantity.Name = "lblQuantity";
             this.lblQuantity.Size = new System.Drawing.Size(90, 15);
             this.lblQuantity.TabIndex = 2;
@@ -85,7 +88,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // numQuantity
             // 
-            this.numQuantity.Location = new System.Drawing.Point(530, 20);
+            this.numQuantity.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
+            this.numQuantity.Location = new System.Drawing.Point(660, 22);
             this.numQuantity.Maximum = new decimal(new int[] {
             10000,
             0,
@@ -97,7 +101,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             0,
             0});
             this.numQuantity.Name = "numQuantity";
-            this.numQuantity.Size = new System.Drawing.Size(100, 23);
+            this.numQuantity.Size = new Size(100, 23);
             this.numQuantity.TabIndex = 3;
             this.numQuantity.Value = new decimal(new int[] {
             1,
@@ -107,9 +111,16 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(640, 20);
+            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
+            this.btnAdd.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
+            this.btnAdd.FlatAppearance.BorderSize = 0;
+            this.btnAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(0, 105, 217);
+            this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAdd.ForeColor = System.Drawing.Color.White;
+            this.btnAdd.Location = new System.Drawing.Point(775, 20);
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(100, 23);
+            this.btnAdd.Size = new System.Drawing.Size(110, 28);
+            this.btnAdd.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnAdd.TabIndex = 4;
             this.btnAdd.Text = "Thêm";
             this.btnAdd.UseVisualStyleBackColor = true;
@@ -119,10 +130,10 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.grid.AllowUserToAddRows = false;
             this.grid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.grid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grid.Location = new System.Drawing.Point(0, 60);
+            this.grid.Location = new System.Drawing.Point(0, 70);
             this.grid.Name = "grid";
             this.grid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.grid.Size = new System.Drawing.Size(1000, 490);
+            this.grid.Size = new System.Drawing.Size(900, 480);
             this.grid.TabIndex = 1;
             // 
             // pnlButtons
@@ -132,7 +143,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.pnlButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlButtons.Location = new System.Drawing.Point(0, 550);
             this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Size = new System.Drawing.Size(1000, 50);
+            this.pnlButtons.Padding = new System.Windows.Forms.Padding(15, 10, 15, 10);
+            this.pnlButtons.Size = new System.Drawing.Size(900, 50);
             this.pnlButtons.TabIndex = 2;
             // 
             // btnSave
@@ -157,10 +169,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1000, 600);
+            this.BackColor = System.Drawing.Color.FromArgb(245, 245, 250);
+            this.ClientSize = new System.Drawing.Size(900, 600);
             this.Controls.Add(this.grid);
             this.Controls.Add(this.pnlButtons);
             this.Controls.Add(this.pnlAdd);
+            this.Margin = new System.Windows.Forms.Padding(0);
+            this.MinimumSize = new System.Drawing.Size(800, 500);
             this.Name = "InventoryAdjustmentForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Nhập hàng - Cập nhật tồn kho";

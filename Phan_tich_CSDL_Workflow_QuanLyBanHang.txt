@@ -1,0 +1,319 @@
+﻿PHÂN TÍCH CSDL, WORKFLOW VÀ NGHIỆP VỤ
+HỆ THỐNG QUẢN LÝ BÁN HÀNG CHO SHOP THỜI TRANG (WINFORMS)
+1. MỤC TIÊU VÀ PHẠM VI
+1.1. Mục tiêu
+Hệ thống quản lý bán hàng cho shop thời trang nhỏ, chạy trên nền WinForms, hỗ trợ:
+- Quản lý danh mục sản phẩm, phân loại sản phẩm theo nhóm (áo, quần, phụ kiện...).
+- Quản lý khách hàng, lưu thông tin cơ bản và lịch sử mua hàng.
+- Lập hóa đơn bán hàng tại quầy, tính tổng tiền, giảm giá (nếu có).
+- Tự động trừ tồn kho khi bán hàng.
+- Quản lý tồn kho ở mức cơ bản (số lượng hiện tại).
+- Xem báo cáo doanh thu theo ngày/tháng và tồn kho.
+1.2. Phạm vi chức năng
+Trong phạm vi:
+- Bán hàng trực tiếp tại cửa hàng (offline).
+- Quản lý sản phẩm, khách hàng, đơn hàng, tồn kho.
+- Báo cáo doanh thu cơ bản, báo cáo tồn kho.
+- Quản lý người dùng ở mức đơn giản (Admin, Nhân viên).
+Ngoài phạm vi (không thực hiện trong phiên bản đồ án này):
+- Bán hàng online, kết nối website hoặc sàn TMĐT.
+- Tích hợp máy quét mã vạch ở mức nâng cao (nếu có thì chỉ dừng ở mức nhập tay mã sản phẩm).
+- Quản lý chi nhánh, kho nhiều địa điểm.
+- Tích hợp hệ thống kế toán hoặc phần mềm khác.
+2. PHÂN TÍCH NGHIỆP VỤ VÀ WORKFLOW
+2.1. Actor chính
+- Chủ shop / Admin:
+  + Quản lý danh mục sản phẩm, giá bán.
+  + Xem báo cáo doanh thu, tồn kho.
+  + Quản lý người dùng hệ thống (tạo tài khoản nhân viên).
+- Nhân viên bán hàng:
+  + Tra cứu sản phẩm theo mã/tên.
+  + Lập hóa đơn cho khách.
+  + Thu tiền và in hóa đơn cho khách.
+- Nhân viên kho (có thể trùng với Admin):
+  + Nhập hàng mới, cập nhật số lượng tồn.
+  + Kiểm tra tồn kho sản phẩm.
+- Khách hàng:
+  + Mua hàng, cung cấp thông tin để lưu lại lịch sử mua hàng.
+  + Nhận hóa đơn sau khi thanh toán.
+2.2. Workflow tổng thể quy trình bán hàng tại quầy
+Bước 1: Khách hàng vào shop và chọn sản phẩm.
+- Nhân viên hướng dẫn khách chọn mẫu, size, màu.
+- Nếu khách hỏi giá hoặc tồn kho, nhân viên có thể tra cứu trên phần mềm.
+Bước 2: Nhân viên lập hóa đơn bán hàng.
+- Mở Form lập hóa đơn trên WinForms.
+- Chọn hoặc tạo mới khách hàng (nếu muốn lưu thông tin).
+- Thêm từng sản phẩm vào hóa đơn: chọn sản phẩm, nhập số lượng.
+- Hệ thống tự tính thành tiền từng dòng và tổng tiền hóa đơn.
+Bước 3: Kiểm tra tồn kho và xác nhận.
+- Khi thêm mỗi sản phẩm vào hóa đơn, hệ thống kiểm tra số lượng tồn.
+- Nếu số lượng yêu cầu > tồn kho:
+  + Thông báo lỗi, yêu cầu giảm số lượng hoặc không cho thêm.
+- Nếu đủ tồn kho:
+  + Cho phép thêm dòng sản phẩm vào hóa đơn.
+Bước 4: Lưu hóa đơn và cập nhật tồn kho.
+- Khi nhân viên bấm "Lưu hóa đơn":
+  + Hệ thống tạo bản ghi trong bảng Orders.
+  + Tạo các bản ghi chi tiết trong bảng OrderItems.
+  + Cập nhật tồn kho: trừ số lượng tương ứng trong bảng Inventory.
+Bước 5: In hoặc xem hóa đơn.
+- Hệ thống hiển thị hóa đơn để xem trước (ReportViewer).
+- Có thể in hóa đơn hoặc xuất PDF (nếu thực hiện).
+2.3. Workflow quản lý sản phẩm và danh mục
+Bước 1: Admin mở Form "Quản lý sản phẩm".
+Bước 2: Thao tác với sản phẩm:
+- Thêm sản phẩm mới: nhập mã, tên, danh mục, giá bán, đơn vị tính.
+- Sửa thông tin sản phẩm: thay đổi tên, danh mục, giá…
+- Xóa sản phẩm: chỉ cho phép xóa nếu chưa phát sinh đơn hàng (hoặc chuyển sang trạng thái ngừng kinh doanh).
+Bước 3: Tìm kiếm/lọc sản phẩm:
+- Tìm theo mã, tên, danh mục, trạng thái.
+2.4. Workflow quản lý khách hàng
+Bước 1: Nhân viên mở Form "Khách hàng".
+Bước 2: Thêm/sửa/xóa khách hàng:
+- Thêm: nhập tên, số điện thoại, email (nếu có), địa chỉ.
+- Sửa: cập nhật thông tin liên hệ.
+- Xóa: chỉ xóa nếu chưa/mới phát sinh ít đơn hàng (tùy quy định), hoặc chuyển trạng thái thành "Không còn hoạt động".
+Bước 3: Xem lịch sử mua hàng của khách:
+- Chọn khách hàng → hiển thị danh sách đơn hàng của khách, tổng tiền đã mua.
+2.5. Workflow nhập hàng và quản lý tồn kho
+Bước 1: Nhân viên kho nhận hàng mới từ nhà cung cấp.
+Bước 2: Mở chức năng "Cập nhật tồn kho" (có thể là Form riêng hoặc thao tác trên Form sản phẩm).
+Bước 3: Chọn sản phẩm, nhập số lượng nhập thêm.
+Bước 4: Hệ thống tăng số lượng tồn trong bảng Inventory.
+Bước 5: Định kỳ kiểm tra tồn kho thông qua Form báo cáo tồn kho.
+3. PHÂN TÍCH CHỨC NĂNG THEO ACTOR
+3.1. Chủ shop / Admin
+- Quản lý người dùng (Users):
+  + Tạo tài khoản nhân viên, đặt username, mật khẩu, phân quyền.
+- Quản lý danh mục (Categories):
+  + Thêm/sửa/xóa danh mục sản phẩm.
+- Quản lý sản phẩm (Products):
+  + Thêm/sửa/xóa sản phẩm, cấu hình giá bán, mã sản phẩm.
+- Xem báo cáo:
+  + Doanh thu theo ngày/tháng.
+  + Tồn kho các sản phẩm.
+3.2. Nhân viên bán hàng
+- Đăng nhập hệ thống.
+- Tra cứu sản phẩm, tồn kho.
+- Lập hóa đơn bán hàng:
+  + Chọn khách hàng.
+  + Thêm sản phẩm, số lượng.
+  + Lưu hóa đơn, in hóa đơn cho khách.
+3.3. Nhân viên kho
+- Nhập hàng, tăng tồn kho.
+- Kiểm tra tồn kho theo sản phẩm.
+- Hỗ trợ kiểm kê định kỳ.
+4. PHÂN TÍCH CƠ SỞ DỮ LIỆU (CSDL)
+4.1. Danh sách bảng chính
+4.1.1. Bảng Users
+Mục đích: Lưu thông tin tài khoản đăng nhập hệ thống.
+Các trường gợi ý:
+- UserId (int, PK, identity): khóa chính.
+- Username (nvarchar(50), unique): tên đăng nhập.
+- PasswordHash (nvarchar(255)): mật khẩu mã hóa/ẩn.
+- FullName (nvarchar(100)): tên hiển thị.
+- Role (nvarchar(20)): vai trò ("Admin", "Staff"...).
+- IsActive (bit): trạng thái hoạt động.
+- CreatedAt (datetime): ngày tạo.
+- UpdatedAt (datetime, nullable): ngày cập nhật.
+4.1.2. Bảng Categories
+Mục đích: Phân nhóm sản phẩm (áo, quần, phụ kiện…).
+Các trường gợi ý:
+- CategoryId (int, PK, identity).
+- CategoryName (nvarchar(100)): tên danh mục.
+- Description (nvarchar(255), nullable): mô tả.
+- IsActive (bit).
+4.1.3. Bảng Products
+Mục đích: Lưu thông tin sản phẩm bán tại shop.
+Các trường gợi ý:
+- ProductId (int, PK, identity).
+- ProductCode (nvarchar(50), unique): mã sản phẩm.
+- ProductName (nvarchar(200)): tên sản phẩm.
+- CategoryId (int, FK → Categories.CategoryId).
+- UnitPrice (decimal(18,2)): giá bán.
+- Unit (nvarchar(20)): đơn vị tính (cái, bộ, chiếc…).
+- IsActive (bit).
+- CreatedAt (datetime).
+- UpdatedAt (datetime, nullable).
+4.1.4. Bảng Customers
+Mục đích: Lưu thông tin khách hàng mua tại shop.
+Các trường gợi ý:
+- CustomerId (int, PK, identity).
+- CustomerName (nvarchar(150)): tên khách.
+- Phone (nvarchar(20), nullable): số điện thoại.
+- Email (nvarchar(100), nullable).
+- Address (nvarchar(255), nullable).
+- IsActive (bit).
+- CreatedAt (datetime).
+- UpdatedAt (datetime, nullable).
+4.1.5. Bảng Orders
+Mục đích: Lưu thông tin hóa đơn bán hàng.
+Các trường gợi ý:
+- OrderId (int, PK, identity).
+- OrderCode (nvarchar(50), unique): mã hóa đơn (nếu muốn sinh mã riêng).
+- OrderDate (datetime): ngày lập hóa đơn.
+- CustomerId (int, FK → Customers.CustomerId, nullable nếu cho phép hóa đơn không gắn khách).
+- UserId (int, FK → Users.UserId): nhân viên lập hóa đơn.
+- TotalAmount (decimal(18,2)): tổng tiền.
+- Notes (nvarchar(255), nullable).
+- Status (nvarchar(20)): trạng thái ("Paid", "Cancelled"...).
+4.1.6. Bảng OrderItems
+Mục đích: Chi tiết từng dòng sản phẩm trong hóa đơn.
+Các trường gợi ý:
+- OrderItemId (int, PK, identity).
+- OrderId (int, FK → Orders.OrderId).
+- ProductId (int, FK → Products.ProductId).
+- Quantity (int): số lượng.
+- UnitPrice (decimal(18,2)): đơn giá tại thời điểm bán.
+- LineTotal (decimal(18,2)): thành tiền = Quantity * UnitPrice.
+4.1.7. Bảng Inventory
+Mục đích: Quản lý tồn kho hiện tại của từng sản phẩm.
+Các trường gợi ý:
+- InventoryId (int, PK, identity).
+- ProductId (int, FK → Products.ProductId, unique nếu mỗi sản phẩm chỉ có 1 dòng tồn kho).
+- QuantityInStock (int): số lượng hiện tại trong kho.
+- LastUpdated (datetime): lần cập nhật gần nhất.
+Ghi chú:
+- Quan hệ giữa Products và Inventory: 1-1 (mỗi sản phẩm có một hàng tồn kho).
+- Có thể thêm bảng nhập hàng (PurchaseOrders, PurchaseItems) nếu muốn chi tiết hơn, nhưng trong phạm vi đồ án cơ bản có thể chỉ cập nhật trực tiếp QuantityInStock.
+4.2. Quan hệ giữa các bảng
+- Users (1) – (N) Orders:
+  + Một nhân viên có thể lập nhiều hóa đơn.
+- Customers (1) – (N) Orders:
+  + Một khách hàng có thể có nhiều đơn hàng.
+- Orders (1) – (N) OrderItems:
+  + Một hóa đơn có nhiều dòng sản phẩm.
+- Products (1) – (N) OrderItems:
+  + Một sản phẩm có thể xuất hiện trong nhiều hóa đơn.
+- Categories (1) – (N) Products:
+  + Mỗi sản phẩm thuộc một danh mục.
+- Products (1) – (1) Inventory:
+  + Mỗi sản phẩm có một record tồn kho hiện tại.
+4.3. Quy tắc nghiệp vụ liên quan CSDL
+- Khi tạo sản phẩm mới:
+  + Tạo bản ghi trong Products.
+  + Tạo bản ghi tương ứng trong Inventory với QuantityInStock = 0.
+- Khi nhập hàng:
+  + Tăng QuantityInStock trong Inventory.
+  + Cập nhật LastUpdated = GETDATE().
+- Khi lập hóa đơn:
+  + Kiểm tra Inventory.QuantityInStock trước khi cho thêm sản phẩm vào hóa đơn.
+  + Sau khi lưu hóa đơn, trừ tồn kho:
+    QuantityInStock = QuantityInStock - Tổng số lượng sản phẩm đã bán trong đơn.
+- Khi xóa sản phẩm:
+  + Không cho xóa nếu đã có trong OrderItems.
+  + Có thể dùng cờ IsActive để ngừng kinh doanh sản phẩm thay cho xóa cứng.
+5. LIÊN KẾT WORKFLOW VỚI CSDL
+Ví dụ luồng: Lập hóa đơn và trừ tồn kho
+Bước 1: Nhân viên mở Form lập hóa đơn.
+- Form đọc dữ liệu từ bảng Customers và Products để hiển thị danh sách.
+Bước 2: Chọn khách hàng.
+- Nếu khách hàng mới: Form lưu khách hàng vào bảng Customers.
+- Nếu khách đã có: Form chỉ cần lưu CustomerId vào hóa đơn.
+Bước 3: Thêm sản phẩm vào chi tiết hóa đơn.
+- Khi chọn sản phẩm và nhập số lượng:
+  + Hệ thống đọc QuantityInStock từ Inventory theo ProductId.
+  + Nếu QuantityInStock < số lượng yêu cầu → báo lỗi, không cho thêm.
+Bước 4: Lưu hóa đơn.
+- Tạo bản ghi trong Orders.
+- Tạo các bản ghi trong OrderItems.
+- Cập nhật Inventory cho từng ProductId:
+  QuantityInStock = QuantityInStock - Quantity (trong OrderItems).
+Bước 5: In hóa đơn.
+- Dùng câu lệnh join giữa Orders, OrderItems, Products, Customers để lấy dữ liệu hiển thị.
+6. GỢI Ý TRIỂN KHAI VỚI VISUAL STUDIO (WINFORMS + SQL SERVER)
+6.1. Gợi ý phân tầng dự án (.NET)
+- Tạo Solution với các project:
+  1) ShopApp.Models:
+     - Chứa class tương ứng với bảng: User, Category, Product, Customer, Order, OrderItem, Inventory.
+  2) ShopApp.Data (DAL):
+     - Chứa lớp truy cập dữ liệu, ví dụ: ProductRepository, CustomerRepository, OrderRepository...
+     - Mỗi lớp có các hàm: GetAll, GetById, Insert, Update, Delete.
+  3) ShopApp.Business (Service/Business Layer):
+     - Chứa logic nghiệp vụ: 
+       + Lập hóa đơn (tạo Order, OrderItems, trừ tồn kho).
+       + Kiểm tra tồn kho.
+       + Tính toán tổng tiền, báo cáo doanh thu.
+  4) ShopApp.Presentation (WinForms):
+     - Chứa các Form: LoginForm, ProductForm, CustomerForm, OrderForm, ReportForm…
+     - Gọi sang lớp Business để xử lý logic.
+6.2. Gợi ý cấu hình kết nối CSDL
+- Sử dụng SQL Server (Express hoặc LocalDB).
+- Chuỗi kết nối (ví dụ trong App.config của project Presentation):
+<connectionStrings>
+    <add name="ShopDb"
+         connectionString="Data Source=.\SQLEXPRESS;Initial Catalog=ShopFashion;Integrated Security=True"
+         providerName="System.Data.SqlClient" />
+  </connectionStrings>
+- Trong tầng Data, đọc connection string bằng ConfigurationManager.
+6.3. Mapping giữa Form và CSDL
+- Form quản lý sản phẩm:
+  + Gọi ProductService (trong Business) → ProductRepository (trong Data) → truy vấn bảng Products, Categories.
+- Form khách hàng:
+  + Gọi CustomerService → CustomerRepository → bảng Customers.
+- Form lập hóa đơn:
+  + Gọi OrderService:
+    * Tạo Order + OrderItems.
+    * Gọi InventoryRepository để trừ tồn kho.
+- Form báo cáo:
+  + Gọi ReportService:
+    * Truy vấn Orders, OrderItems, Products, Customers để tính doanh thu và tồn kho.
+7. KẾT LUẬN
+Tài liệu này cung cấp:
+- Mô tả nghiệp vụ và workflow chính của hệ thống bán hàng cho shop thời trang.
+- Thiết kế CSDL với các bảng, trường, quan hệ và quy tắc nghiệp vụ liên quan.
+- Gợi ý cách phân tầng dự án và liên kết giữa Form WinForms, Business Layer và CSDL trong Visual Studio.
+Bạn có thể dùng tài liệu này làm cơ sở:
+- Thiết kế CSDL trong SQL Server.
+- Tạo các project và class trong Visual Studio (WinForms).
+- Viết code cho các chức năng theo đúng workflow và dữ liệu đã phân tích.
+
+
+P1 (Core bắt buộc)
+· DB: Tạo đầy đủ bảng (Users, Categories, Products, Customers, Orders, OrderItems, Inventory) + khóa, ràng buộc FK, chỉ mục cơ bản.
+· DB: Thêm cột còn thiếu so với phân tích (CreatedAt, UpdatedAt, IsActive, Role, OrderCode, Status, LineTotal, LastUpdated).
+· Data Layer: Bổ sung repository cho Category, Inventory (update theo schema mới), User (thêm lọc theo Role/IsActive), Order + OrderItem (thêm truy vấn theo khoảng thời gian, theo Customer, theo User).
+· Data Layer: Thêm kiểm tra không xóa sản phẩm đã xuất hiện trong OrderItems (throw hoặc trả về false).
+· Business Layer: Bổ sung CategoryService, UserService, ReportService (doanh thu, tồn kho, lịch sử mua hàng của khách).
+· Business Layer: Mở rộng OrderService: sinh OrderCode, tính LineTotal từng item, xử lý giảm giá (tham số optional), Status (Paid/Cancelled), kiểm tra tồn kho trước khi thêm item.
+· Business Layer: InventoryService: phương thức IncreaseStock(productId, qty), DecreaseStock(productId, qty), GetLowStock(threshold).
+· Auth: Thay so sánh mật khẩu thô bằng hashing (SHA256 hoặc BCrypt) + kiểm tra IsActive.
+· Composition root: Bổ sung service mới (CategoryService, UserService, ReportService) + inject vào MainForm thông qua ServiceRegistry.
+P2 (UI/WinForms)
+· LoginForm: Hiển thị role sau đăng nhập, chặn người dùng không active.
+· MainForm: Ẩn các menu Admin khi role = Staff.
+· ProductManagementForm: Thêm trường mã sản phẩm (SKU/ProductCode), danh mục (ComboBox load Categories), nút Sửa/Xóa/Ngừng kinh doanh, tìm kiếm nhiều tiêu chí.
+· CategoryForm (mới): CRUD danh mục.
+· CustomerManagementForm: Thêm xem lịch sử mua hàng của khách (DataGridView Orders).
+· OrderForm:
+· Chọn khách (ComboBox + nút tạo khách mới).
+· Grid sản phẩm chọn bằng mã/tên, nhập số lượng → kiểm tra tồn kho tức thì.
+· Tính tổng tiền, giảm giá % hoặc số tiền tuyệt đối.
+· Hiển thị tồn kho hiện tại khi chọn sản phẩm.
+· Nút Lưu hóa đơn → gọi OrderService.CreateOrder.
+· InventoryAdjustmentForm (mới): Nhập hàng tăng tồn kho (sản phẩm + số lượng).
+· ReportForm:
+· Tab Doanh thu: chọn From/To → hiển thị Orders + tổng doanh thu.
+· Tab Tồn kho: danh sách Inventory + đánh dấu hàng thấp (màu đỏ nếu < threshold).
+· Tab Khách hàng: top N khách theo tổng chi tiêu.
+P3 (Nâng cao / tiện ích)
+· Thêm in hóa đơn (dùng PrintDocument hoặc xuất PDF đơn giản).
+· Logging lỗi (file text hoặc Serilog).
+· Cấu hình ngưỡng tồn kho thấp (appsettings.json).
+· Thêm bộ nhớ cache tạm cho danh mục/sản phẩm (giảm truy vấn lặp lại).
+· Phân quyền giao diện (Role-based UI disabling).
+P4 (Chất lượng & bảo trì)
+· Unit tests cho Business Layer (OrderService, InventoryService, ReportService).
+· Kiểm tra rò rỉ kết nối (using chuẩn trong repository).
+· Thêm XML docs public methods.
+· Chuẩn hóa đặt tên thuộc tính theo schema (ProductCode vs Sku).
+· Xử lý ngoại lệ toàn cục (Application.ThreadException).
+User Stories mẫu
+· US1: Là nhân viên tôi muốn đăng nhập để sử dụng hệ thống theo quyền.
+· US2: Là admin tôi muốn thêm sản phẩm với mã, tên, giá, danh mục để bán.
+· US3: Là nhân viên tôi muốn lập hóa đơn gồm nhiều sản phẩm và hệ thống tự trừ tồn kho.
+· US4: Là admin tôi muốn xem báo cáo doanh thu theo khoảng ngày.
+· US5: Là nhân viên kho tôi muốn nhập hàng tăng tồn kho sản phẩm.
+· US6: Là admin tôi muốn ngừng kinh doanh sản phẩm thay vì xóa khi có lịch sử bán.
+· US7: Là nhân viên tôi muốn tìm sản phẩm nhanh theo mã hoặc tên khi bán hàng.
+· US8: Là admin tôi muốn xem danh sách sản phẩm sắp hết để nhập thêm.

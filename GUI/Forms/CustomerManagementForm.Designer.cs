@@ -28,191 +28,274 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.pnlSearch = new System.Windows.Forms.Panel();
-            this.txtSearch = new System.Windows.Forms.TextBox();
-            this.btnSearch = new System.Windows.Forms.Button();
-            this.splitContainer = new System.Windows.Forms.SplitContainer();
-            this.gridCustomers = new System.Windows.Forms.DataGridView();
-            this.lblHistory = new System.Windows.Forms.Label();
-            this.gridOrders = new System.Windows.Forms.DataGridView();
-            this.pnlButtons = new System.Windows.Forms.Panel();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.btnEdit = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
-            this.btnViewHistory = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.pnlSearch.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
-            this.splitContainer.Panel1.SuspendLayout();
-            this.splitContainer.Panel2.SuspendLayout();
-            this.splitContainer.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridCustomers)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridOrders)).BeginInit();
-            this.pnlButtons.SuspendLayout();
-            this.SuspendLayout();
+            pnlHeader = new Panel();
+            picLogo = new PictureBox();
+            lblTitle = new Label();
+            pnlSearch = new Panel();
+            txtSearch = new TextBox();
+            btnSearch = new Button();
+            splitContainer = new SplitContainer();
+            gridCustomers = new DataGridView();
+            gridOrders = new DataGridView();
+            lblHistory = new Label();
+            pnlButtons = new Panel();
+            btnAdd = new Button();
+            btnEdit = new Button();
+            btnDelete = new Button();
+            btnViewHistory = new Button();
+            btnRefresh = new Button();
+            pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).BeginInit();
+            pnlSearch.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer).BeginInit();
+            splitContainer.Panel1.SuspendLayout();
+            splitContainer.Panel2.SuspendLayout();
+            splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)gridCustomers).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)gridOrders).BeginInit();
+            pnlButtons.SuspendLayout();
+            SuspendLayout();
+            // 
+            // pnlHeader
+            // 
+            pnlHeader.BackColor = Color.FromArgb(70, 130, 180);
+            pnlHeader.Controls.Add(picLogo);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Margin = new Padding(0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Padding = new Padding(15, 12, 15, 12);
+            pnlHeader.Size = new Size(1000, 60);
+            pnlHeader.TabIndex = 0;
+            // 
+            // picLogo
+            // 
+            picLogo.Image = GUI.Properties.Resources.Logo_3T;
+            picLogo.Location = new Point(15, 12);
+            picLogo.Margin = new Padding(0);
+            picLogo.Name = "picLogo";
+            picLogo.Size = new Size(36, 36);
+            picLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            picLogo.TabIndex = 0;
+            picLogo.TabStop = false;
+            // 
+            // lblTitle
+            // 
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Arial", 14F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(56, 18);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(328, 27);
+            lblTitle.TabIndex = 1;
+            lblTitle.Text = "👥 QUẢN LÝ KHÁCH HÀNG";
             // 
             // pnlSearch
             // 
-            this.pnlSearch.Controls.Add(this.txtSearch);
-            this.pnlSearch.Controls.Add(this.btnSearch);
-            this.pnlSearch.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlSearch.Location = new System.Drawing.Point(0, 0);
-            this.pnlSearch.Name = "pnlSearch";
-            this.pnlSearch.Size = new System.Drawing.Size(1200, 50);
-            this.pnlSearch.TabIndex = 0;
+            pnlSearch.BackColor = Color.White;
+            pnlSearch.BorderStyle = BorderStyle.FixedSingle;
+            pnlSearch.Controls.Add(txtSearch);
+            pnlSearch.Controls.Add(btnSearch);
+            pnlSearch.Dock = DockStyle.Top;
+            pnlSearch.Location = new Point(0, 60);
+            pnlSearch.Margin = new Padding(0);
+            pnlSearch.Name = "pnlSearch";
+            pnlSearch.Padding = new Padding(12, 10, 12, 10);
+            pnlSearch.Size = new Size(1000, 70);
+            pnlSearch.TabIndex = 0;
             // 
             // txtSearch
             // 
-            this.txtSearch.Location = new System.Drawing.Point(10, 10);
-            this.txtSearch.Name = "txtSearch";
-            this.txtSearch.PlaceholderText = "Tìm theo tên/SĐT...";
-            this.txtSearch.Size = new System.Drawing.Size(200, 23);
-            this.txtSearch.TabIndex = 0;
+            txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSearch.Font = new Font("Arial", 10F);
+            txtSearch.Location = new Point(12, 18);
+            txtSearch.Margin = new Padding(0);
+            txtSearch.Name = "txtSearch";
+            txtSearch.PlaceholderText = "Tìm theo tên/SĐT...";
+            txtSearch.Size = new Size(820, 28);
+            txtSearch.TabIndex = 0;
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(220, 10);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(80, 23);
-            this.btnSearch.TabIndex = 1;
-            this.btnSearch.Text = "Tìm";
-            this.btnSearch.UseVisualStyleBackColor = true;
+            btnSearch.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSearch.BackColor = Color.FromArgb(0, 123, 255);
+            btnSearch.FlatAppearance.BorderSize = 0;
+            btnSearch.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 105, 217);
+            btnSearch.FlatStyle = FlatStyle.Flat;
+            btnSearch.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSearch.ForeColor = Color.White;
+            btnSearch.Location = new Point(840, 18);
+            btnSearch.Margin = new Padding(0);
+            btnSearch.Name = "btnSearch";
+            btnSearch.Size = new Size(148, 28);
+            btnSearch.Cursor = Cursors.Hand;
+            btnSearch.TabIndex = 1;
+            btnSearch.Text = "Tìm kiếm";
+            btnSearch.UseVisualStyleBackColor = false;
             // 
             // splitContainer
             // 
-            this.splitContainer.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer.Location = new System.Drawing.Point(0, 50);
-            this.splitContainer.Name = "splitContainer";
+            splitContainer.Dock = DockStyle.Fill;
+            splitContainer.Location = new Point(0, 130);
+            splitContainer.Margin = new Padding(0);
+            splitContainer.Name = "splitContainer";
             // 
             // splitContainer.Panel1
             // 
-            this.splitContainer.Panel1.Controls.Add(this.gridCustomers);
+            splitContainer.Panel1.Controls.Add(gridCustomers);
             // 
             // splitContainer.Panel2
             // 
-            this.splitContainer.Panel2.Controls.Add(this.gridOrders);
-            this.splitContainer.Panel2.Controls.Add(this.lblHistory);
-            this.splitContainer.Orientation = System.Windows.Forms.Orientation.Vertical;
-            this.splitContainer.Size = new System.Drawing.Size(1200, 600);
-            this.splitContainer.SplitterDistance = 600;
-            this.splitContainer.TabIndex = 1;
+            splitContainer.Panel2.Controls.Add(gridOrders);
+            splitContainer.Panel2.Controls.Add(lblHistory);
+            splitContainer.Size = new Size(1000, 530);
+            splitContainer.SplitterDistance = 497;
+            splitContainer.SplitterWidth = 5;
+            splitContainer.TabIndex = 1;
             // 
             // gridCustomers
             // 
-            this.gridCustomers.AllowUserToAddRows = false;
-            this.gridCustomers.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.gridCustomers.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridCustomers.Location = new System.Drawing.Point(0, 0);
-            this.gridCustomers.Name = "gridCustomers";
-            this.gridCustomers.ReadOnly = true;
-            this.gridCustomers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.gridCustomers.Size = new System.Drawing.Size(600, 600);
-            this.gridCustomers.TabIndex = 0;
-            // 
-            // lblHistory
-            // 
-            this.lblHistory.Dock = System.Windows.Forms.DockStyle.Top;
-            this.lblHistory.Location = new System.Drawing.Point(0, 0);
-            this.lblHistory.Name = "lblHistory";
-            this.lblHistory.Size = new System.Drawing.Size(596, 25);
-            this.lblHistory.TabIndex = 1;
-            this.lblHistory.Text = "Lịch sử mua hàng:";
-            this.lblHistory.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            gridCustomers.AllowUserToAddRows = false;
+            gridCustomers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridCustomers.ColumnHeadersHeight = 32;
+            gridCustomers.Dock = DockStyle.Fill;
+            gridCustomers.Location = new Point(0, 0);
+            gridCustomers.Margin = new Padding(0);
+            gridCustomers.Name = "gridCustomers";
+            gridCustomers.ReadOnly = true;
+            gridCustomers.RowHeadersWidth = 40;
+            gridCustomers.RowTemplate.Height = 32;
+            gridCustomers.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            gridCustomers.Size = new Size(497, 530);
+            gridCustomers.TabIndex = 0;
             // 
             // gridOrders
             // 
-            this.gridOrders.AllowUserToAddRows = false;
-            this.gridOrders.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.gridOrders.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridOrders.Location = new System.Drawing.Point(0, 25);
-            this.gridOrders.Name = "gridOrders";
-            this.gridOrders.ReadOnly = true;
-            this.gridOrders.Size = new System.Drawing.Size(596, 575);
-            this.gridOrders.TabIndex = 0;
+            gridOrders.AllowUserToAddRows = false;
+            gridOrders.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridOrders.ColumnHeadersHeight = 32;
+            gridOrders.Dock = DockStyle.Fill;
+            gridOrders.Location = new Point(0, 28);
+            gridOrders.Margin = new Padding(0);
+            gridOrders.Name = "gridOrders";
+            gridOrders.ReadOnly = true;
+            gridOrders.RowHeadersWidth = 40;
+            gridOrders.RowTemplate.Height = 32;
+            gridOrders.Size = new Size(498, 502);
+            gridOrders.TabIndex = 0;
+            // 
+            // lblHistory
+            // 
+            lblHistory.Dock = DockStyle.Top;
+            lblHistory.Font = new Font("Arial", 10F, FontStyle.Bold);
+            lblHistory.Location = new Point(0, 0);
+            lblHistory.Name = "lblHistory";
+            lblHistory.Size = new Size(498, 28);
+            lblHistory.TabIndex = 1;
+            lblHistory.Text = "Lịch sử mua hàng:";
+            lblHistory.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pnlButtons
             // 
-            this.pnlButtons.Controls.Add(this.btnAdd);
-            this.pnlButtons.Controls.Add(this.btnEdit);
-            this.pnlButtons.Controls.Add(this.btnDelete);
-            this.pnlButtons.Controls.Add(this.btnViewHistory);
-            this.pnlButtons.Controls.Add(this.btnRefresh);
-            this.pnlButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlButtons.Location = new System.Drawing.Point(0, 650);
-            this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Size = new System.Drawing.Size(1200, 50);
-            this.pnlButtons.TabIndex = 2;
+            pnlButtons.Controls.Add(btnAdd);
+            pnlButtons.Controls.Add(btnEdit);
+            pnlButtons.Controls.Add(btnDelete);
+            pnlButtons.Controls.Add(btnViewHistory);
+            pnlButtons.Controls.Add(btnRefresh);
+            pnlButtons.Dock = DockStyle.Bottom;
+            pnlButtons.Location = new Point(0, 660);
+            pnlButtons.Margin = new Padding(0);
+            pnlButtons.Name = "pnlButtons";
+            pnlButtons.Padding = new Padding(12, 8, 12, 8);
+            pnlButtons.Size = new Size(1000, 60);
+            pnlButtons.TabIndex = 2;
             // 
             // btnAdd
             // 
-            this.btnAdd.Location = new System.Drawing.Point(10, 10);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(100, 30);
-            this.btnAdd.TabIndex = 0;
-            this.btnAdd.Text = "Thêm mới";
-            this.btnAdd.UseVisualStyleBackColor = true;
+            btnAdd.Location = new Point(12, 12);
+            btnAdd.Margin = new Padding(0);
+            btnAdd.Name = "btnAdd";
+            btnAdd.Size = new Size(100, 35);
+            btnAdd.TabIndex = 0;
+            btnAdd.Text = "Thêm mới";
+            btnAdd.UseVisualStyleBackColor = true;
             // 
             // btnEdit
             // 
-            this.btnEdit.Location = new System.Drawing.Point(120, 10);
-            this.btnEdit.Name = "btnEdit";
-            this.btnEdit.Size = new System.Drawing.Size(100, 30);
-            this.btnEdit.TabIndex = 1;
-            this.btnEdit.Text = "Sửa";
-            this.btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.Location = new Point(118, 12);
+            btnEdit.Margin = new Padding(0);
+            btnEdit.Name = "btnEdit";
+            btnEdit.Size = new Size(100, 35);
+            btnEdit.TabIndex = 1;
+            btnEdit.Text = "Sửa";
+            btnEdit.UseVisualStyleBackColor = true;
             // 
             // btnDelete
             // 
-            this.btnDelete.Location = new System.Drawing.Point(230, 10);
-            this.btnDelete.Name = "btnDelete";
-            this.btnDelete.Size = new System.Drawing.Size(100, 30);
-            this.btnDelete.TabIndex = 2;
-            this.btnDelete.Text = "Xóa";
-            this.btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Location = new Point(224, 12);
+            btnDelete.Margin = new Padding(0);
+            btnDelete.Name = "btnDelete";
+            btnDelete.Size = new Size(100, 35);
+            btnDelete.TabIndex = 2;
+            btnDelete.Text = "Xóa";
+            btnDelete.UseVisualStyleBackColor = true;
             // 
             // btnViewHistory
             // 
-            this.btnViewHistory.Location = new System.Drawing.Point(340, 10);
-            this.btnViewHistory.Name = "btnViewHistory";
-            this.btnViewHistory.Size = new System.Drawing.Size(100, 30);
-            this.btnViewHistory.TabIndex = 3;
-            this.btnViewHistory.Text = "Xem lịch sử";
-            this.btnViewHistory.UseVisualStyleBackColor = true;
+            btnViewHistory.Location = new Point(330, 12);
+            btnViewHistory.Margin = new Padding(0);
+            btnViewHistory.Name = "btnViewHistory";
+            btnViewHistory.Size = new Size(100, 35);
+            btnViewHistory.TabIndex = 3;
+            btnViewHistory.Text = "Xem lịch sử";
+            btnViewHistory.UseVisualStyleBackColor = true;
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(450, 10);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(100, 30);
-            this.btnRefresh.TabIndex = 4;
-            this.btnRefresh.Text = "Làm mới";
-            this.btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Location = new Point(436, 12);
+            btnRefresh.Margin = new Padding(0);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(100, 35);
+            btnRefresh.TabIndex = 4;
+            btnRefresh.Text = "Làm mới";
+            btnRefresh.UseVisualStyleBackColor = true;
             // 
             // CustomerManagementForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1200, 700);
-            this.Controls.Add(this.splitContainer);
-            this.Controls.Add(this.pnlButtons);
-            this.Controls.Add(this.pnlSearch);
-            this.Name = "CustomerManagementForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Quản lý Khách hàng";
-            this.pnlSearch.ResumeLayout(false);
-            this.pnlSearch.PerformLayout();
-            this.splitContainer.Panel1.ResumeLayout(false);
-            this.splitContainer.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
-            this.splitContainer.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridCustomers)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.gridOrders)).EndInit();
-            this.pnlButtons.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(245, 245, 250);
+            ClientSize = new Size(1000, 720);
+            Controls.Add(splitContainer);
+            Controls.Add(pnlButtons);
+            Controls.Add(pnlSearch);
+            Controls.Add(pnlHeader);
+            Margin = new Padding(0);
+            MinimumSize = new Size(900, 600);
+            Name = "CustomerManagementForm";
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Quản lý Khách hàng";
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).EndInit();
+            pnlSearch.ResumeLayout(false);
+            pnlSearch.PerformLayout();
+            splitContainer.Panel1.ResumeLayout(false);
+            splitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer).EndInit();
+            splitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)gridCustomers).EndInit();
+            ((System.ComponentModel.ISupportInitialize)gridOrders).EndInit();
+            pnlButtons.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion
 
+        private System.Windows.Forms.Panel pnlHeader;
+        private System.Windows.Forms.PictureBox picLogo;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Panel pnlSearch;
         private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Button btnSearch;

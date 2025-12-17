@@ -22,6 +22,18 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void InitializeControls()
         {
+            // Load logo if available
+            var logo = LogoHelper.LoadLogo(UIThemeConstants.Spacing.LogoSizeLarge);
+            if (logo != null && picLogo != null)
+            {
+                picLogo.Image = logo;
+            }
+            else if (picLogo != null)
+            {
+                // Hide logo if not found
+                picLogo.Visible = false;
+            }
+
             txtPassword.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) OnLoginClicked(s, e); };
             btnLogin.Click += OnLoginClicked;
         }

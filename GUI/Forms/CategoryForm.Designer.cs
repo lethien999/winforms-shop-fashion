@@ -28,6 +28,9 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            pnlHeader = new Panel();
+            picLogo = new PictureBox();
+            lblTitle = new Label();
             pnlSearch = new Panel();
             txtSearch = new TextBox();
             btnSearch = new Button();
@@ -37,54 +40,107 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnEdit = new Button();
             btnDelete = new Button();
             btnRefresh = new Button();
+            pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).BeginInit();
             pnlSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
             pnlButtons.SuspendLayout();
             SuspendLayout();
             // 
+            // pnlHeader
+            // 
+            pnlHeader.BackColor = Color.FromArgb(70, 130, 180);
+            pnlHeader.Controls.Add(picLogo);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Margin = new Padding(0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Padding = new Padding(15, 12, 15, 12);
+            pnlHeader.Size = new Size(900, 60);
+            pnlHeader.TabIndex = 0;
+            // 
+            // picLogo
+            // 
+            picLogo.Image = GUI.Properties.Resources.Logo_3T;
+            picLogo.Location = new Point(15, 12);
+            picLogo.Margin = new Padding(0);
+            picLogo.Name = "picLogo";
+            picLogo.Size = new Size(36, 36);
+            picLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            picLogo.TabIndex = 0;
+            picLogo.TabStop = false;
+            // 
+            // lblTitle
+            // 
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Arial", 14F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(56, 18);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(293, 27);
+            lblTitle.TabIndex = 1;
+            lblTitle.Text = "📂 QUẢN LÝ DANH MỤC";
+            // 
             // pnlSearch
             // 
+            pnlSearch.BackColor = Color.White;
+            pnlSearch.BorderStyle = BorderStyle.FixedSingle;
             pnlSearch.Controls.Add(txtSearch);
             pnlSearch.Controls.Add(btnSearch);
             pnlSearch.Dock = DockStyle.Top;
-            pnlSearch.Location = new Point(0, 0);
-            pnlSearch.Margin = new Padding(3, 4, 3, 4);
+            pnlSearch.Location = new Point(0, 60);
+            pnlSearch.Margin = new Padding(0);
             pnlSearch.Name = "pnlSearch";
-            pnlSearch.Size = new Size(900, 67);
+            pnlSearch.Padding = new Padding(12, 10, 12, 10);
+            pnlSearch.Size = new Size(900, 70);
             pnlSearch.TabIndex = 0;
             // 
             // txtSearch
             // 
-            txtSearch.Location = new Point(11, 13);
-            txtSearch.Margin = new Padding(3, 4, 3, 4);
+            txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtSearch.Font = new Font("Arial", 10F);
+            txtSearch.Location = new Point(12, 18);
+            txtSearch.Margin = new Padding(0);
             txtSearch.Name = "txtSearch";
             txtSearch.PlaceholderText = "Tìm kiếm...";
-            txtSearch.Size = new Size(228, 27);
+            txtSearch.Size = new Size(750, 28);
             txtSearch.TabIndex = 0;
             // 
             // btnSearch
             // 
-            btnSearch.Location = new Point(251, 13);
-            btnSearch.Margin = new Padding(3, 4, 3, 4);
+            btnSearch.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnSearch.BackColor = Color.FromArgb(0, 123, 255);
+            btnSearch.FlatAppearance.BorderSize = 0;
+            btnSearch.FlatStyle = FlatStyle.Flat;
+            btnSearch.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSearch.ForeColor = Color.White;
+            btnSearch.Location = new Point(772, 18);
+            btnSearch.Margin = new Padding(0);
             btnSearch.Name = "btnSearch";
-            btnSearch.Size = new Size(91, 31);
+            btnSearch.Size = new Size(104, 28);
             btnSearch.TabIndex = 1;
             btnSearch.Text = "Tìm";
-            btnSearch.UseVisualStyleBackColor = true;
+            btnSearch.UseVisualStyleBackColor = false;
             // 
             // grid
             // 
             grid.AllowUserToAddRows = false;
             grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            grid.ColumnHeadersHeight = 29;
+            grid.BackgroundColor = Color.White;
+            grid.BorderStyle = BorderStyle.None;
+            grid.ColumnHeadersHeight = 32;
+            grid.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             grid.Dock = DockStyle.Fill;
-            grid.Location = new Point(0, 67);
-            grid.Margin = new Padding(3, 4, 3, 4);
+            grid.EnableHeadersVisualStyles = false;
+            grid.Location = new Point(0, 130);
+            grid.Margin = new Padding(0);
             grid.Name = "grid";
             grid.ReadOnly = true;
-            grid.RowHeadersWidth = 51;
+            grid.RowHeadersWidth = 40;
+            grid.RowTemplate.Height = 32;
             grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            grid.Size = new Size(900, 666);
+            grid.Size = new Size(900, 530);
             grid.TabIndex = 1;
             // 
             // pnlButtons
@@ -94,48 +150,49 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlButtons.Controls.Add(btnDelete);
             pnlButtons.Controls.Add(btnRefresh);
             pnlButtons.Dock = DockStyle.Bottom;
-            pnlButtons.Location = new Point(0, 733);
-            pnlButtons.Margin = new Padding(3, 4, 3, 4);
+            pnlButtons.Location = new Point(0, 660);
+            pnlButtons.Margin = new Padding(0);
             pnlButtons.Name = "pnlButtons";
-            pnlButtons.Size = new Size(900, 67);
+            pnlButtons.Padding = new Padding(12, 8, 12, 8);
+            pnlButtons.Size = new Size(900, 60);
             pnlButtons.TabIndex = 2;
             // 
             // btnAdd
             // 
-            btnAdd.Location = new Point(11, 13);
-            btnAdd.Margin = new Padding(3, 4, 3, 4);
+            btnAdd.Location = new Point(12, 12);
+            btnAdd.Margin = new Padding(0);
             btnAdd.Name = "btnAdd";
-            btnAdd.Size = new Size(114, 40);
+            btnAdd.Size = new Size(100, 35);
             btnAdd.TabIndex = 0;
             btnAdd.Text = "Thêm mới";
             btnAdd.UseVisualStyleBackColor = true;
             // 
             // btnEdit
             // 
-            btnEdit.Location = new Point(137, 13);
-            btnEdit.Margin = new Padding(3, 4, 3, 4);
+            btnEdit.Location = new Point(118, 12);
+            btnEdit.Margin = new Padding(0);
             btnEdit.Name = "btnEdit";
-            btnEdit.Size = new Size(114, 40);
+            btnEdit.Size = new Size(100, 35);
             btnEdit.TabIndex = 1;
             btnEdit.Text = "Sửa";
             btnEdit.UseVisualStyleBackColor = true;
             // 
             // btnDelete
             // 
-            btnDelete.Location = new Point(263, 13);
-            btnDelete.Margin = new Padding(3, 4, 3, 4);
+            btnDelete.Location = new Point(224, 12);
+            btnDelete.Margin = new Padding(0);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(114, 40);
+            btnDelete.Size = new Size(100, 35);
             btnDelete.TabIndex = 2;
             btnDelete.Text = "Xóa";
             btnDelete.UseVisualStyleBackColor = true;
             // 
             // btnRefresh
             // 
-            btnRefresh.Location = new Point(389, 13);
-            btnRefresh.Margin = new Padding(3, 4, 3, 4);
+            btnRefresh.Location = new Point(330, 12);
+            btnRefresh.Margin = new Padding(0);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(114, 40);
+            btnRefresh.Size = new Size(100, 35);
             btnRefresh.TabIndex = 3;
             btnRefresh.Text = "Làm mới";
             btnRefresh.UseVisualStyleBackColor = true;
@@ -144,14 +201,20 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(900, 800);
+            BackColor = Color.FromArgb(245, 245, 250);
+            ClientSize = new Size(900, 720);
             Controls.Add(grid);
             Controls.Add(pnlButtons);
             Controls.Add(pnlSearch);
-            Margin = new Padding(3, 4, 3, 4);
+            Controls.Add(pnlHeader);
+            Margin = new Padding(0);
+            MinimumSize = new Size(800, 600);
             Name = "CategoryForm";
             StartPosition = FormStartPosition.CenterParent;
             Text = "Quản lý Danh mục";
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).EndInit();
             pnlSearch.ResumeLayout(false);
             pnlSearch.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)grid).EndInit();
@@ -161,6 +224,9 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         #endregion
 
+        private System.Windows.Forms.Panel pnlHeader;
+        private System.Windows.Forms.PictureBox picLogo;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Panel pnlSearch;
         private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Button btnSearch;

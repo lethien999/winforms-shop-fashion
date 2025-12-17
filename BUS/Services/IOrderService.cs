@@ -8,7 +8,7 @@ namespace WinFormsFashionShop.Business.Services
     {
         IEnumerable<OrderDTO> GetAllOrders();
         OrderDTO? GetOrderById(int id);
-        void CreateOrder(CreateOrderDTO order);
+        OrderDTO CreateOrder(CreateOrderDTO order);
         void UpdateOrder(UpdateOrderDTO order);
         void DeleteOrder(int id);
         IEnumerable<OrderDTO> GetOrdersByDateRange(DateTime from, DateTime to);

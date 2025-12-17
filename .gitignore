@@ -364,3 +364,17 @@ FodyWeavers.xsd
 # DO NOT commit DatabaseConfig.cs with real passwords
 WinFormsFashionShop.Data/DatabaseConfig.cs
 
+# Image files (keep folder structure but ignore actual images)
+Images/**/*.jpg
+Images/**/*.jpeg
+Images/**/*.png
+Images/**/*.gif
+Images/**/*.bmp
+Images/**/*.webp
+# Keep README and .gitkeep files
+!Images/README.md
+!Images/**/.gitkeep
+
+# PayOS configuration (contains sensitive API keys)
+GUI/Config/payos.config.json
+

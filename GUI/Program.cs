@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using WinFormsFashionShop.Presentation.Forms;
 using WinFormsFashionShop.Business.Composition;
 using WinFormsFashionShop.Presentation.Helpers;
+using WinFormsFashionShop.Presentation.Composition;
 
 namespace WinFormsFashionShop.Presentation
 {
@@ -30,6 +31,7 @@ namespace WinFormsFashionShop.Presentation
 
             // Obtain services from Business composition root. Presentation does not reference Data.
             var services = ServicesComposition.Create();
+            var presentationServices = PresentationComposition.Create();
 
             using (var login = new LoginForm(services.AuthService))
             {
@@ -39,6 +41,9 @@ namespace WinFormsFashionShop.Presentation
                     try
                     {
                         Application.Run(new MainForm(
+                            services.DashboardService,
+                            presentationServices.DashboardCardFactory,
+                            presentationServices.ErrorHandler,
                             services.ProductService, 
                             services.CustomerService, 
                             services.OrderService, 
@@ -51,7 +56,7 @@ namespace WinFormsFashionShop.Presentation
                     catch (Exception ex)
                     {
                         LogException(ex, "Application startup error");
-                        ErrorHandler.ShowError("Lỗi khởi động ứng dụng: " + ex.Message);
+                        presentationServices.ErrorHandler.ShowError("Lỗi khởi động ứng dụng: " + ex.Message);
                     }
                 }
             }
@@ -63,11 +68,14 @@ namespace WinFormsFashionShop.Presentation
         /// </summary>
         private static void SetupGlobalExceptionHandlers()
         {
+            // Create error handler for global exception handlers
+            var errorHandler = new ErrorHandlerService();
+
             // Handle UI thread exceptions
             Application.ThreadException += (sender, e) =>
             {
                 LogException(e.Exception, "UI Thread Exception");
-                ErrorHandler.ShowError("Đã xảy ra lỗi không mong muốn:\n" + e.Exception.Message);
+                errorHandler.ShowError("Đã xảy ra lỗi không mong muốn:\n" + e.Exception.Message);
             };
 
             // Handle non-UI thread exceptions
@@ -76,7 +84,7 @@ namespace WinFormsFashionShop.Presentation
                 if (e.ExceptionObject is Exception ex)
                 {
                     LogException(ex, "Unhandled Exception");
-                    ErrorHandler.ShowError("Đã xảy ra lỗi nghiêm trọng:\n" + ex.Message);
+                    errorHandler.ShowError("Đã xảy ra lỗi nghiêm trọng:\n" + ex.Message);
                 }
             };
         }

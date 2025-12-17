@@ -14,24 +14,24 @@ namespace WinFormsFashionShop.Business.Services
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderItemRepository _orderItemRepository;
         private readonly IInventoryService _inventoryService;
-        private readonly IProductRepository _productRepository;
-        private readonly ICustomerRepository _customerRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IProductService _productService;
+        private readonly ICustomerService _customerService;
+        private readonly IUserService _userService;
         
         public OrderService(
             IOrderRepository orderRepository, 
             IOrderItemRepository orderItemRepository, 
             IInventoryService inventoryService,
-            IProductRepository productRepository,
-            ICustomerRepository customerRepository,
-            IUserRepository userRepository)
+            IProductService productService,
+            ICustomerService customerService,
+            IUserService userService)
         {
             _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
             _orderItemRepository = orderItemRepository ?? throw new ArgumentNullException(nameof(orderItemRepository));
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
-            _productRepository = productRepository ?? throw new ArgumentNullException(nameof(productRepository));
-            _customerRepository = customerRepository ?? throw new ArgumentNullException(nameof(customerRepository));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _productService = productService ?? throw new ArgumentNullException(nameof(productService));
+            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
+            _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
         public IEnumerable<OrderDTO> GetAllOrders()
@@ -55,7 +55,7 @@ namespace WinFormsFashionShop.Business.Services
         /// Creates a new order with items and updates inventory.
         /// Orchestrates the flow but delegates to smaller methods.
         /// </summary>
-        public void CreateOrder(CreateOrderDTO dto)
+        public OrderDTO CreateOrder(CreateOrderDTO dto)
         {
             ValidateCreateOrderRequest(dto);
             ValidateStockAvailabilityForItems(dto.Items);
@@ -64,6 +64,9 @@ namespace WinFormsFashionShop.Business.Services
             var order = CreateOrderEntity(dto, orderCode);
             
             SaveOrderAndItems(order, dto);
+            
+            // Return the created order as DTO
+            return GetOrderById(order.Id) ?? throw new InvalidOperationException("Failed to retrieve created order");
         }
 
         /// <summary>
@@ -257,24 +260,28 @@ namespace WinFormsFashionShop.Business.Services
             }
         }
 
+        /// <summary>
+        /// Maps Order entity to OrderDTO, populating related data from services.
+        /// Single responsibility: only maps order to DTO.
+        /// </summary>
         private OrderDTO MapToDTO(Order order)
         {
             string? customerName = null;
             if (order.CustomerId.HasValue)
             {
-                var customer = _customerRepository.GetById(order.CustomerId.Value);
+                var customer = _customerService.GetCustomerById(order.CustomerId.Value);
                 customerName = customer?.CustomerName;
             }
 
-            var user = _userRepository.GetById(order.UserId);
+            var user = _userService.GetUserById(order.UserId);
             var userName = user?.FullName;
 
             var orderDTO = OrderMapper.ToDTO(order, customerName, userName);
             
-            // Populate product names for items
+            // Populate product names for items using ProductService
             foreach (var itemDTO in orderDTO.Items)
             {
-                var product = _productRepository.GetById(itemDTO.ProductId);
+                var product = _productService.GetProductById(itemDTO.ProductId);
                 if (product != null)
                 {
                     itemDTO.ProductName = product.Name;

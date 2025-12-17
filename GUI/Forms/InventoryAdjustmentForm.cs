@@ -11,14 +11,17 @@ namespace WinFormsFashionShop.Presentation.Forms
     {
         private readonly IInventoryService _inventoryService;
         private readonly IProductService _productService;
+        private readonly IErrorHandler _errorHandler;
         private System.Collections.Generic.List<InventoryAdjustmentItem> _adjustmentItems;
 
-        public InventoryAdjustmentForm(IInventoryService inventoryService, IProductService productService)
+        public InventoryAdjustmentForm(IInventoryService inventoryService, IProductService productService, IErrorHandler errorHandler)
         {
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
             _adjustmentItems = new System.Collections.Generic.List<InventoryAdjustmentItem>();
 
+            // InitializeComponent() must be called first to initialize all controls
             InitializeComponent();
             InitializeControls();
             LoadInventory();
@@ -26,6 +29,16 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void InitializeControls()
         {
+            // Validate grid is initialized
+            if (grid == null)
+            {
+                _errorHandler.ShowError("Lỗi khởi tạo form: Grid chưa được khởi tạo!");
+                return;
+            }
+
+            // Clear existing columns if any
+            grid.Columns.Clear();
+
             // Setup grid columns
             grid.Columns.Add("ProductCode", "Mã SP");
             grid.Columns.Add("ProductName", "Tên SP");
@@ -51,8 +64,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
 
             // Wire up event handlers
-            btnAdd.Click += (s, e) => AddProductToAdjustment();
-            txtProductSearch.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) AddProductToAdjustment(); };
+            if (btnAdd != null)
+                btnAdd.Click += (s, e) => AddProductToAdjustment();
+            
+            if (txtProductSearch != null)
+                txtProductSearch.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) AddProductToAdjustment(); };
             
             grid.CellValueChanged += (s, e) =>
             {
@@ -70,8 +86,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
             };
 
-            btnSave.Click += (s, e) => SaveAdjustments();
-            btnRefresh.Click += (s, e) => LoadInventory();
+            if (btnSave != null)
+                btnSave.Click += (s, e) => SaveAdjustments();
+            
+            if (btnRefresh != null)
+                btnRefresh.Click += (s, e) => LoadInventory();
         }
 
         private void LoadInventory()
@@ -102,16 +121,22 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
             }
         }
 
         private void AddProductToAdjustment()
         {
+            if (txtProductSearch == null)
+            {
+                _errorHandler.ShowError("Lỗi: txtProductSearch chưa được khởi tạo!");
+                return;
+            }
+
             var searchText = txtProductSearch.Text.Trim();
             if (string.IsNullOrWhiteSpace(searchText))
             {
-                ErrorHandler.ShowWarning("Vui lòng nhập mã hoặc tên sản phẩm!");
+                _errorHandler.ShowWarning("Vui lòng nhập mã hoặc tên sản phẩm!");
                 return;
             }
 
@@ -125,7 +150,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
                 if (products.Count == 0)
                 {
-                    ErrorHandler.ShowWarning("Không tìm thấy sản phẩm!");
+                    _errorHandler.ShowWarning("Không tìm thấy sản phẩm!");
                     return;
                 }
 
@@ -136,8 +161,8 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
                 else
                 {
-                    using var dialog = new ProductSelectionDialog(products);
-                    if (dialog.ShowDialog() != DialogResult.OK || dialog.SelectedProduct == null)
+                    using var dialog = new ProductSelectionDialogLegacy(products);
+                    if (dialog.ShowDialog(this) != DialogResult.OK || dialog.SelectedProduct == null)
                         return;
                     selectedProduct = dialog.SelectedProduct;
                 }
@@ -149,9 +174,13 @@ namespace WinFormsFashionShop.Presentation.Forms
                 if (existingRow != null)
                 {
                     var currentQty = Convert.ToInt32(existingRow.Cells["AdjustQuantity"].Value ?? 0);
-                    existingRow.Cells["AdjustQuantity"].Value = currentQty + (int)numQuantity.Value;
+                    if (numQuantity != null)
+                    {
+                        existingRow.Cells["AdjustQuantity"].Value = currentQty + (int)numQuantity.Value;
+                    }
                     UpdateNewStock(existingRow.Index);
-                    txtProductSearch.Clear();
+                    if (txtProductSearch != null)
+                        txtProductSearch.Clear();
                     return;
                 }
 
@@ -164,16 +193,19 @@ namespace WinFormsFashionShop.Presentation.Forms
                 row.Cells["ProductCode"].Value = selectedProduct.ProductCode;
                 row.Cells["ProductName"].Value = selectedProduct.Name;
                 row.Cells["CurrentStock"].Value = currentStock;
-                row.Cells["AdjustQuantity"].Value = (int)numQuantity.Value;
-                row.Cells["NewStock"].Value = currentStock + (int)numQuantity.Value;
+                
+                var adjustQty = numQuantity != null ? (int)numQuantity.Value : 1;
+                row.Cells["AdjustQuantity"].Value = adjustQty;
+                row.Cells["NewStock"].Value = currentStock + adjustQty;
                 row.Cells["Delete"].Value = "Xóa";
                 row.Tag = new { Product = selectedProduct, Inventory = inventory };
 
-                txtProductSearch.Clear();
+                if (txtProductSearch != null)
+                    txtProductSearch.Clear();
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
             }
         }
 
@@ -201,7 +233,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (grid.Rows.Count == 0)
             {
-                ErrorHandler.ShowWarning("Không có sản phẩm nào để cập nhật!");
+                _errorHandler.ShowWarning("Không có sản phẩm nào để cập nhật!");
                 return;
             }
 
@@ -225,17 +257,17 @@ namespace WinFormsFashionShop.Presentation.Forms
 
                 if (successCount > 0)
                 {
-                    ErrorHandler.ShowSuccess($"Cập nhật tồn kho thành công cho {successCount} sản phẩm!");
+                    _errorHandler.ShowSuccess($"Cập nhật tồn kho thành công cho {successCount} sản phẩm!");
                     LoadInventory();
                 }
                 else
                 {
-                    ErrorHandler.ShowWarning("Không có sản phẩm nào được cập nhật!");
+                    _errorHandler.ShowWarning("Không có sản phẩm nào được cập nhật!");
                 }
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
             }
         }
     }

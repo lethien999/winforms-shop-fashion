@@ -46,7 +46,7 @@ namespace WinFormsFashionShop.Presentation.Helpers
         /// </summary>
         private static void PrintDocument_PrintPage(object sender, PrintPageEventArgs e)
         {
-            if (_orderToPrint == null) return;
+            if (_orderToPrint == null || e?.Graphics == null) return;
 
             var graphics = e.Graphics;
             var font = new Font("Arial", 12);
@@ -59,17 +59,27 @@ namespace WinFormsFashionShop.Presentation.Helpers
             float topMargin = e.MarginBounds.Top;
             float rightMargin = e.MarginBounds.Right;
 
-            // Header
-            graphics.DrawString("HÓA ĐƠN BÁN HÀNG", titleFont, Brushes.Black, leftMargin, yPos);
-            yPos += titleFont.GetHeight() + 10;
+            // Header with background
+            var headerRect = new RectangleF(leftMargin, yPos, rightMargin - leftMargin, 80);
+            using (var brush = new SolidBrush(Color.FromArgb(240, 240, 240)))
+            {
+                graphics.FillRectangle(brush, headerRect);
+            }
+            var roundedRect = Rectangle.Round(headerRect);
+            graphics.DrawRectangle(Pens.Gray, roundedRect);
 
-            graphics.DrawString("WinForms Fashion Shop", font, Brushes.Black, leftMargin, yPos);
+            // Title
+            var titleRect = new RectangleF(leftMargin + 10, yPos + 10, rightMargin - leftMargin - 20, 30);
+            graphics.DrawString("HÓA ĐƠN BÁN HÀNG", titleFont, Brushes.Black, titleRect);
+            yPos += 40;
+
+            graphics.DrawString("WinForms Fashion Shop", new Font("Arial", 12, FontStyle.Bold), Brushes.Black, leftMargin + 10, yPos);
             yPos += font.GetHeight() + 5;
 
-            graphics.DrawString("Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM", smallFont, Brushes.Black, leftMargin, yPos);
-            yPos += smallFont.GetHeight() + 5;
+            graphics.DrawString("Địa chỉ: 123 Đường ABC, Quận XYZ, TP.HCM", smallFont, Brushes.Black, leftMargin + 10, yPos);
+            yPos += smallFont.GetHeight() + 3;
 
-            graphics.DrawString($"ĐT: 0123 456 789", smallFont, Brushes.Black, leftMargin, yPos);
+            graphics.DrawString($"ĐT: 0123 456 789 | Email: shop@fashion.com", smallFont, Brushes.Black, leftMargin + 10, yPos);
             yPos += smallFont.GetHeight() + 15;
 
             // Order info
@@ -92,18 +102,20 @@ namespace WinFormsFashionShop.Presentation.Helpers
             graphics.DrawLine(Pens.Black, leftMargin, yPos, rightMargin, yPos);
             yPos += 10;
 
-            // Items header
-            graphics.DrawString("STT", smallFont, Brushes.Black, leftMargin, yPos);
-            graphics.DrawString("Tên sản phẩm", smallFont, Brushes.Black, leftMargin + 50, yPos);
-            graphics.DrawString("SL", smallFont, Brushes.Black, leftMargin + 300, yPos);
-            graphics.DrawString("Đơn giá", smallFont, Brushes.Black, leftMargin + 350, yPos);
-            graphics.DrawString("Thành tiền", smallFont, Brushes.Black, leftMargin + 450, yPos);
-            yPos += smallFont.GetHeight() + 5;
+            // Items table header with background
+            var headerTableRect = new RectangleF(leftMargin, yPos, rightMargin - leftMargin, 25);
+            graphics.FillRectangle(new SolidBrush(Color.FromArgb(70, 130, 180)), headerTableRect);
+            graphics.DrawRectangle(Pens.Black, Rectangle.Round(headerTableRect));
 
-            graphics.DrawLine(Pens.Black, leftMargin, yPos, rightMargin, yPos);
-            yPos += 10;
+            var headerFont = new Font("Arial", 10, FontStyle.Bold);
+            graphics.DrawString("STT", headerFont, Brushes.White, leftMargin + 5, yPos + 3);
+            graphics.DrawString("Tên sản phẩm", headerFont, Brushes.White, leftMargin + 50, yPos + 3);
+            graphics.DrawString("SL", headerFont, Brushes.White, leftMargin + 300, yPos + 3);
+            graphics.DrawString("Đơn giá", headerFont, Brushes.White, leftMargin + 350, yPos + 3);
+            graphics.DrawString("Thành tiền", headerFont, Brushes.White, leftMargin + 450, yPos + 3);
+            yPos += 25;
 
-            // Items
+            // Items with borders
             int stt = 1;
             foreach (var item in _orderToPrint.Items ?? Enumerable.Empty<OrderItemDTO>())
             {
@@ -113,12 +125,15 @@ namespace WinFormsFashionShop.Presentation.Helpers
                     return;
                 }
 
-                graphics.DrawString(stt.ToString(), smallFont, Brushes.Black, leftMargin, yPos);
-                graphics.DrawString(item.ProductName ?? "", smallFont, Brushes.Black, leftMargin + 50, yPos);
-                graphics.DrawString(item.Quantity.ToString(), smallFont, Brushes.Black, leftMargin + 300, yPos);
-                graphics.DrawString($"{item.UnitPrice:N0}", smallFont, Brushes.Black, leftMargin + 350, yPos);
-                graphics.DrawString($"{item.LineTotal:N0}", smallFont, Brushes.Black, leftMargin + 450, yPos);
-                yPos += smallFont.GetHeight() + 5;
+                var rowRect = new RectangleF(leftMargin, yPos, rightMargin - leftMargin, 20);
+                graphics.DrawRectangle(Pens.LightGray, Rectangle.Round(rowRect));
+
+                graphics.DrawString(stt.ToString(), smallFont, Brushes.Black, leftMargin + 5, yPos + 2);
+                graphics.DrawString(item.ProductName ?? "", smallFont, Brushes.Black, leftMargin + 50, yPos + 2);
+                graphics.DrawString(item.Quantity.ToString(), smallFont, Brushes.Black, leftMargin + 300, yPos + 2);
+                graphics.DrawString($"{item.UnitPrice:N0}", smallFont, Brushes.Black, leftMargin + 350, yPos + 2);
+                graphics.DrawString($"{item.LineTotal:N0}", smallFont, Brushes.Black, leftMargin + 450, yPos + 2);
+                yPos += 20;
                 stt++;
             }
 
@@ -126,10 +141,15 @@ namespace WinFormsFashionShop.Presentation.Helpers
             graphics.DrawLine(Pens.Black, leftMargin, yPos, rightMargin, yPos);
             yPos += 10;
 
-            // Total
-            graphics.DrawString("TỔNG TIỀN:", boldFont, Brushes.Black, leftMargin + 350, yPos);
-            graphics.DrawString($"{_orderToPrint.TotalAmount:N0} VNĐ", boldFont, Brushes.Black, leftMargin + 450, yPos);
-            yPos += boldFont.GetHeight() + 20;
+            // Total with background
+            var totalRect = new RectangleF(leftMargin, yPos, rightMargin - leftMargin, 35);
+            graphics.FillRectangle(new SolidBrush(Color.FromArgb(255, 240, 240)), totalRect);
+            graphics.DrawRectangle(Pens.Black, Rectangle.Round(totalRect));
+
+            var totalFont = new Font("Arial", 12, FontStyle.Bold);
+            graphics.DrawString("TỔNG TIỀN:", totalFont, Brushes.Black, leftMargin + 10, yPos + 8);
+            graphics.DrawString($"{_orderToPrint.TotalAmount:N0} VNĐ", totalFont, Brushes.Red, rightMargin - 200, yPos + 8);
+            yPos += 40;
 
             // Footer
             graphics.DrawString("Cảm ơn quý khách!", font, Brushes.Black, leftMargin, yPos);

@@ -1,0 +1,3 @@
+# This file ensures the Images directory is tracked by Git
+# Actual image files should be added to .gitignore
+

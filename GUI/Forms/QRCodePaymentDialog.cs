@@ -1,0 +1,490 @@
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using Net.payOS.Types;
+using QRCoder;
+using WinFormsFashionShop.Presentation.Helpers;
+using WinFormsFashionShop.Presentation.Services;
+
+namespace WinFormsFashionShop.Presentation.Forms
+{
+    /// <summary>
+    /// Dialog for displaying QR code payment via PayOS/VietQR.
+    /// Single responsibility: only displays QR code payment UI.
+    /// </summary>
+    public partial class QRCodePaymentDialog : Form
+    {
+        private readonly PayOSService _payOSService;
+        private readonly int _orderId;
+        private readonly decimal _totalAmount;
+        private readonly string _orderDescription;
+        private CreatePaymentResult? _paymentLinkData;
+        private System.Windows.Forms.Timer? _paymentCheckTimer;
+        private bool _isPaymentConfirmed = false;
+
+        public bool IsPaymentConfirmed => _isPaymentConfirmed;
+        public CreatePaymentResult? PaymentData => _paymentLinkData;
+
+        public QRCodePaymentDialog(int orderId, decimal totalAmount, string orderDescription)
+        {
+            _orderId = orderId;
+            _totalAmount = totalAmount;
+            _orderDescription = orderDescription;
+            _payOSService = new PayOSService();
+            InitializeComponent();
+            InitializeControls();
+            LoadPaymentQRCode();
+        }
+
+        /// <summary>
+        /// Initializes event handlers and sets initial values.
+        /// Single responsibility: only wires up event handlers and sets initial data.
+        /// </summary>
+        private void InitializeControls()
+        {
+            // Set initial order info
+            _lblOrderCode!.Text = $"📋 Mã đơn: {_orderId}";
+            _lblAmount!.Text = $"💰 Số tiền: {_totalAmount:N0} VNĐ";
+            lblDescription!.Text = $"📝 {_orderDescription}";
+
+            // Wire up event handlers
+            _btnCheckPayment!.Click += BtnCheckPayment_Click;
+            _btnCancel!.Click += BtnCancel_Click;
+        }
+
+        /// <summary>
+        /// Handles cancel button click.
+        /// Single responsibility: only closes the dialog.
+        /// </summary>
+        private void BtnCancel_Click(object? sender, EventArgs e)
+        {
+            StopPaymentCheckTimer();
+            DialogResult = DialogResult.Cancel;
+            Close();
+        }
+
+
+        /// <summary>
+        /// Loads payment QR code from PayOS.
+        /// Single responsibility: only loads QR code.
+        /// </summary>
+        private async void LoadPaymentQRCode()
+        {
+            try
+            {
+                if (_lblStatus == null) return;
+                _lblStatus.Text = "Đang tạo link thanh toán...";
+                _lblStatus.ForeColor = Color.Blue;
+
+                // PayOS requires amount in VND (as integer, not decimal)
+                // Example: 1,220 VNĐ = 1220 (not 1.22)
+                // Validate amount >= 0.01 VND (minimum 1 VND)
+                if (_totalAmount < 0.01m)
+                {
+                    throw new ArgumentException("Số tiền phải lớn hơn hoặc bằng 0.01 VNĐ");
+                }
+
+                // Convert decimal VND to integer (e.g., 1220.50 -> 1221, 1220.00 -> 1220)
+                int amountInVND = (int)Math.Round(_totalAmount, MidpointRounding.AwayFromZero);
+                
+                // Ensure minimum amount is 1 VND (PayOS requirement)
+                if (amountInVND < 1)
+                {
+                    amountInVND = 1;
+                }
+
+                // Create payment items
+                var items = new List<ItemData>
+                {
+                    new ItemData(_orderDescription, 1, amountInVND)
+                };
+
+                // Create payment link
+                _paymentLinkData = await _payOSService.CreatePaymentLinkAsync(
+                    orderId: _orderId,
+                    amount: amountInVND,
+                    description: _orderDescription,
+                    items: items
+                );
+
+                // Ưu tiên sử dụng QR code chuẩn VietQR từ PayOS (có thể quét bằng app ngân hàng/Momo)
+                if (!string.IsNullOrWhiteSpace(_paymentLinkData.qrCode))
+                {
+                    // Sử dụng QR code chuẩn VietQR từ PayOS
+                    DisplayQRCode(_paymentLinkData.qrCode);
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "📱 Quét mã QR bằng app ngân hàng hoặc Momo để thanh toán";
+                        _lblStatus.ForeColor = Color.Green;
+                    }
+                    if (_btnCheckPayment != null)
+                        _btnCheckPayment.Enabled = true;
+                    
+                    // Start auto-check timer (check every 3 seconds)
+                    StartPaymentCheckTimer();
+                    
+                    // Thêm link web làm phương án dự phòng (nếu có checkoutUrl)
+                    if (!string.IsNullOrWhiteSpace(_paymentLinkData.checkoutUrl))
+                    {
+                        var lblOpenLink = new LinkLabel
+                        {
+                            Text = "🌐 Hoặc click để mở link thanh toán trên web",
+                            Font = new Font("Arial", 9),
+                            Dock = DockStyle.Top,
+                            Height = 25,
+                            TextAlign = ContentAlignment.MiddleCenter,
+                            AutoSize = false,
+                            LinkColor = Color.FromArgb(70, 130, 180),
+                            ActiveLinkColor = Color.Blue
+                        };
+                        lblOpenLink.LinkClicked += (s, e) =>
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = _paymentLinkData.checkoutUrl,
+                                UseShellExecute = true
+                            });
+                        };
+                        pnlContent.Controls.Add(lblOpenLink);
+                    }
+                }
+                else if (!string.IsNullOrWhiteSpace(_paymentLinkData.checkoutUrl))
+                {
+                    // Fallback: Tạo QR code từ checkout URL (chỉ mở web, không quét trực tiếp được)
+                    DisplayQRCodeFromUrl(_paymentLinkData.checkoutUrl);
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "⚠️ Quét mã QR sẽ mở link thanh toán trên web";
+                        _lblStatus.ForeColor = Color.Orange;
+                    }
+                    if (_btnCheckPayment != null)
+                        _btnCheckPayment.Enabled = true;
+
+                    // Add link to open in browser
+                    var lblOpenLink = new LinkLabel
+                    {
+                        Text = "🌐 Click để mở link thanh toán",
+                        Font = new Font("Arial", 9),
+                        Dock = DockStyle.Top,
+                        Height = 25,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        AutoSize = false,
+                        LinkColor = Color.FromArgb(70, 130, 180),
+                        ActiveLinkColor = Color.Blue
+                    };
+                    lblOpenLink.LinkClicked += (s, e) =>
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = _paymentLinkData.checkoutUrl,
+                            UseShellExecute = true
+                        });
+                    };
+                    pnlContent.Controls.Add(lblOpenLink);
+
+                    // Start auto-check timer (check every 3 seconds)
+                    StartPaymentCheckTimer();
+                }
+                else
+                {
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "❌ Không thể tạo mã QR. Vui lòng thử lại!";
+                        _lblStatus.ForeColor = Color.Red;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.ShowError($"Không thể tạo mã QR thanh toán: {ex.Message}");
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = "Lỗi: " + ex.Message;
+                    _lblStatus.ForeColor = Color.Red;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Generates and displays QR code from payment URL.
+        /// Single responsibility: only generates and displays QR code from URL.
+        /// </summary>
+        private void DisplayQRCodeFromUrl(string paymentUrl)
+        {
+            try
+            {
+                using (var qrGenerator = new QRCodeGenerator())
+                {
+                    var qrCodeData = qrGenerator.CreateQrCode(paymentUrl, QRCodeGenerator.ECCLevel.Q);
+                    using (var qrCode = new QRCode(qrCodeData))
+                    {
+                        var qrCodeImage = qrCode.GetGraphic(20);
+                        _picQRCode!.Image = qrCodeImage;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorHandler.ShowError($"Không thể tạo mã QR: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Displays QR code from PayOS data (can be base64 image or EMV QR data string).
+        /// Single responsibility: only displays QR code from PayOS data.
+        /// </summary>
+        private void DisplayQRCode(string qrCodeData)
+        {
+            try
+            {
+                // Kiểm tra xem đây có phải là base64 image không
+                if (IsBase64Image(qrCodeData))
+                {
+                    // Xử lý base64 image
+                    var base64String = qrCodeData;
+                    if (base64String.Contains(","))
+                    {
+                        base64String = base64String.Split(',')[1];
+                    }
+
+                    var imageBytes = Convert.FromBase64String(base64String);
+                    using (var ms = new System.IO.MemoryStream(imageBytes))
+                    {
+                        var image = Image.FromStream(ms);
+                        // Dispose old image if exists
+                        if (_picQRCode!.Image != null)
+                        {
+                            var oldImage = _picQRCode.Image;
+                            _picQRCode.Image = null;
+                            oldImage.Dispose();
+                        }
+                        _picQRCode.Image = (Image)image.Clone();
+                    }
+                }
+                else
+                {
+                    // Nếu không phải base64 image, coi như là EMV QR data string và generate QR code
+                    // Đây là chuẩn VietQR có thể quét được bằng app ngân hàng/Momo
+                    using (var qrGenerator = new QRCodeGenerator())
+                    {
+                        var qrCodeDataObj = qrGenerator.CreateQrCode(qrCodeData, QRCodeGenerator.ECCLevel.Q);
+                        using (var qrCode = new QRCode(qrCodeDataObj))
+                        {
+                            var qrCodeImage = qrCode.GetGraphic(20);
+                            _picQRCode!.Image = qrCodeImage;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Thử fallback: generate QR code từ string data
+                try
+                {
+                    using (var qrGenerator = new QRCodeGenerator())
+                    {
+                        var qrCodeDataObj = qrGenerator.CreateQrCode(qrCodeData, QRCodeGenerator.ECCLevel.Q);
+                        using (var qrCode = new QRCode(qrCodeDataObj))
+                        {
+                            var qrCodeImage = qrCode.GetGraphic(20);
+                            _picQRCode!.Image = qrCodeImage;
+                        }
+                    }
+                }
+                catch
+                {
+                    ErrorHandler.ShowError($"Không thể hiển thị mã QR: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if a string is a valid base64 image.
+        /// Single responsibility: only validates base64 image string.
+        /// </summary>
+        private bool IsBase64Image(string data)
+        {
+            try
+            {
+                // Kiểm tra nếu có data URI prefix (data:image/...)
+                if (data.Contains("data:image/"))
+                    return true;
+
+                // Thử decode base64
+                var cleanData = data.Contains(",") ? data.Split(',')[1] : data;
+                var imageBytes = Convert.FromBase64String(cleanData);
+                
+                // Kiểm tra magic bytes của các format image phổ biến
+                if (imageBytes.Length < 4) return false;
+                
+                // PNG: 89 50 4E 47
+                if (imageBytes[0] == 0x89 && imageBytes[1] == 0x50 && 
+                    imageBytes[2] == 0x4E && imageBytes[3] == 0x47)
+                    return true;
+                
+                // JPEG: FF D8 FF
+                if (imageBytes[0] == 0xFF && imageBytes[1] == 0xD8 && imageBytes[2] == 0xFF)
+                    return true;
+                
+                // GIF: 47 49 46 38
+                if (imageBytes[0] == 0x47 && imageBytes[1] == 0x49 && 
+                    imageBytes[2] == 0x46 && imageBytes[3] == 0x38)
+                    return true;
+                
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Starts automatic payment status checking timer.
+        /// Single responsibility: only starts timer.
+        /// </summary>
+        private void StartPaymentCheckTimer()
+        {
+            _paymentCheckTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 3000 // Check every 3 seconds
+            };
+            _paymentCheckTimer.Tick += async (s, e) => await CheckPaymentStatusAsync();
+            _paymentCheckTimer.Start();
+        }
+
+        /// <summary>
+        /// Stops payment status checking timer.
+        /// Single responsibility: only stops timer.
+        /// </summary>
+        private void StopPaymentCheckTimer()
+        {
+            _paymentCheckTimer?.Stop();
+            _paymentCheckTimer?.Dispose();
+        }
+
+        /// <summary>
+        /// Handles check payment button click.
+        /// Single responsibility: only triggers payment check.
+        /// </summary>
+        private async void BtnCheckPayment_Click(object? sender, EventArgs e)
+        {
+            if (_btnCheckPayment == null || _lblStatus == null) return;
+
+            // Disable button temporarily to prevent multiple clicks
+            _btnCheckPayment.Enabled = false;
+            _btnCheckPayment.Text = "⏳ Đang kiểm tra...";
+            
+            try
+            {
+                await CheckPaymentStatusAsync();
+            }
+            finally
+            {
+                // Re-enable button if payment not confirmed
+                if (!_isPaymentConfirmed && _btnCheckPayment != null)
+                {
+                    _btnCheckPayment.Enabled = true;
+                    _btnCheckPayment.Text = "🔄 Kiểm tra thanh toán";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks payment status from PayOS.
+        /// Single responsibility: only checks payment status.
+        /// </summary>
+        private async Task CheckPaymentStatusAsync()
+        {
+            if (_paymentLinkData == null)
+            {
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = "❌ Không có thông tin thanh toán để kiểm tra";
+                    _lblStatus.ForeColor = Color.Red;
+                }
+                return;
+            }
+
+            try
+            {
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = "⏳ Đang kiểm tra trạng thái thanh toán...";
+                    _lblStatus.ForeColor = Color.Blue;
+                }
+
+                var paymentInfo = await _payOSService.GetPaymentInfoAsync(_paymentLinkData.orderCode);
+
+                // Check payment status from PaymentLinkInformation
+                var status = paymentInfo.status?.ToString() ?? "";
+                if (status.Contains("PAID") || status.Contains("PROCESSING"))
+                {
+                    _isPaymentConfirmed = true;
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "✓ Thanh toán thành công!";
+                        _lblStatus.ForeColor = Color.Green;
+                    }
+                    StopPaymentCheckTimer();
+                    if (_btnCheckPayment != null)
+                    {
+                        _btnCheckPayment.Enabled = false;
+                        _btnCheckPayment.Text = "✓ Đã thanh toán";
+                    }
+
+                    // Auto close after 2 seconds
+                    var closeTimer = new System.Windows.Forms.Timer { Interval = 2000 };
+                    closeTimer.Tick += (s, e) => 
+                    { 
+                        closeTimer.Stop();
+                        closeTimer.Dispose();
+                        DialogResult = DialogResult.OK; 
+                        Close(); 
+                    };
+                    closeTimer.Start();
+                }
+                else if (status.Contains("CANCELLED"))
+                {
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "❌ Thanh toán đã bị hủy";
+                        _lblStatus.ForeColor = Color.Red;
+                    }
+                    StopPaymentCheckTimer();
+                    if (_btnCheckPayment != null)
+                        _btnCheckPayment.Enabled = false;
+                }
+                else
+                {
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "⏳ Đang chờ thanh toán... (Chưa nhận được thanh toán)";
+                        _lblStatus.ForeColor = Color.Blue;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Show error message to user when manually checking
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = $"❌ Lỗi kiểm tra: {ex.Message}";
+                    _lblStatus.ForeColor = Color.Red;
+                }
+                System.Diagnostics.Debug.WriteLine($"Payment check error: {ex.Message}");
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            StopPaymentCheckTimer();
+            base.OnFormClosing(e);
+        }
+
+    }
+}
+

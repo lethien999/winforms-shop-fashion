@@ -3,9 +3,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
 using WinFormsFashionShop.Presentation.Helpers;
+using UIThemeConstants = WinFormsFashionShop.Presentation.Helpers.UIThemeConstants;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -13,11 +15,15 @@ namespace WinFormsFashionShop.Presentation.Forms
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IErrorHandler _errorHandler;
+        private readonly UserDTO? _currentUser;
 
-        public ProductManagementForm(IProductService productService, ICategoryService categoryService)
+        public ProductManagementForm(IProductService productService, ICategoryService categoryService, IErrorHandler errorHandler, UserDTO? currentUser = null)
         {
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
             _categoryService = categoryService ?? throw new ArgumentNullException(nameof(categoryService));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
+            _currentUser = currentUser;
             InitializeComponent();
             InitializeControls();
             LoadProducts();
@@ -25,18 +31,55 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void InitializeControls()
         {
+            // Load logo if available
+            var logo = LogoHelper.LoadLogo(UIThemeConstants.Spacing.LogoSizeMedium);
+            if (logo != null && picLogo != null)
+            {
+                picLogo.Image = logo;
+            }
+            else if (picLogo != null)
+            {
+                picLogo.Visible = false;
+            }
+
             // Load categories for filter
             LoadCategoriesForFilter();
 
             // Wire up event handlers
             cmbCategoryFilter.SelectedIndexChanged += (s, e) => LoadProducts();
             btnSearch.Click += (s, e) => LoadProducts();
-            grid.CellDoubleClick += (s, e) => EditSelectedProduct();
+            grid.CellDoubleClick += (s, e) => 
+            {
+                if (e.ColumnIndex == grid.Columns["Ảnh"]?.Index)
+                {
+                    ShowImagePreview(e.RowIndex);
+                }
+                else
+                {
+                    EditSelectedProduct();
+                }
+            };
+            grid.CellClick += (s, e) =>
+            {
+                if (e.ColumnIndex == grid.Columns["Ảnh"]?.Index)
+                {
+                    ShowImagePreview(e.RowIndex);
+                }
+            };
             btnAdd.Click += (s, e) => AddProduct();
             btnEdit.Click += (s, e) => EditSelectedProduct();
             btnDelete.Click += (s, e) => DeleteSelectedProduct();
             btnDeactivate.Click += (s, e) => DeactivateSelectedProduct();
             btnRefresh.Click += (s, e) => LoadProducts();
+
+            // Kiểm tra quyền: Chỉ Admin mới được thêm/sửa/xóa/ngừng kinh doanh sản phẩm
+            if (_currentUser == null || _currentUser.Role != UserRole.Admin)
+            {
+                btnAdd.Visible = false;
+                btnEdit.Visible = false;
+                btnDelete.Visible = false;
+                btnDeactivate.Visible = false;
+            }
         }
 
         /// <summary>
@@ -71,25 +114,50 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             try
             {
-                var products = _productService.GetAllProducts().ToList();
+                if (grid == null)
+                {
+                    _errorHandler.ShowError("Grid chưa được khởi tạo!");
+                    return;
+                }
+
+                var allProducts = _productService.GetAllProducts();
+                if (allProducts == null)
+                {
+                    _errorHandler.ShowWarning("Không thể tải danh sách sản phẩm. Dịch vụ trả về null.");
+                    grid.DataSource = null;
+                    return;
+                }
+
+                var products = allProducts.ToList();
                 
                 // Filter by search text
-                if (!string.IsNullOrWhiteSpace(txtSearch.Text))
+                if (txtSearch != null && !string.IsNullOrWhiteSpace(txtSearch.Text))
                 {
                     var searchText = txtSearch.Text.ToLower();
                     products = products.Where(p => 
-                        p.ProductCode.ToLower().Contains(searchText) ||
-                        p.Name.ToLower().Contains(searchText)
+                        p != null &&
+                        (p.ProductCode?.ToLower().Contains(searchText) ?? false) ||
+                        (p.Name?.ToLower().Contains(searchText) ?? false)
                     ).ToList();
                 }
 
                 // Filter by category
-                if (cmbCategoryFilter.SelectedIndex > 0 && cmbCategoryFilter.SelectedItem is CategoryDTO selectedCategory)
+                if (cmbCategoryFilter != null && cmbCategoryFilter.SelectedIndex > 0 && cmbCategoryFilter.SelectedItem is CategoryDTO selectedCategory)
                 {
-                    products = products.Where(p => p.CategoryId == selectedCategory.Id).ToList();
+                    products = products.Where(p => p != null && p.CategoryId == selectedCategory.Id).ToList();
                 }
 
-                grid.DataSource = products.Select(p => new
+                // Setup grid columns if not already set
+                SetupProductGridColumns();
+
+                // Load data with images
+                if (products == null)
+                {
+                    grid.DataSource = new List<object>();
+                    return;
+                }
+
+                var productList = products.Where(p => p != null).Select(p => new
                 {
                     p.Id,
                     p.ProductCode,
@@ -98,12 +166,106 @@ namespace WinFormsFashionShop.Presentation.Forms
                     p.UnitPrice,
                     p.Unit,
                     p.IsActive,
-                    TrạngThái = p.IsActive ? "Hoạt động" : "Ngừng"
+                    TrạngThái = p.IsActive ? "Hoạt động" : "Ngừng",
+                    ImagePath = p.ImagePath
                 }).ToList();
+
+                grid.DataSource = productList;
+
+                // Load images into grid
+                LoadProductImagesToGrid(products.Where(p => p != null).ToList());
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError($"Lỗi khi tải danh sách sản phẩm: {ex.Message}");
+                if (grid != null)
+                {
+                    grid.DataSource = null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets up grid columns for product display with image column.
+        /// Single responsibility: only configures grid columns.
+        /// </summary>
+        private void SetupProductGridColumns()
+        {
+            if (grid.Columns.Count > 0 && grid.Columns.Contains("Ảnh"))
+                return; // Already set up
+
+            // Add image column if not exists
+            if (!grid.Columns.Contains("Ảnh"))
+            {
+                var imageColumn = new DataGridViewImageColumn
+                {
+                    Name = "Ảnh",
+                    HeaderText = "Ảnh",
+                    Width = 80,
+                    ImageLayout = DataGridViewImageCellLayout.Zoom
+                };
+                grid.Columns.Insert(0, imageColumn);
+            }
+
+            // Reorder columns: Ảnh, Mã SP, Tên SP, Danh mục, Giá, Đơn vị, Trạng thái
+            if (grid.Columns.Contains("Id"))
+                grid.Columns["Id"].Visible = false;
+        }
+
+        /// <summary>
+        /// Loads product images into the grid.
+        /// Single responsibility: only loads images into grid cells.
+        /// </summary>
+        private void LoadProductImagesToGrid(List<ProductDTO> products)
+        {
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                if (row.Cells["Id"]?.Value == null) continue;
+
+                var productId = (int)row.Cells["Id"].Value;
+                var product = products.FirstOrDefault(p => p.Id == productId);
+
+                if (product != null && !string.IsNullOrWhiteSpace(product.ImagePath))
+                {
+                    try
+                    {
+                        var image = ImageHelper.LoadProductImage(product.ImagePath);
+                        if (image != null)
+                        {
+                            var thumbnail = ImageHelper.ResizeImage(image, 60, 60);
+                            row.Cells["Ảnh"].Value = thumbnail;
+                            // Store full image path in tag for preview
+                            row.Cells["Ảnh"].Tag = product;
+                        }
+                    }
+                    catch
+                    {
+                        // If image fails to load, leave cell empty
+                        row.Cells["Ảnh"].Value = null;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Shows image preview dialog when clicking on image cell.
+        /// Single responsibility: only displays image preview.
+        /// </summary>
+        private void ShowImagePreview(int rowIndex)
+        {
+            if (rowIndex < 0 || rowIndex >= grid.Rows.Count) return;
+
+            var row = grid.Rows[rowIndex];
+            var product = row.Cells["Ảnh"]?.Tag as ProductDTO;
+            
+            if (product != null && !string.IsNullOrWhiteSpace(product.ImagePath))
+            {
+                using var previewDialog = new ImagePreviewDialog(product.ImagePath, product.Name);
+                previewDialog.ShowDialog(this);
+            }
+            else
+            {
+                _errorHandler.ShowInfo("Sản phẩm này chưa có ảnh!");
             }
         }
 
@@ -113,8 +275,15 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void AddProduct()
         {
+            // Kiểm tra quyền: Chỉ Admin mới được thêm sản phẩm
+            if (_currentUser == null || _currentUser.Role != UserRole.Admin)
+            {
+                _errorHandler.ShowWarning("Chỉ quản trị viên mới có quyền thêm sản phẩm!");
+                return;
+            }
+
             using var dialog = new ProductEditDialog(null, _categoryService, _productService);
-            if (dialog.ShowDialog() == DialogResult.OK && dialog.CreateProductDTO != null)
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.CreateProductDTO != null)
             {
                 try
                 {
@@ -159,11 +328,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                     }
                     
                     LoadProducts();
-                    ErrorHandler.ShowSuccess("Thêm sản phẩm thành công!");
+                    _errorHandler.ShowSuccess("Thêm sản phẩm thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -174,9 +343,16 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void EditSelectedProduct()
         {
+            // Kiểm tra quyền: Chỉ Admin mới được sửa sản phẩm
+            if (_currentUser == null || _currentUser.Role != UserRole.Admin)
+            {
+                _errorHandler.ShowWarning("Chỉ quản trị viên mới có quyền sửa sản phẩm!");
+                return;
+            }
+
             if (grid.SelectedRows.Count == 0)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn sản phẩm cần sửa!");
+                _errorHandler.ShowWarning("Vui lòng chọn sản phẩm cần sửa!");
                 return;
             }
 
@@ -189,7 +365,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
 
             using var dialog = new ProductEditDialog(product, _categoryService, _productService);
-            if (dialog.ShowDialog() == DialogResult.OK && dialog.UpdateProductDTO != null)
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.UpdateProductDTO != null)
             {
                 try
                 {
@@ -220,46 +396,60 @@ namespace WinFormsFashionShop.Presentation.Forms
                     
                     _productService.UpdateProduct(updateDto);
                     LoadProducts();
-                    ErrorHandler.ShowSuccess("Cập nhật sản phẩm thành công!");
+                    _errorHandler.ShowSuccess("Cập nhật sản phẩm thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
 
         private void DeleteSelectedProduct()
         {
+            // Kiểm tra quyền: Chỉ Admin mới được xóa sản phẩm
+            if (_currentUser == null || _currentUser.Role != UserRole.Admin)
+            {
+                _errorHandler.ShowWarning("Chỉ quản trị viên mới có quyền xóa sản phẩm!");
+                return;
+            }
+
             if (grid.SelectedRows.Count == 0)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn sản phẩm cần xóa!");
+                _errorHandler.ShowWarning("Vui lòng chọn sản phẩm cần xóa!");
                 return;
             }
 
             var id = (int)grid.SelectedRows[0].Cells["Id"].Value;
             var productName = grid.SelectedRows[0].Cells["Name"].Value?.ToString() ?? "";
 
-            if (ErrorHandler.ShowConfirmation($"Bạn có chắc muốn xóa sản phẩm '{productName}'?\n\nLưu ý: Không thể xóa sản phẩm đã có trong đơn hàng."))
+            if (_errorHandler.ShowConfirmation($"Bạn có chắc muốn xóa sản phẩm '{productName}'?\n\nLưu ý: Không thể xóa sản phẩm đã có trong đơn hàng."))
             {
                 try
                 {
                     _productService.DeleteProduct(id);
                     LoadProducts();
-                    ErrorHandler.ShowSuccess("Xóa sản phẩm thành công!");
+                    _errorHandler.ShowSuccess("Xóa sản phẩm thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
 
         private void DeactivateSelectedProduct()
         {
+            // Kiểm tra quyền: Chỉ Admin mới được ngừng kinh doanh sản phẩm
+            if (_currentUser == null || _currentUser.Role != UserRole.Admin)
+            {
+                _errorHandler.ShowWarning("Chỉ quản trị viên mới có quyền ngừng kinh doanh sản phẩm!");
+                return;
+            }
+
             if (grid.SelectedRows.Count == 0)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn sản phẩm!");
+                _errorHandler.ShowWarning("Vui lòng chọn sản phẩm!");
                 return;
             }
 
@@ -277,270 +467,5 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
     }
 
-    // Dialog for editing product
-    public class ProductEditDialog : Form
-    {
-        private TextBox? _txtCode, _txtName, _txtPrice, _txtUnit;
-        private ComboBox? _cmbCategory;
-        private CheckBox? _chkIsActive;
-        private Button? _btnOK, _btnCancel, _btnSelectImage, _btnRemoveImage;
-        private PictureBox? _picProductImage;
-        private readonly ICategoryService _categoryService;
-        private readonly IProductService _productService;
-        public CreateProductDTO? CreateProductDTO { get; private set; }
-        public UpdateProductDTO? UpdateProductDTO { get; private set; }
-        public string? SelectedImagePath { get; private set; } // Đường dẫn file ảnh được chọn (tạm thời)
-        public object? ProductDTO => (object?)CreateProductDTO ?? UpdateProductDTO;
-        private ProductDTO? _existingProduct;
-
-        public ProductEditDialog(ProductDTO? product, ICategoryService categoryService, IProductService productService)
-        {
-            _categoryService = categoryService ?? throw new ArgumentNullException(nameof(categoryService));
-            _productService = productService ?? throw new ArgumentNullException(nameof(productService));
-            _existingProduct = product;
-            Text = product == null ? "Thêm sản phẩm mới" : "Sửa sản phẩm";
-            Width = 600;
-            Height = 500;
-            StartPosition = FormStartPosition.CenterParent;
-            InitializeControls();
-        }
-
-        private void InitializeControls()
-        {
-            var lblCode = new Label { Text = "Mã SP:", Left = 10, Top = 20, Width = 100 };
-            _txtCode = new TextBox { Left = 120, Top = 20, Width = 250, Text = _existingProduct?.ProductCode ?? "" };
-            
-            // Auto-generate product code for new products
-            if (_existingProduct == null)
-            {
-                _txtCode.ReadOnly = true;
-                _txtCode.BackColor = System.Drawing.SystemColors.Control;
-                _txtCode.Text = _productService.GenerateProductCode();
-            }
-
-            var lblName = new Label { Text = "Tên SP:", Left = 10, Top = 60, Width = 100 };
-            _txtName = new TextBox { Left = 120, Top = 60, Width = 250, Text = _existingProduct?.Name ?? "" };
-
-            var lblCategory = new Label { Text = "Danh mục:", Left = 10, Top = 100, Width = 100 };
-            _cmbCategory = new ComboBox { Left = 120, Top = 100, Width = 250, DropDownStyle = ComboBoxStyle.DropDownList };
-            LoadCategories();
-
-            var lblPrice = new Label { Text = "Giá bán:", Left = 10, Top = 140, Width = 100 };
-            _txtPrice = new TextBox { Left = 120, Top = 140, Width = 250, Text = _existingProduct?.UnitPrice.ToString() ?? "0" };
-
-            var lblUnit = new Label { Text = "Đơn vị:", Left = 10, Top = 180, Width = 100 };
-            _txtUnit = new TextBox { Left = 120, Top = 180, Width = 250, Text = _existingProduct?.Unit ?? "cái" };
-
-            // Image section
-            var lblImage = new Label { Text = "Ảnh SP:", Left = 10, Top = 220, Width = 100 };
-            _picProductImage = new PictureBox 
-            { 
-                Left = 120, 
-                Top = 220, 
-                Width = 150, 
-                Height = 150, 
-                BorderStyle = BorderStyle.FixedSingle,
-                SizeMode = PictureBoxSizeMode.Zoom
-            };
-            LoadExistingImage();
-
-            _btnSelectImage = new Button { Text = "Chọn ảnh", Left = 280, Top = 220, Width = 90, Height = 30 };
-            _btnSelectImage.Click += (s, e) => SelectImage();
-
-            _btnRemoveImage = new Button { Text = "Xóa ảnh", Left = 280, Top = 260, Width = 90, Height = 30 };
-            _btnRemoveImage.Click += (s, e) => RemoveImage();
-
-            _chkIsActive = new CheckBox { Text = "Hoạt động", Left = 120, Top = 380, Checked = _existingProduct?.IsActive ?? true };
-
-            _btnOK = new Button { Text = "OK", Left = 120, Top = 420, Width = 100, DialogResult = DialogResult.OK };
-            _btnCancel = new Button { Text = "Hủy", Left = 230, Top = 420, Width = 100, DialogResult = DialogResult.Cancel };
-
-            _btnOK.Click += (s, e) =>
-            {
-                // Product code is auto-generated for new products, so no need to validate
-                if (string.IsNullOrWhiteSpace(_txtName?.Text))
-                {
-                    ErrorHandler.ShowWarning("Vui lòng nhập tên sản phẩm!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-                if (_cmbCategory?.SelectedItem == null)
-                {
-                    ErrorHandler.ShowWarning("Vui lòng chọn danh mục!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-                if (!decimal.TryParse(_txtPrice?.Text, out var price) || price < 0)
-                {
-                    ErrorHandler.ShowWarning("Giá bán không hợp lệ!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-
-                if (_existingProduct == null)
-                {
-                    // Create new product
-                    CreateProductDTO = new CreateProductDTO
-                    {
-                        ProductCode = _txtCode.Text.Trim(),
-                        Name = _txtName.Text.Trim(),
-                        CategoryId = ((CategoryDTO)_cmbCategory.SelectedItem).Id,
-                        UnitPrice = price,
-                        Unit = _txtUnit?.Text.Trim() ?? "cái",
-                        ImagePath = SelectedImagePath // Lưu đường dẫn tạm thời, sẽ được xử lý sau khi tạo product
-                    };
-                }
-                else
-                {
-                    // Update existing product
-                    UpdateProductDTO = new UpdateProductDTO
-                    {
-                        Id = _existingProduct.Id,
-                        ProductCode = _txtCode.Text.Trim(),
-                        Name = _txtName.Text.Trim(),
-                        CategoryId = ((CategoryDTO)_cmbCategory.SelectedItem).Id,
-                        UnitPrice = price,
-                        Unit = _txtUnit?.Text.Trim() ?? "cái",
-                        ImagePath = SelectedImagePath ?? _existingProduct.ImagePath, // Giữ ảnh cũ nếu không chọn ảnh mới
-                        IsActive = _chkIsActive?.Checked ?? true
-                    };
-                }
-            };
-
-            Controls.AddRange(new Control[] { 
-                lblCode, _txtCode, lblName, _txtName, lblCategory, _cmbCategory,
-                lblPrice, _txtPrice, lblUnit, _txtUnit, 
-                lblImage, _picProductImage, _btnSelectImage, _btnRemoveImage,
-                _chkIsActive, _btnOK, _btnCancel 
-            });
-        }
-
-        /// <summary>
-        /// Opens file dialog to select product image.
-        /// Single responsibility: only handles image selection.
-        /// </summary>
-        private void SelectImage()
-        {
-            using var dialog = new OpenFileDialog
-            {
-                Filter = "Image Files|*.jpg;*.jpeg;*.png;*.gif;*.bmp;*.webp|All Files|*.*",
-                Title = "Chọn ảnh sản phẩm"
-            };
-
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    if (!ImageHelper.IsValidImageFile(dialog.FileName))
-                    {
-                        ErrorHandler.ShowWarning("Định dạng file không được hỗ trợ. Chỉ chấp nhận: JPG, JPEG, PNG, GIF, BMP, WEBP");
-                        return;
-                    }
-
-                    if (!ImageHelper.IsValidFileSize(dialog.FileName))
-                    {
-                        ErrorHandler.ShowWarning("Kích thước file quá lớn. Tối đa: 5MB");
-                        return;
-                    }
-
-                    SelectedImagePath = dialog.FileName;
-                    DisplayImage(dialog.FileName);
-                }
-                catch (Exception ex)
-                {
-                    ErrorHandler.ShowError(ex);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Removes selected image.
-        /// Single responsibility: only removes image.
-        /// </summary>
-        private void RemoveImage()
-        {
-            SelectedImagePath = null;
-            _picProductImage?.Image?.Dispose();
-            _picProductImage!.Image = null;
-        }
-
-        /// <summary>
-        /// Displays image in PictureBox.
-        /// Single responsibility: only displays image.
-        /// </summary>
-        private void DisplayImage(string imagePath)
-        {
-            try
-            {
-                Image? image = null;
-                
-                // If it's a full path (file exists), load directly
-                if (File.Exists(imagePath))
-                {
-                    image = Image.FromFile(imagePath);
-                }
-                else
-                {
-                    // Otherwise, treat as relative path from database
-                    image = ImageHelper.LoadProductImage(imagePath);
-                }
-                
-                if (image != null)
-                {
-                    _picProductImage?.Image?.Dispose();
-                    _picProductImage!.Image = ImageHelper.ResizeImage(image, 150, 150);
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorHandler.ShowError($"Không thể tải ảnh: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Loads existing product image if available.
-        /// Single responsibility: only loads existing image.
-        /// </summary>
-        private void LoadExistingImage()
-        {
-            if (_existingProduct?.ImagePath != null)
-            {
-                DisplayImage(_existingProduct.ImagePath);
-            }
-        }
-
-        /// <summary>
-        /// Loads categories into the ComboBox with proper display.
-        /// Single responsibility: only loads and configures categories.
-        /// </summary>
-        private void LoadCategories()
-        {
-            try
-            {
-                var categories = _categoryService.GetAllCategories().Where(c => c.IsActive).ToList();
-                _cmbCategory?.Items.Clear();
-                
-                if (_cmbCategory != null)
-                {
-                    // Set display member to show CategoryName instead of object type
-                    _cmbCategory.DisplayMember = "CategoryName";
-                    _cmbCategory.ValueMember = "Id";
-                    
-                    foreach (var cat in categories)
-                    {
-                        _cmbCategory.Items.Add(cat);
-                        if (_existingProduct != null && _existingProduct.CategoryId == cat.Id)
-                            _cmbCategory.SelectedItem = cat;
-                    }
-                    
-                    if (_cmbCategory.SelectedItem == null && _cmbCategory.Items.Count > 0)
-                        _cmbCategory.SelectedIndex = 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorHandler.ShowError(ex);
-            }
-        }
-    }
+    // ProductEditDialog has been moved to separate file ProductEditDialog.cs
 }

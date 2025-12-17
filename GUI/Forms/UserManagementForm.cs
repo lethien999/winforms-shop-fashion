@@ -7,16 +7,19 @@ using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.DTO;
 using WinFormsFashionShop.Presentation.Helpers;
+using UIThemeConstants = WinFormsFashionShop.Presentation.Helpers.UIThemeConstants;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
     public partial class UserManagementForm : Form
     {
         private readonly IUserService _userService;
+        private readonly IErrorHandler _errorHandler;
 
-        public UserManagementForm(IUserService userService)
+        public UserManagementForm(IUserService userService, IErrorHandler errorHandler)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
             InitializeComponent();
             InitializeControls();
             LoadUsers();
@@ -28,6 +31,17 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void InitializeControls()
         {
+            // Load logo if available
+            var logo = LogoHelper.LoadLogo(UIThemeConstants.Spacing.LogoSizeMedium);
+            if (logo != null && picLogo != null)
+            {
+                picLogo.Image = logo;
+            }
+            else if (picLogo != null)
+            {
+                picLogo.Visible = false;
+            }
+
             SetupFilterComboBoxes();
             WireUpEventHandlers();
         }
@@ -75,13 +89,27 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             try
             {
-                var users = _userService.GetAllUsers().ToList();
+                if (gridUsers == null)
+                {
+                    _errorHandler.ShowError("Grid người dùng chưa được khởi tạo!");
+                    return;
+                }
+
+                var allUsers = _userService.GetAllUsers();
+                if (allUsers == null)
+                {
+                    _errorHandler.ShowWarning("Không thể tải danh sách người dùng. Dịch vụ trả về null.");
+                    gridUsers.DataSource = null;
+                    return;
+                }
+
+                var users = allUsers.ToList();
                 
                 users = ApplySearchFilter(users);
                 users = ApplyRoleFilter(users);
                 users = ApplyStatusFilter(users);
 
-                gridUsers.DataSource = users.Select(u => new
+                gridUsers.DataSource = users?.Where(u => u != null).Select(u => new
                 {
                     u.Id,
                     u.Username,
@@ -94,7 +122,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError($"Lỗi khi tải danh sách người dùng: {ex.Message}");
+                if (gridUsers != null)
+                {
+                    gridUsers.DataSource = null;
+                }
             }
         }
 
@@ -150,7 +182,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         private void AddUser()
         {
             using var dialog = new UserEditDialog(null);
-            if (dialog.ShowDialog() == DialogResult.OK && dialog.CreateUserDTO != null)
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.CreateUserDTO != null)
             {
                 try
                 {
@@ -162,11 +194,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                     };
                     _userService.CreateUser(user, dialog.CreateUserDTO.Password);
                     LoadUsers();
-                    ErrorHandler.ShowSuccess("Thêm người dùng thành công!");
+                    _errorHandler.ShowSuccess("Thêm người dùng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -180,19 +212,19 @@ namespace WinFormsFashionShop.Presentation.Forms
             var user = GetSelectedUser();
             if (user == null)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn người dùng cần sửa!");
+                _errorHandler.ShowWarning("Vui lòng chọn người dùng cần sửa!");
                 return;
             }
 
             using var dialog = new UserEditDialog(user);
-            if (dialog.ShowDialog() == DialogResult.OK && dialog.UpdateUserDTO != null)
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.UpdateUserDTO != null)
             {
                 try
                 {
                     var existingUser = _userService.GetUserById(user.Id);
                     if (existingUser == null)
                     {
-                        ErrorHandler.ShowError("Không tìm thấy người dùng!");
+                        _errorHandler.ShowError("Không tìm thấy người dùng!");
                         return;
                     }
 
@@ -210,11 +242,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                     }
 
                     LoadUsers();
-                    ErrorHandler.ShowSuccess("Cập nhật người dùng thành công!");
+                    _errorHandler.ShowSuccess("Cập nhật người dùng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -228,21 +260,21 @@ namespace WinFormsFashionShop.Presentation.Forms
             var user = GetSelectedUser();
             if (user == null)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn người dùng cần xóa!");
+                _errorHandler.ShowWarning("Vui lòng chọn người dùng cần xóa!");
                 return;
             }
 
-            if (ErrorHandler.ShowConfirmation($"Bạn có chắc muốn xóa người dùng '{user.Username}'?"))
+            if (_errorHandler.ShowConfirmation($"Bạn có chắc muốn xóa người dùng '{user.Username}'?"))
             {
                 try
                 {
                     _userService.DeleteUser(user.Id);
                     LoadUsers();
-                    ErrorHandler.ShowSuccess("Xóa người dùng thành công!");
+                    _errorHandler.ShowSuccess("Xóa người dùng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -256,21 +288,21 @@ namespace WinFormsFashionShop.Presentation.Forms
             var user = GetSelectedUser();
             if (user == null)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn người dùng cần đổi mật khẩu!");
+                _errorHandler.ShowWarning("Vui lòng chọn người dùng cần đổi mật khẩu!");
                 return;
             }
 
             using var dialog = new ChangePasswordDialog(user.Username);
-            if (dialog.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.NewPassword))
+            if (dialog.ShowDialog(this) == DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.NewPassword))
             {
                 try
                 {
                     _userService.UpdateUserPassword(user.Id, dialog.NewPassword);
-                    ErrorHandler.ShowSuccess("Đổi mật khẩu thành công!");
+                    _errorHandler.ShowSuccess("Đổi mật khẩu thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -284,7 +316,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             var user = GetSelectedUser();
             if (user == null)
             {
-                ErrorHandler.ShowWarning("Vui lòng chọn người dùng!");
+                _errorHandler.ShowWarning("Vui lòng chọn người dùng!");
                 return;
             }
 
@@ -293,18 +325,18 @@ namespace WinFormsFashionShop.Presentation.Forms
                 if (user.IsActive)
                 {
                     _userService.DeactivateUser(user.Id);
-                    ErrorHandler.ShowSuccess("Đã ngừng kích hoạt người dùng!");
+                    _errorHandler.ShowSuccess("Đã ngừng kích hoạt người dùng!");
                 }
                 else
                 {
                     _userService.ActivateUser(user.Id);
-                    ErrorHandler.ShowSuccess("Đã kích hoạt người dùng!");
+                    _errorHandler.ShowSuccess("Đã kích hoạt người dùng!");
                 }
                 LoadUsers();
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
             }
         }
 
@@ -322,204 +354,5 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
     }
 
-    /// <summary>
-    /// Dialog for adding/editing user information.
-    /// </summary>
-    public class UserEditDialog : Form
-    {
-        private TextBox? _txtUsername, _txtFullName, _txtPassword;
-        private ComboBox? _cmbRole;
-        private CheckBox? _chkIsActive;
-        private Button? _btnOK, _btnCancel;
-        public CreateUserDTO? CreateUserDTO { get; private set; }
-        public UpdateUserDTO? UpdateUserDTO { get; private set; }
-        private User? _existingUser;
-
-        public UserEditDialog(User? user)
-        {
-            _existingUser = user;
-            Text = user == null ? "Thêm người dùng mới" : "Sửa thông tin người dùng";
-            Width = 450;
-            Height = user == null ? 280 : 320;
-            StartPosition = FormStartPosition.CenterParent;
-            InitializeControls();
-        }
-
-        /// <summary>
-        /// Initializes all controls in the dialog.
-        /// Single responsibility: only sets up UI controls.
-        /// </summary>
-        private void InitializeControls()
-        {
-            var lblUsername = new Label { Text = "Tên đăng nhập:", Left = 10, Top = 20, Width = 120 };
-            _txtUsername = new TextBox { Left = 140, Top = 20, Width = 250, Text = _existingUser?.Username ?? "" };
-            if (_existingUser != null) _txtUsername.ReadOnly = true; // Cannot change username
-
-            var lblFullName = new Label { Text = "Họ và tên:", Left = 10, Top = 60, Width = 120 };
-            _txtFullName = new TextBox { Left = 140, Top = 60, Width = 250, Text = _existingUser?.FullName ?? "" };
-
-            var lblPassword = new Label { Text = _existingUser == null ? "Mật khẩu:" : "Mật khẩu mới (để trống nếu không đổi):", Left = 10, Top = 100, Width = 120 };
-            _txtPassword = new TextBox { Left = 140, Top = 100, Width = 250, UseSystemPasswordChar = true };
-
-            var lblRole = new Label { Text = "Vai trò:", Left = 10, Top = 140, Width = 120 };
-            _cmbRole = new ComboBox { Left = 140, Top = 140, Width = 250, DropDownStyle = ComboBoxStyle.DropDownList };
-            _cmbRole.Items.Add(UserRole.Admin);
-            _cmbRole.Items.Add(UserRole.Staff);
-            if (_existingUser != null)
-            {
-                _cmbRole.SelectedItem = _existingUser.Role;
-            }
-            else
-            {
-                _cmbRole.SelectedIndex = 1; // Default to Staff
-            }
-
-            _chkIsActive = new CheckBox { Text = "Hoạt động", Left = 140, Top = 180, Checked = _existingUser?.IsActive ?? true };
-            if (_existingUser == null) _chkIsActive.Visible = false; // Hide for new users (always active)
-
-            _btnOK = new Button { Text = "OK", Left = 140, Top = _existingUser == null ? 220 : 240, Width = 100, DialogResult = DialogResult.OK };
-            _btnCancel = new Button { Text = "Hủy", Left = 250, Top = _existingUser == null ? 220 : 240, Width = 100, DialogResult = DialogResult.Cancel };
-
-            _btnOK.Click += (s, e) =>
-            {
-                if (!ValidateInputs())
-                {
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-
-                if (_existingUser == null)
-                {
-                    CreateUserDTO = new CreateUserDTO
-                    {
-                        Username = _txtUsername?.Text.Trim() ?? "",
-                        Password = _txtPassword?.Text ?? "",
-                        FullName = _txtFullName?.Text.Trim() ?? "",
-                        Role = _cmbRole?.SelectedItem?.ToString() ?? UserRole.Staff
-                    };
-                }
-                else
-                {
-                    UpdateUserDTO = new UpdateUserDTO
-                    {
-                        Id = _existingUser.Id,
-                        Username = _txtUsername?.Text.Trim() ?? "",
-                        Password = string.IsNullOrWhiteSpace(_txtPassword?.Text) ? null : _txtPassword.Text,
-                        FullName = _txtFullName?.Text.Trim() ?? "",
-                        Role = _cmbRole?.SelectedItem?.ToString() ?? UserRole.Staff,
-                        IsActive = _chkIsActive?.Checked ?? true
-                    };
-                }
-            };
-
-            Controls.AddRange(new Control[] {
-                lblUsername, _txtUsername, lblFullName, _txtFullName,
-                lblPassword, _txtPassword, lblRole, _cmbRole,
-                _chkIsActive, _btnOK, _btnCancel
-            });
-        }
-
-        /// <summary>
-        /// Validates user input before saving.
-        /// Single responsibility: only validates inputs.
-        /// </summary>
-        private bool ValidateInputs()
-        {
-            if (string.IsNullOrWhiteSpace(_txtUsername?.Text))
-            {
-                ErrorHandler.ShowWarning("Vui lòng nhập tên đăng nhập!");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(_txtFullName?.Text))
-            {
-                ErrorHandler.ShowWarning("Vui lòng nhập họ và tên!");
-                return false;
-            }
-
-            if (_existingUser == null && string.IsNullOrWhiteSpace(_txtPassword?.Text))
-            {
-                ErrorHandler.ShowWarning("Vui lòng nhập mật khẩu!");
-                return false;
-            }
-
-            if (_cmbRole?.SelectedItem == null)
-            {
-                ErrorHandler.ShowWarning("Vui lòng chọn vai trò!");
-                return false;
-            }
-
-            return true;
-        }
-    }
-
-    /// <summary>
-    /// Dialog for changing user password.
-    /// </summary>
-    public class ChangePasswordDialog : Form
-    {
-        private TextBox? _txtNewPassword, _txtConfirmPassword;
-        private Button? _btnOK, _btnCancel;
-        public string? NewPassword { get; private set; }
-        private string _username;
-
-        public ChangePasswordDialog(string username)
-        {
-            _username = username;
-            Text = $"Đổi mật khẩu cho: {username}";
-            Width = 400;
-            Height = 180;
-            StartPosition = FormStartPosition.CenterParent;
-            InitializeControls();
-        }
-
-        /// <summary>
-        /// Initializes all controls in the dialog.
-        /// Single responsibility: only sets up UI controls.
-        /// </summary>
-        private void InitializeControls()
-        {
-            var lblNewPassword = new Label { Text = "Mật khẩu mới:", Left = 10, Top = 20, Width = 120 };
-            _txtNewPassword = new TextBox { Left = 140, Top = 20, Width = 220, UseSystemPasswordChar = true };
-
-            var lblConfirmPassword = new Label { Text = "Xác nhận mật khẩu:", Left = 10, Top = 60, Width = 120 };
-            _txtConfirmPassword = new TextBox { Left = 140, Top = 60, Width = 220, UseSystemPasswordChar = true };
-
-            _btnOK = new Button { Text = "OK", Left = 140, Top = 100, Width = 100, DialogResult = DialogResult.OK };
-            _btnCancel = new Button { Text = "Hủy", Left = 250, Top = 100, Width = 100, DialogResult = DialogResult.Cancel };
-
-            _btnOK.Click += (s, e) =>
-            {
-                if (string.IsNullOrWhiteSpace(_txtNewPassword?.Text))
-                {
-                    ErrorHandler.ShowWarning("Vui lòng nhập mật khẩu mới!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-
-                if (_txtNewPassword.Text != _txtConfirmPassword?.Text)
-                {
-                    ErrorHandler.ShowWarning("Mật khẩu xác nhận không khớp!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-
-                if (_txtNewPassword.Text.Length < 6)
-                {
-                    ErrorHandler.ShowWarning("Mật khẩu phải có ít nhất 6 ký tự!");
-                    DialogResult = DialogResult.None;
-                    return;
-                }
-
-                NewPassword = _txtNewPassword.Text;
-            };
-
-            Controls.AddRange(new Control[] {
-                lblNewPassword, _txtNewPassword,
-                lblConfirmPassword, _txtConfirmPassword,
-                _btnOK, _btnCancel
-            });
-        }
-    }
 }
 

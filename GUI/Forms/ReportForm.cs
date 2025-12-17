@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
+using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.Presentation.Helpers;
 
 namespace WinFormsFashionShop.Presentation.Forms
@@ -9,10 +11,12 @@ namespace WinFormsFashionShop.Presentation.Forms
     public partial class ReportForm : Form
     {
         private readonly IReportService _reportService;
+        private readonly IErrorHandler _errorHandler;
 
-        public ReportForm(IReportService reportService)
+        public ReportForm(IReportService reportService, IErrorHandler errorHandler)
         {
             _reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
             InitializeComponent();
             InitializeControls();
             LoadDefaultData();
@@ -40,24 +44,43 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             try
             {
-                var report = _reportService.GetRevenueReport(dtpFrom.Value.Date, dtpTo.Value.Date);
-                
-                gridRevenue.DataSource = report.Orders.Select(o => new
+                if (gridRevenue == null || dtpFrom == null || dtpTo == null)
                 {
-                    o.Id,
-                    o.OrderCode,
-                    o.OrderDate,
-                    o.CustomerId,
-                    o.TotalAmount,
-                    o.Status,
+                    _errorHandler.ShowError("Các control chưa được khởi tạo!");
+                    return;
+                }
+
+                var report = _reportService.GetRevenueReport(dtpFrom.Value.Date, dtpTo.Value.Date);
+                if (report == null)
+                {
+                    _errorHandler.ShowWarning("Không thể tải báo cáo doanh thu. Dịch vụ trả về null.");
+                    gridRevenue.DataSource = null;
+                    if (lblRevenueTotal != null)
+                        lblRevenueTotal.Text = "Tổng doanh thu: 0 VNĐ (0 đơn hàng)";
+                    return;
+                }
+                
+                var orders = report.Orders?.ToList() ?? new List<Order>();
+                var orderList = orders.Where(o => o != null).Select(o => new
+                {
+                    Id = o.Id,
+                    OrderCode = o.OrderCode ?? "",
+                    OrderDate = o.OrderDate,
+                    CustomerId = o.CustomerId,
+                    TotalAmount = o.TotalAmount,
+                    Status = o.Status,
                     SốLượngSP = o.Items?.Count ?? 0
                 }).ToList();
+                gridRevenue.DataSource = orderList;
 
+                if (lblRevenueTotal != null)
                 lblRevenueTotal.Text = $"Tổng doanh thu: {report.TotalRevenue:N0} VNĐ ({report.TotalOrders} đơn hàng)";
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError($"Lỗi khi tải báo cáo doanh thu: {ex.Message}");
+                if (gridRevenue != null)
+                    gridRevenue.DataSource = null;
             }
         }
 
@@ -65,17 +88,31 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             try
             {
+                if (gridInventory == null || numLowStockThreshold == null)
+                {
+                    _errorHandler.ShowError("Các control chưa được khởi tạo!");
+                    return;
+                }
+
                 var threshold = (int)numLowStockThreshold.Value;
                 var report = _reportService.GetInventoryReport(threshold);
-                
-                gridInventory.DataSource = report.Items.Select(i => new
+                if (report == null)
                 {
-                    i.ProductCode,
-                    i.ProductName,
-                    i.QuantityInStock,
-                    i.IsLowStock,
+                    _errorHandler.ShowWarning("Không thể tải báo cáo tồn kho. Dịch vụ trả về null.");
+                    gridInventory.DataSource = null;
+                    return;
+                }
+                
+                var items = report.Items?.ToList() ?? new List<InventoryItem>();
+                var itemList = items.Where(i => i != null).Select(i => new
+                {
+                    ProductCode = i.ProductCode ?? "",
+                    ProductName = i.ProductName ?? "",
+                    QuantityInStock = i.QuantityInStock,
+                    IsLowStock = i.IsLowStock,
                     TrạngThái = i.IsLowStock ? "Tồn thấp" : "Bình thường"
                 }).ToList();
+                gridInventory.DataSource = itemList;
 
                 // Highlight low stock rows
                 gridInventory.CellFormatting += (s, e) =>
@@ -97,7 +134,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError($"Lỗi khi tải báo cáo tồn kho: {ex.Message}");
+                if (gridInventory != null)
+                    gridInventory.DataSource = null;
             }
         }
 
@@ -105,10 +144,22 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             try
             {
+                if (gridCustomers == null || numTopCustomers == null)
+                {
+                    _errorHandler.ShowError("Các control chưa được khởi tạo!");
+                    return;
+                }
+
                 var topN = (int)numTopCustomers.Value;
                 var customers = _reportService.GetTopCustomers(topN);
+                if (customers == null)
+                {
+                    _errorHandler.ShowWarning("Không thể tải báo cáo khách hàng. Dịch vụ trả về null.");
+                    gridCustomers.DataSource = null;
+                    return;
+                }
                 
-                gridCustomers.DataSource = customers.Select(c => new
+                gridCustomers.DataSource = customers.Where(c => c != null).Select(c => new
                 {
                     c.CustomerId,
                     c.CustomerName,
@@ -118,7 +169,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError($"Lỗi khi tải báo cáo khách hàng: {ex.Message}");
+                if (gridCustomers != null)
+                    gridCustomers.DataSource = null;
             }
         }
     }

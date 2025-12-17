@@ -6,6 +6,7 @@ using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
 using WinFormsFashionShop.Presentation.Helpers;
+using UIThemeConstants = WinFormsFashionShop.Presentation.Helpers.UIThemeConstants;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -15,17 +16,24 @@ namespace WinFormsFashionShop.Presentation.Forms
         private readonly IProductService _productService;
         private readonly ICustomerService _customerService;
         private readonly IInventoryService _inventoryService;
+        private readonly ICategoryService _categoryService;
+        private readonly IErrorHandler _errorHandler;
         private readonly UserDTO _currentUser;
 
         private List<CreateOrderItemDTO> _orderItems = new List<CreateOrderItemDTO>();
+        private DateTime _lastKeyPressTime = DateTime.MinValue;
+        private const int BarcodeScanThresholdMs = 100; // Nếu input trong vòng 100ms thì coi như barcode scan
 
         public OrderForm(IOrderService orderService, IProductService productService, 
-            ICustomerService customerService, IInventoryService inventoryService, UserDTO currentUser)
+            ICustomerService customerService, IInventoryService inventoryService, 
+            ICategoryService categoryService, IErrorHandler errorHandler, UserDTO currentUser)
         {
             _orderService = orderService ?? throw new ArgumentNullException(nameof(orderService));
             _productService = productService ?? throw new ArgumentNullException(nameof(productService));
             _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
             _inventoryService = inventoryService ?? throw new ArgumentNullException(nameof(inventoryService));
+            _categoryService = categoryService ?? throw new ArgumentNullException(nameof(categoryService));
+            _errorHandler = errorHandler ?? throw new ArgumentNullException(nameof(errorHandler));
             _currentUser = currentUser ?? throw new ArgumentNullException(nameof(currentUser));
 
             InitializeComponent();
@@ -35,6 +43,17 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void InitializeControls()
         {
+            // Load logo if available
+            var logo = LogoHelper.LoadLogo(UIThemeConstants.Spacing.LogoSizeMedium);
+            if (logo != null && picLogo != null)
+            {
+                picLogo.Image = logo;
+            }
+            else if (picLogo != null)
+            {
+                picLogo.Visible = false;
+            }
+
             SetupGridColumns();
             SetupPaymentMethodComboBox();
             WireUpEventHandlers();
@@ -69,7 +88,13 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             cmbPaymentMethod.Items.Add(PaymentMethod.Cash);
             cmbPaymentMethod.Items.Add(PaymentMethod.Card);
-            cmbPaymentMethod.Items.Add(PaymentMethod.Transfer);
+            
+            // Add VietQR option if PayOS is configured
+            if (Helpers.PayOSConfig.IsConfigured())
+            {
+                cmbPaymentMethod.Items.Add(PaymentMethod.VietQR);
+            }
+            
             cmbPaymentMethod.Items.Add(PaymentMethod.Other);
             cmbPaymentMethod.SelectedIndex = 0; // Default to Cash
         }
@@ -81,8 +106,54 @@ namespace WinFormsFashionShop.Presentation.Forms
         private void WireUpEventHandlers()
         {
             btnNewCustomer.Click += (s, e) => AddNewCustomer();
-            btnAddProduct.Click += (s, e) => AddProductToOrder();
-            txtProductSearch.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) AddProductToOrder(); };
+            btnAddProduct.Click += (s, e) => OpenProductSelectionDialog();
+            
+            // Setup AutoComplete for product search
+            SetupProductSearchAutoComplete();
+            
+            txtProductSearch.KeyPress += (s, e) =>
+            {
+                // Track timing for barcode scanner detection
+                var now = DateTime.Now;
+                if (_lastKeyPressTime != DateTime.MinValue)
+                {
+                    var timeDiff = (now - _lastKeyPressTime).TotalMilliseconds;
+                    // If characters come very quickly (less than threshold), likely barcode scanner
+                    // Timer logic removed - using direct timing detection instead
+                }
+                _lastKeyPressTime = now;
+            };
+            
+            txtProductSearch.KeyDown += (s, e) => 
+            { 
+                if (e.KeyCode == Keys.Enter) 
+                {
+                    // If text is entered, use quick search, otherwise open dialog
+                    if (!string.IsNullOrWhiteSpace(txtProductSearch.Text))
+                    {
+                        // Detect if this might be from barcode scanner
+                        // Barcode scanners: fast input + Enter immediately after
+                        var isLikelyBarcode = (_lastKeyPressTime != DateTime.MinValue && 
+                            (DateTime.Now - _lastKeyPressTime).TotalMilliseconds < BarcodeScanThresholdMs * 2);
+                        
+                        AddProductToOrder(isBarcodeScan: isLikelyBarcode);
+                        _lastKeyPressTime = DateTime.MinValue; // Reset
+                    }
+                    else
+                    {
+                        OpenProductSelectionDialog();
+                    }
+                }
+                else if (e.KeyCode == Keys.Escape)
+                {
+                    // Clear search on Escape
+                    txtProductSearch.Clear();
+                    txtProductSearch.Focus();
+                }
+            };
+            
+            // Text changed event for live search suggestions
+            txtProductSearch.TextChanged += (s, e) => HandleProductSearchTextChanged();
             
             gridOrderItems.CellValueChanged += (s, e) =>
             {
@@ -101,10 +172,24 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
             };
 
+            gridOrderItems.SelectionChanged += (s, e) => UpdateProductImageDisplay();
+
             txtDiscountPercent.TextChanged += (s, e) => CalculateTotal();
             txtDiscountAmount.TextChanged += (s, e) => CalculateTotal();
             btnSaveOrder.Click += (s, e) => SaveOrder();
             btnCancel.Click += (s, e) => Close();
+            
+            // Cleanup on form closing
+            FormClosing += OrderForm_FormClosing;
+        }
+
+        /// <summary>
+        /// Handles form closing to cleanup resources.
+        /// Single responsibility: only handles cleanup.
+        /// </summary>
+        private void OrderForm_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            // Cleanup if needed
         }
 
         /// <summary>
@@ -131,14 +216,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
             }
         }
 
         private void AddNewCustomer()
         {
             using var dialog = new CustomerEditDialog(null);
-            if (dialog.ShowDialog() == DialogResult.OK && dialog.CustomerDTO != null)
+            if (dialog.ShowDialog(this) == DialogResult.OK && dialog.CustomerDTO != null)
             {
                 try
                 {
@@ -148,11 +233,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                         LoadCustomers();
                         SelectNewlyCreatedCustomer(dialog.CreateCustomerDTO.CustomerName);
                     }
-                    ErrorHandler.ShowSuccess("Thêm khách hàng thành công!");
+                    _errorHandler.ShowSuccess("Thêm khách hàng thành công!");
                 }
                 catch (Exception ex)
                 {
-                    ErrorHandler.ShowError(ex);
+                    _errorHandler.ShowError(ex);
                 }
             }
         }
@@ -172,39 +257,159 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         /// <summary>
-        /// Main method to add a product to the order.
+        /// Opens the product selection dialog for visual product browsing.
+        /// Single responsibility: only opens the selection dialog.
+        /// </summary>
+        private void OpenProductSelectionDialog()
+        {
+            try
+            {
+                using var dialog = new ProductSelectionDialog(_productService, _inventoryService, _categoryService);
+                if (dialog.ShowDialog(this) == DialogResult.OK && dialog.SelectedProduct != null)
+                {
+                    AddSelectedProductToOrder(dialog.SelectedProduct);
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Adds a selected product to the order.
+        /// Single responsibility: only adds product to order.
+        /// </summary>
+        private void AddSelectedProductToOrder(ProductDTO product)
+        {
+            try
+            {
+                if (TryIncrementExistingProduct(product))
+                {
+                    txtProductSearch.Clear();
+                    return;
+                }
+
+                if (!ValidateStockAvailability(product, out var stock))
+                {
+                    return;
+                }
+
+                AddProductRowToGrid(product, stock);
+                txtProductSearch.Clear();
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Sets up AutoComplete for product search textbox.
+        /// Single responsibility: only configures AutoComplete.
+        /// </summary>
+        private void SetupProductSearchAutoComplete()
+        {
+            try
+            {
+                var products = _productService.GetAllProducts()
+                    .Where(p => p.IsActive)
+                    .ToList();
+
+                var autoCompleteCollection = new AutoCompleteStringCollection();
+                foreach (var product in products)
+                {
+                    // Add both product code and name for autocomplete
+                    autoCompleteCollection.Add(product.ProductCode);
+                    autoCompleteCollection.Add(product.Name);
+                }
+
+                txtProductSearch.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                txtProductSearch.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                txtProductSearch.AutoCompleteCustomSource = autoCompleteCollection;
+                
+                // Add tooltip
+                var tooltip = new ToolTip
+                {
+                    IsBalloon = true,
+                    ToolTipTitle = "Hướng dẫn",
+                    AutoPopDelay = 5000
+                };
+                tooltip.SetToolTip(txtProductSearch, 
+                    "Nhập mã/tên sản phẩm và nhấn Enter\n" +
+                    "Hoặc quét mã vạch/barcode để tự động thêm\n" +
+                    "Hoặc click nút 'Thêm' để chọn từ danh sách");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error setting up AutoComplete: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handles text changed event for live search (optional enhancement).
+        /// Single responsibility: only handles text change events.
+        /// </summary>
+        private void HandleProductSearchTextChanged()
+        {
+            // Optional: Could add live search dropdown here
+            // For now, AutoComplete handles suggestions
+        }
+
+        /// <summary>
+        /// Main method to add a product to the order using quick search.
         /// Orchestrates the flow but delegates to smaller methods.
         /// </summary>
-        private void AddProductToOrder()
+        /// <param name="isBarcodeScan">Indicates if this is from a barcode scanner</param>
+        private void AddProductToOrder(bool isBarcodeScan = false)
         {
             var searchText = ValidateProductSearchInput();
             if (searchText == null) return;
 
             try
             {
-                var products = SearchProducts(searchText);
-                if (products == null || products.Count == 0) return;
+                // For barcode scans, try exact match first
+                ProductDTO? selectedProduct = null;
+                
+                if (isBarcodeScan)
+                {
+                    // Barcode scanner typically sends exact product code
+                    selectedProduct = _productService.GetAllProducts()
+                        .FirstOrDefault(p => p.IsActive && 
+                            p.ProductCode.Equals(searchText, StringComparison.OrdinalIgnoreCase));
+                }
+                
+                // If not found with exact match, do normal search
+                if (selectedProduct == null)
+                {
+                    var products = SearchProducts(searchText);
+                    if (products == null || products.Count == 0) return;
 
-                var selectedProduct = SelectProductFromResults(products);
-                if (selectedProduct == null) return;
+                    selectedProduct = SelectProductFromResults(products, isBarcodeScan);
+                    if (selectedProduct == null) return;
+                }
 
                 if (TryIncrementExistingProduct(selectedProduct))
                 {
                     txtProductSearch.Clear();
+                    txtProductSearch.Focus();
                     return;
                 }
 
                 if (!ValidateStockAvailability(selectedProduct, out var stock))
                 {
+                    txtProductSearch.Focus();
                     return;
                 }
 
                 AddProductRowToGrid(selectedProduct, stock);
                 txtProductSearch.Clear();
+                txtProductSearch.Focus(); // Focus lại để tiếp tục quét/nhập sản phẩm tiếp theo
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
+                txtProductSearch.Focus();
             }
         }
 
@@ -217,7 +422,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             var searchText = txtProductSearch.Text.Trim();
             if (string.IsNullOrWhiteSpace(searchText))
             {
-                ErrorHandler.ShowWarning("Vui lòng nhập mã hoặc tên sản phẩm!");
+                _errorHandler.ShowWarning("Vui lòng nhập mã hoặc tên sản phẩm!");
                 return null;
             }
             return searchText;
@@ -237,7 +442,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
             if (products.Count == 0)
             {
-                ErrorHandler.ShowWarning("Không tìm thấy sản phẩm!");
+                _errorHandler.ShowWarning("Không tìm thấy sản phẩm!");
                 return null;
             }
 
@@ -248,16 +453,29 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// Selects a product from search results, showing dialog if multiple matches.
         /// Single responsibility: only handles product selection.
         /// </summary>
-        private ProductDTO? SelectProductFromResults(List<ProductDTO> products)
+        /// <param name="products">List of matching products</param>
+        /// <param name="isBarcodeScan">If true and multiple matches, prefer exact code match</param>
+        private ProductDTO? SelectProductFromResults(List<ProductDTO> products, bool isBarcodeScan = false)
         {
             if (products.Count == 1)
             {
                 return products.First();
             }
 
+            // For barcode scans, prefer exact code match if available
+            if (isBarcodeScan && !string.IsNullOrWhiteSpace(txtProductSearch?.Text))
+            {
+                var exactMatch = products.FirstOrDefault(p => 
+                    p.ProductCode.Equals(txtProductSearch.Text.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (exactMatch != null)
+                {
+                    return exactMatch;
+                }
+            }
+
             // Show selection dialog if multiple products found
-            using var dialog = new ProductSelectionDialog(products);
-            if (dialog.ShowDialog() != DialogResult.OK || dialog.SelectedProduct == null)
+            using var dialog = new ProductSelectionDialogLegacy(products);
+            if (dialog.ShowDialog(this) != DialogResult.OK || dialog.SelectedProduct == null)
                 return null;
 
             return dialog.SelectedProduct;
@@ -296,7 +514,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
             if (stock <= 0)
             {
-                ErrorHandler.ShowWarning($"Sản phẩm '{product.Name}' đã hết hàng!");
+                _errorHandler.ShowWarning($"Sản phẩm '{product.Name}' đã hết hàng!");
                 return false;
             }
 
@@ -368,7 +586,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (qty > stock)
             {
-                ErrorHandler.ShowWarning($"Số lượng vượt quá tồn kho ({stock})!");
+                _errorHandler.ShowWarning($"Số lượng vượt quá tồn kho ({stock})!");
                 row.Cells["Quantity"].Value = stock;
                 return stock;
             }
@@ -449,23 +667,141 @@ namespace WinFormsFashionShop.Presentation.Forms
             if (!ValidateOrderBeforeSave())
                 return;
 
+            // Payment confirmation is handled in ConfirmPaymentBeforeSaveWithDTO
+
             try
             {
                 var orderItems = BuildOrderItemsFromGrid();
                 if (orderItems == null)
                     return;
 
-                var customerId = GetSelectedCustomerId();
-                var (discountPercent, discountAmount) = ParseDiscountFromInputs();
-                var createOrderDTO = CreateOrderDTO(orderItems, customerId, discountPercent, discountAmount);
+            var customerId = GetSelectedCustomerId();
+            var (discountPercent, discountAmount) = ParseDiscountFromInputs();
+            var createOrderDTO = CreateOrderDTO(orderItems, customerId, discountPercent, discountAmount);
 
-                SaveOrderToDatabase(createOrderDTO);
-                ErrorHandler.ShowSuccess("Lưu hóa đơn thành công!");
+            // Confirm payment before saving (this may update Notes field for bank transfer)
+            if (!ConfirmPaymentBeforeSaveWithDTO(createOrderDTO))
+                return;
+
+            var createdOrder = SaveOrderToDatabase(createOrderDTO);
+                if (createdOrder != null)
+                {
+                    _errorHandler.ShowSuccess("Lưu hóa đơn thành công!");
+                    ShowOrderDetailAfterCreate(createdOrder);
+                }
+                else
+                {
+                    _errorHandler.ShowSuccess("Lưu hóa đơn thành công!");
+                }
+                
                 Close();
             }
             catch (Exception ex)
             {
-                ErrorHandler.ShowError(ex);
+                _errorHandler.ShowError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Confirms payment with pre-built order DTO (allows updating Notes for bank transfer).
+        /// Single responsibility: only handles payment confirmation with DTO.
+        /// </summary>
+        private bool ConfirmPaymentBeforeSaveWithDTO(CreateOrderDTO createOrderDTO)
+        {
+            var subtotal = CalculateSubtotal();
+            var total = ApplyDiscount(subtotal);
+            var paymentMethod = GetSelectedPaymentMethod();
+
+            // Show payment dialog for cash payment
+            if (paymentMethod == PaymentMethod.Cash)
+            {
+                using var paymentDialog = new PaymentDialog(total);
+                if (paymentDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    if (paymentDialog.Change > 0)
+                    {
+                        var changeMessage = $"Tiền thừa: {paymentDialog.Change:N0} VNĐ\n\n" +
+                                           $"Bạn có chắc chắn muốn lưu hóa đơn này?";
+                        return ErrorHandler.ShowConfirmation(changeMessage, "Xác nhận thanh toán");
+                    }
+                    return true;
+                }
+                return false;
+            }
+            else if (paymentMethod == PaymentMethod.VietQR)
+            {
+                // Show VietQR payment dialog
+                // Generate unique order ID for PayOS (use order code hash or timestamp)
+                var payOSOrderId = GeneratePayOSOrderId();
+                // PayOS description max 25 characters - use shorter format
+                var orderDescription = $"ĐH #{payOSOrderId} - {DateTime.Now:dd/MM HH:mm}";
+                
+                using var qrPaymentDialog = new QRCodePaymentDialog(payOSOrderId, total, orderDescription);
+                if (qrPaymentDialog.ShowDialog(this) == DialogResult.OK && qrPaymentDialog.IsPaymentConfirmed)
+                {
+                    // Store PayOS payment info in Notes field
+                    if (qrPaymentDialog.PaymentData != null)
+                    {
+                        createOrderDTO.Notes = FormatPayOSPaymentInfo(qrPaymentDialog.PaymentData);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            else
+            {
+                // For other payment methods (Card, Other), show simple confirmation
+                var message = $"Xác nhận thanh toán:\n\n" +
+                             $"Tổng tiền: {total:N0} VNĐ\n" +
+                             $"Phương thức: {paymentMethod}\n\n" +
+                             $"Bạn có chắc chắn muốn lưu hóa đơn này?";
+
+                return ErrorHandler.ShowConfirmation(message, "Xác nhận thanh toán");
+            }
+        }
+
+        /// <summary>
+        /// Formats PayOS payment information for storage in Notes field.
+        /// Single responsibility: only formats PayOS payment info.
+        /// </summary>
+        private string FormatPayOSPaymentInfo(Net.payOS.Types.CreatePaymentResult paymentData)
+        {
+            return $"VIETQR PAYOS:\n" +
+                   $"Mã đơn PayOS: {paymentData.orderCode}\n" +
+                   $"Link thanh toán: {paymentData.checkoutUrl}\n" +
+                   $"Trạng thái: {paymentData.status}\n" +
+                   $"Ngày tạo: {DateTime.Now:dd/MM/yyyy HH:mm}";
+        }
+
+        /// <summary>
+        /// Generates a unique order ID for PayOS (must be integer).
+        /// Single responsibility: only generates order ID.
+        /// </summary>
+        private int GeneratePayOSOrderId()
+        {
+            // Use timestamp-based ID to ensure uniqueness
+            // Format: YYYYMMDDHHMMSS (last 9 digits to fit in int)
+            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+            var last9Digits = timestamp.Substring(Math.Max(0, timestamp.Length - 9));
+            return int.Parse(last9Digits);
+        }
+
+        /// <summary>
+        /// Shows order detail dialog after successful creation.
+        /// Single responsibility: only displays order details.
+        /// </summary>
+        private void ShowOrderDetailAfterCreate(OrderDTO order)
+        {
+            var message = $"Hóa đơn đã được tạo thành công!\n\n" +
+                         $"Mã đơn: {order.OrderCode}\n" +
+                         $"Tổng tiền: {order.TotalAmount:N0} VNĐ\n" +
+                         $"Phương thức: {order.PaymentMethod}\n\n" +
+                         $"Bạn có muốn xem chi tiết hóa đơn không?";
+
+            if (_errorHandler.ShowConfirmation(message, "Hóa đơn đã tạo"))
+            {
+                using var dialog = new OrderDetailDialog(order);
+                dialog.ShowDialog(this);
             }
         }
 
@@ -477,7 +813,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (gridOrderItems.Rows.Count == 0)
             {
-                ErrorHandler.ShowWarning("Hóa đơn phải có ít nhất một sản phẩm!");
+                _errorHandler.ShowWarning("Hóa đơn phải có ít nhất một sản phẩm!");
                 return false;
             }
             return true;
@@ -519,7 +855,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             if (!_orderService.CheckStockAvailability(product.Id, quantity))
             {
-                ErrorHandler.ShowError($"Sản phẩm '{product.Name}' không đủ tồn kho!");
+                _errorHandler.ShowError($"Sản phẩm '{product.Name}' không đủ tồn kho!");
                 return false;
             }
             return true;
@@ -593,22 +929,68 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         /// <summary>
-        /// Saves the order to the database.
+        /// Saves the order to the database and returns the created order.
         /// Single responsibility: only saves to database.
         /// </summary>
-        private void SaveOrderToDatabase(CreateOrderDTO createOrderDTO)
+        private OrderDTO? SaveOrderToDatabase(CreateOrderDTO createOrderDTO)
         {
-            _orderService.CreateOrder(createOrderDTO);
+            return _orderService.CreateOrder(createOrderDTO);
+        }
+
+        /// <summary>
+        /// Updates product image display when selection changes.
+        /// Single responsibility: only updates image display.
+        /// </summary>
+        private void UpdateProductImageDisplay()
+        {
+            if (gridOrderItems.SelectedRows.Count == 0)
+            {
+                picProductImage.Image = null;
+                lblProductImage.Text = "Ảnh sản phẩm";
+                return;
+            }
+
+            var selectedRow = gridOrderItems.SelectedRows[0];
+            var product = selectedRow.Tag as ProductDTO;
+
+            if (product != null && !string.IsNullOrWhiteSpace(product.ImagePath))
+            {
+                try
+                {
+                    var image = ImageHelper.LoadProductImage(product.ImagePath);
+                    if (image != null)
+                    {
+                        picProductImage.Image?.Dispose();
+                        picProductImage.Image = ImageHelper.ResizeImage(image, picProductImage.Width, picProductImage.Height);
+                        lblProductImage.Text = product.Name;
+                    }
+                    else
+                    {
+                        picProductImage.Image = null;
+                        lblProductImage.Text = product.Name;
+                    }
+                }
+                catch
+                {
+                    picProductImage.Image = null;
+                    lblProductImage.Text = product.Name;
+                }
+            }
+            else
+            {
+                picProductImage.Image = null;
+                lblProductImage.Text = selectedRow.Cells["ProductName"]?.Value?.ToString() ?? "Ảnh sản phẩm";
+            }
         }
     }
 
-    // Dialog for selecting product when multiple matches found
-    public class ProductSelectionDialog : Form
+    // Legacy dialog for selecting product when multiple matches found (kept for backward compatibility)
+    public class ProductSelectionDialogLegacy : Form
     {
         private DataGridView _grid;
         public ProductDTO? SelectedProduct { get; private set; }
 
-        public ProductSelectionDialog(List<ProductDTO> products)
+        public ProductSelectionDialogLegacy(List<ProductDTO> products)
         {
             Text = "Chọn sản phẩm";
             Width = 600;

@@ -31,9 +31,10 @@ namespace WinFormsFashionShop.Business.Composition
             var categoryService = new CategoryService(categoryRepo);
             var customerService = new CustomerService(customerRepo);
             var inventoryService = new InventoryService(inventoryRepo);
-            var orderService = new OrderService(orderRepo, orderItemRepo, inventoryService, productRepo, customerRepo, userRepo);
             var userService = new UserService(userRepo);
+            var orderService = new OrderService(orderRepo, orderItemRepo, inventoryService, productService, customerService, userService);
             var reportService = new ReportService(orderRepo, orderItemRepo, inventoryRepo, productRepo, customerRepo);
+            var dashboardService = new DashboardService(orderService, productService, customerService, reportService);
 
             return new ServiceRegistry
             {
@@ -44,7 +45,8 @@ namespace WinFormsFashionShop.Business.Composition
                 OrderService = orderService,
                 InventoryService = inventoryService,
                 UserService = userService,
-                ReportService = reportService
+                ReportService = reportService,
+                DashboardService = dashboardService
             };
         }
     }
@@ -63,5 +65,6 @@ namespace WinFormsFashionShop.Business.Composition
         public IInventoryService InventoryService { get; init; } = null!;
         public IUserService UserService { get; init; } = null!;
         public IReportService ReportService { get; init; } = null!;
+        public IDashboardService DashboardService { get; init; } = null!;
     }
 }
