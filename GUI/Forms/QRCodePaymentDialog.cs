@@ -348,12 +348,26 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void StartPaymentCheckTimer()
         {
+            // Delay first check by 10 seconds to allow payment link to be fully processed
+            // Then check every 5 seconds
             _paymentCheckTimer = new System.Windows.Forms.Timer
             {
-                Interval = 3000 // Check every 3 seconds
+                Interval = 5000 // Check every 5 seconds (increased from 3 seconds)
             };
             _paymentCheckTimer.Tick += async (s, e) => await CheckPaymentStatusAsync();
-            _paymentCheckTimer.Start();
+            
+            // Start timer after 10 seconds delay to avoid immediate API errors
+            var delayTimer = new System.Windows.Forms.Timer
+            {
+                Interval = 10000 // 10 seconds delay before first check
+            };
+            delayTimer.Tick += (s, e) =>
+            {
+                delayTimer.Stop();
+                delayTimer.Dispose();
+                _paymentCheckTimer?.Start();
+            };
+            delayTimer.Start();
         }
 
         /// <summary>
@@ -380,7 +394,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             
             try
             {
-                await CheckPaymentStatusAsync();
+                await CheckPaymentStatusAsync(true); // Pass true to indicate manual check
             }
             finally
             {
@@ -397,11 +411,12 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// Checks payment status from PayOS.
         /// Single responsibility: only checks payment status.
         /// </summary>
-        private async Task CheckPaymentStatusAsync()
+        /// <param name="isManualCheck">True if user manually clicked check button, false if auto-check from timer</param>
+        private async Task CheckPaymentStatusAsync(bool isManualCheck = false)
         {
             if (_paymentLinkData == null)
             {
-                if (_lblStatus != null)
+                if (_lblStatus != null && isManualCheck)
                 {
                     _lblStatus.Text = "❌ Không có thông tin thanh toán để kiểm tra";
                     _lblStatus.ForeColor = Color.Red;
@@ -411,7 +426,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
             try
             {
-                if (_lblStatus != null)
+                if (_lblStatus != null && isManualCheck)
                 {
                     _lblStatus.Text = "⏳ Đang kiểm tra trạng thái thanh toán...";
                     _lblStatus.ForeColor = Color.Blue;
@@ -460,7 +475,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
                 else
                 {
-                    if (_lblStatus != null)
+                    // Only update status message for manual checks or if payment is still pending
+                    // Don't spam status updates for auto-checks
+                    if (_lblStatus != null && isManualCheck)
                     {
                         _lblStatus.Text = "⏳ Đang chờ thanh toán... (Chưa nhận được thanh toán)";
                         _lblStatus.ForeColor = Color.Blue;
@@ -469,13 +486,23 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                // Show error message to user when manually checking
-                if (_lblStatus != null)
+                // Only show error message when user manually clicks "Kiểm tra thanh toán"
+                // For auto-check (timer), just log the error silently to avoid spamming user
+                // The error might be temporary (network issue, API not ready yet, etc.)
+                if (isManualCheck)
                 {
-                    _lblStatus.Text = $"❌ Lỗi kiểm tra: {ex.Message}";
-                    _lblStatus.ForeColor = Color.Red;
+                    // Show error to user when they manually check
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = $"❌ Lỗi kiểm tra: {ex.Message}";
+                        _lblStatus.ForeColor = Color.Red;
+                    }
                 }
-                System.Diagnostics.Debug.WriteLine($"Payment check error: {ex.Message}");
+                else
+                {
+                    // Silent log for auto-check errors (don't disturb user)
+                    System.Diagnostics.Debug.WriteLine($"Payment check error (auto-check): {ex.Message}");
+                }
             }
         }
 
