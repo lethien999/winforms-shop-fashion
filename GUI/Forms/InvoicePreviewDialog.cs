@@ -46,8 +46,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             // Set form title
             Text = $"Xem trước hóa đơn - {_order.OrderCode}";
 
-            // Set header info
-            lblHeaderTitle!.Text = $"HÓA ĐƠN BÁN HÀNG - {_order.OrderCode}";
+            // Set header info (only show order code in header, title is in invoice content)
+            lblHeaderTitle!.Text = $"HÓA ĐƠN - {_order.OrderCode}";
             lblOrderDate!.Text = $"Ngày: {_order.OrderDate:dd/MM/yyyy HH:mm}";
 
             // Wire up event handlers
@@ -199,11 +199,23 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void PopulateDataGridView()
         {
-            gridItems!.Rows.Clear();
+            if (gridItems == null) return;
+
+            gridItems.Rows.Clear();
 
             if (_order.Items == null || !_order.Items.Any())
             {
-                gridItems.Height = 35; // Just header height if no items
+                // Show empty message if no items
+                gridItems.Rows.Add("", "Không có sản phẩm", "", "", "");
+                gridItems.Rows[0].DefaultCellStyle.ForeColor = Color.Gray;
+                gridItems.Rows[0].DefaultCellStyle.Font = new Font("Arial", 10, FontStyle.Italic);
+                
+                // Set minimum height
+                if (pnlInvoiceContent != null && pnlInvoiceContent.RowCount > 3)
+                {
+                    pnlInvoiceContent.RowStyles[3].SizeType = SizeType.Absolute;
+                    pnlInvoiceContent.RowStyles[3].Height = 70; // Header + 1 row
+                }
                 return;
             }
 
@@ -214,8 +226,8 @@ namespace WinFormsFashionShop.Presentation.Forms
                     stt.ToString(),
                     item.ProductName ?? "",
                     item.Quantity.ToString(),
-                    $"{item.UnitPrice:N0}",
-                    $"{item.LineTotal:N0}"
+                    $"{item.UnitPrice:N0} VNĐ",
+                    $"{item.LineTotal:N0} VNĐ"
                 );
                 stt++;
             }
@@ -227,7 +239,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             int calculatedHeight = headerHeight + (totalRows * rowHeight) + 2; // +2 for border
             
             // Set minimum and maximum height
-            int gridHeight = Math.Max(calculatedHeight, 35);
+            int gridHeight = Math.Max(calculatedHeight, 70);
             gridHeight = Math.Min(gridHeight, 500); // Max 500px to prevent too large
             
             // Update TableLayoutPanel row height for gridItems (row index 3)
@@ -235,20 +247,25 @@ namespace WinFormsFashionShop.Presentation.Forms
             {
                 pnlInvoiceContent.RowStyles[3].SizeType = SizeType.Absolute;
                 pnlInvoiceContent.RowStyles[3].Height = gridHeight;
-                gridItems.Height = gridHeight;
             }
 
-            // Auto-resize columns to fill available space
-            gridItems.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            gridItems.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // Product name fills remaining space
-            gridItems.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            gridItems.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            gridItems.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
-            
-            // Ensure grid fits within container
-            if (gridItems.Width > 800)
+            // Set column widths and auto-size modes AFTER adding rows
+            if (gridItems.Columns.Count >= 5)
             {
-                gridItems.Width = 800;
+                gridItems.Columns[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                gridItems.Columns[0].Width = 50; // STT
+                
+                gridItems.Columns[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // Product name fills remaining space
+                gridItems.Columns[1].MinimumWidth = 200;
+                
+                gridItems.Columns[2].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                gridItems.Columns[2].Width = 60; // SL
+                
+                gridItems.Columns[3].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                gridItems.Columns[3].Width = 120; // Đơn giá
+                
+                gridItems.Columns[4].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                gridItems.Columns[4].Width = 130; // Thành tiền
             }
         }
 

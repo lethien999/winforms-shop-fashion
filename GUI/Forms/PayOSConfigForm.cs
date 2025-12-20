@@ -60,9 +60,10 @@ namespace WinFormsFashionShop.Presentation.Forms
                 PayOSConfig.ApiKey = _txtApiKey!.Text.Trim();
                 PayOSConfig.ChecksumKey = _txtChecksumKey!.Text.Trim();
 
-                // Test by creating a small payment link
+                // Test by creating a small payment link with unique orderCode
                 var payOSService = new Services.PayOSService();
-                var testOrderId = 999999;
+                // Generate unique orderCode based on timestamp to avoid "order already exists" error
+                var testOrderId = (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % int.MaxValue);
                 var testItems = new System.Collections.Generic.List<Net.payOS.Types.ItemData>
                 {
                     new Net.payOS.Types.ItemData("Test", 1, 1000)
@@ -74,6 +75,16 @@ namespace WinFormsFashionShop.Presentation.Forms
                     description: "Test connection",
                     items: testItems
                 );
+
+                // Cancel the test payment link immediately after successful creation
+                if (result != null && !string.IsNullOrEmpty(result.checkoutUrl))
+                {
+                    try
+                    {
+                        await payOSService.CancelPaymentLinkAsync(testOrderId, "Test connection - auto cancel");
+                    }
+                    catch { /* Ignore cancel errors */ }
+                }
 
                 // Restore original config
                 PayOSConfig.ClientId = originalClientId;

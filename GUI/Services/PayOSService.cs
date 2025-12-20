@@ -172,7 +172,16 @@ namespace WinFormsFashionShop.Presentation.Services
             }
             catch (System.Net.Http.HttpRequestException ex)
             {
+                // Check if it's a DNS/network error
+                if (ex.Message.Contains("name is valid") || ex.Message.Contains("NameResolutionFailure") || ex.Message.Contains("No such host"))
+                {
+                    throw new InvalidOperationException("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối Internet và thử lại.", ex);
+                }
                 throw new InvalidOperationException($"Lỗi kết nối PayOS API: {ex.Message}", ex);
+            }
+            catch (System.Net.Sockets.SocketException ex)
+            {
+                throw new InvalidOperationException("Lỗi kết nối mạng. Vui lòng kiểm tra kết nối Internet và thử lại.", ex);
             }
             catch (InvalidOperationException)
             {

@@ -733,8 +733,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                 // Show VietQR payment dialog
                 // Generate unique order ID for PayOS (use order code hash or timestamp)
                 var payOSOrderId = GeneratePayOSOrderId();
-                // PayOS description max 25 characters - use shorter format
-                var orderDescription = $"ĐH #{payOSOrderId} - {DateTime.Now:dd/MM HH:mm}";
+                // PayOS description max 25 characters - simple, clear format for bank transfer note
+                // Format: "DH [orderId]" - e.g., "DH 218213659"
+                var orderDescription = $"DH {payOSOrderId}";
                 
                 using var qrPaymentDialog = new QRCodePaymentDialog(payOSOrderId, total, orderDescription);
                 if (qrPaymentDialog.ShowDialog(this) == DialogResult.OK && qrPaymentDialog.IsPaymentConfirmed)

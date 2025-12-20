@@ -254,7 +254,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblInvoiceTitle.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
             lblInvoiceTitle.Font = new Font("Arial", 16F, FontStyle.Bold);
-            lblInvoiceTitle.ForeColor = Color.Black;
+            lblInvoiceTitle.ForeColor = Color.LightCoral;
             lblInvoiceTitle.Location = new Point(5, 12);
             lblInvoiceTitle.Margin = new Padding(5, 12, 5, 0);
             lblInvoiceTitle.Name = "lblInvoiceTitle";
@@ -350,12 +350,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             gridItems.AllowUserToDeleteRows = false;
             gridItems.AllowUserToResizeColumns = false;
             gridItems.AllowUserToResizeRows = false;
-            gridItems.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            gridItems.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
             gridItems.BackgroundColor = Color.White;
-            gridItems.BorderStyle = BorderStyle.None;
-            gridItems.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            gridItems.BorderStyle = BorderStyle.FixedSingle;
+            gridItems.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             gridItems.Dock = DockStyle.Fill;
-            gridItems.Location = new Point(0, 166);
+            gridItems.Location = new Point(0, 0);
             gridItems.Margin = new Padding(0);
             gridItems.MultiSelect = false;
             gridItems.Name = "gridItems";
@@ -393,23 +393,24 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // lblTotalAmount
             // 
-            lblTotalAmount.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            lblTotalAmount.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             lblTotalAmount.Font = new Font("Arial", 15F, FontStyle.Bold);
             lblTotalAmount.ForeColor = Color.FromArgb(220, 53, 69);
-            lblTotalAmount.Location = new Point(5, 0);
+            lblTotalAmount.Location = new Point(200, 0);
             lblTotalAmount.Name = "lblTotalAmount";
-            lblTotalAmount.Size = new Size(788, 45);
+            lblTotalAmount.Size = new Size(588, 45);
             lblTotalAmount.TabIndex = 1;
             lblTotalAmount.Text = "0 VNĐ";
             lblTotalAmount.TextAlign = ContentAlignment.MiddleRight;
             // 
             // lblTotalLabel
             // 
+            lblTotalLabel.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             lblTotalLabel.Font = new Font("Arial", 13F, FontStyle.Bold);
             lblTotalLabel.ForeColor = Color.Black;
             lblTotalLabel.Location = new Point(5, 0);
             lblTotalLabel.Name = "lblTotalLabel";
-            lblTotalLabel.Size = new Size(200, 45);
+            lblTotalLabel.Size = new Size(190, 45);
             lblTotalLabel.TabIndex = 0;
             lblTotalLabel.Text = "TỔNG TIỀN:";
             lblTotalLabel.TextAlign = ContentAlignment.MiddleLeft;
@@ -419,7 +420,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblThankYou1.Dock = DockStyle.Fill;
             lblThankYou1.Font = new Font("Arial", 11F, FontStyle.Bold);
             lblThankYou1.ForeColor = Color.Black;
-            lblThankYou1.Location = new Point(0, 0);
+            lblThankYou1.Location = new Point(0, 412);
             lblThankYou1.Margin = new Padding(0);
             lblThankYou1.Name = "lblThankYou1";
             lblThankYou1.Size = new Size(798, 25);
@@ -450,7 +451,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlFooter.Location = new Point(0, 910);
             pnlFooter.Margin = new Padding(0);
             pnlFooter.Name = "pnlFooter";
-            pnlFooter.Padding = new Padding(15);
+            pnlFooter.Padding = new Padding(15, 12, 15, 12);
             pnlFooter.Size = new Size(900, 60);
             pnlFooter.TabIndex = 2;
             // 
@@ -468,7 +469,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // _btnClose
             // 
-            _btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            _btnClose.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _btnClose.BackColor = Color.FromArgb(108, 117, 125);
             _btnClose.Cursor = Cursors.Hand;
             _btnClose.FlatAppearance.BorderSize = 0;
@@ -485,7 +486,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // _btnPrint
             // 
-            _btnPrint.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
+            _btnPrint.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             _btnPrint.BackColor = Color.FromArgb(34, 139, 34);
             _btnPrint.Cursor = Cursors.Hand;
             _btnPrint.FlatAppearance.BorderSize = 0;
