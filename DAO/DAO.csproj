@@ -17,4 +17,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <!-- Exclude example/template files from compilation -->
+    <Compile Remove="DatabaseConfig.example.cs" />
+  </ItemGroup>
 </Project>

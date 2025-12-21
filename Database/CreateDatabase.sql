@@ -167,6 +167,7 @@ BEGIN
     CREATE TABLE Orders (
         Id INT PRIMARY KEY IDENTITY(1,1),
         OrderCode NVARCHAR(50) NOT NULL UNIQUE,          -- Mã hóa đơn (ORD202412010001)
+        PayOSOrderCode INT NULL UNIQUE,                  -- Mã đơn hàng PayOS (orderCode từ PayOS API)
         OrderDate DATETIME NOT NULL DEFAULT GETDATE(),  -- Ngày lập hóa đơn
         CustomerId INT NULL,                            -- FK -> Customers.Id (nullable - cho phép hóa đơn không gắn khách)
         UserId INT NOT NULL,                             -- FK -> Users.Id (Nhân viên lập hóa đơn)
@@ -174,6 +175,8 @@ BEGIN
         PaymentMethod NVARCHAR(50) NULL,                 -- Phương thức thanh toán (Tiền mặt, Thẻ, Chuyển khoản...)
         Notes NVARCHAR(255) NULL,                        -- Ghi chú
         Status NVARCHAR(20) NOT NULL DEFAULT 'Paid' CHECK (Status IN ('Pending', 'Paid', 'Cancelled')),  -- Trạng thái: Pending, Paid, Cancelled
+        PaidAt DATETIME NULL,                            -- Thời gian thanh toán thành công (từ webhook PayOS)
+        TransactionId NVARCHAR(100) NULL,                -- Transaction ID từ PayOS (để tracking)
         FOREIGN KEY (CustomerId) REFERENCES Customers(Id) ON DELETE SET NULL,
         FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE RESTRICT
     );

@@ -77,11 +77,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 
                 if (txtSearch != null && !string.IsNullOrWhiteSpace(txtSearch.Text))
                 {
-                    var searchText = txtSearch.Text.ToLower();
+                    var searchText = txtSearch.Text?.ToLower() ?? string.Empty;
                     categories = categories.Where(c => 
                         c != null &&
-                        (c.CategoryName?.ToLower().Contains(searchText) ?? false) ||
-                        (c.Description != null && c.Description.ToLower().Contains(searchText))
+                        ((c.CategoryName?.ToLower().Contains(searchText) ?? false) ||
+                        (c.Description?.ToLower().Contains(searchText) ?? false))
                     ).ToList();
                 }
 

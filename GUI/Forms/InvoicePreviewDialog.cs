@@ -272,11 +272,28 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// <summary>
         /// Prints the invoice.
         /// Single responsibility: only handles print action.
+        /// Kiểm tra và đánh dấu đã in để tránh in trùng.
         /// </summary>
         private void PrintInvoice()
         {
-            PrintHelper.PrintOrder(_order);
+            // Kiểm tra nếu đã in rồi
+            if (_order.PrintedAt.HasValue)
+            {
+                var message = $"Hóa đơn này đã được in vào {_order.PrintedAt.Value:dd/MM/yyyy HH:mm:ss}\n\n" +
+                             "Bạn có muốn in lại không?";
+                
+                if (ErrorHandler.ShowConfirmation(message, "Xác nhận in lại"))
+                {
+                    PrintHelper.PrintOrder(_order, checkPrinted: false); // Không check printed khi in lại
+                    ErrorHandler.ShowSuccess("Đã gửi lệnh in hóa đơn!");
+                }
+            }
+            else
+            {
+                // In lần đầu, sẽ tự động đánh dấu đã in
+                PrintHelper.PrintOrder(_order, checkPrinted: true);
             ErrorHandler.ShowSuccess("Đã gửi lệnh in hóa đơn!");
+            }
         }
     }
 }

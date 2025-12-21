@@ -41,10 +41,15 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlFooter = new Panel();
             lblTotal = new Label();
             btnClose = new Button();
+            pnlActions = new Panel();
+            btnPayVietQR = new Button();
+            btnCheckPayment = new Button();
+            btnCancelOrder = new Button();
             pnlInfo.SuspendLayout();
             pnlGrid.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)gridItems).BeginInit();
             pnlFooter.SuspendLayout();
+            pnlActions.SuspendLayout();
             SuspendLayout();
             // 
             // pnlInfo
@@ -155,6 +160,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlFooter
             // 
+            pnlFooter.Controls.Add(pnlActions);
             pnlFooter.Controls.Add(btnClose);
             pnlFooter.Controls.Add(lblTotal);
             pnlFooter.Dock = DockStyle.Bottom;
@@ -175,6 +181,53 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblTotal.TabIndex = 0;
             lblTotal.Text = "Tổng tiền:";
             // 
+            // btnClose
+            // 
+            // 
+            // pnlActions
+            // 
+            pnlActions.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+            pnlActions.Controls.Add(btnPayVietQR);
+            pnlActions.Controls.Add(btnCheckPayment);
+            pnlActions.Controls.Add(btnCancelOrder);
+            pnlActions.Location = new Point(15, 15);
+            pnlActions.Name = "pnlActions";
+            pnlActions.Size = new Size(500, 35);
+            pnlActions.TabIndex = 2;
+            pnlActions.Visible = false;
+            // 
+            // btnPayVietQR
+            // 
+            btnPayVietQR.Location = new Point(0, 0);
+            btnPayVietQR.Name = "btnPayVietQR";
+            btnPayVietQR.Size = new Size(160, 35);
+            btnPayVietQR.TabIndex = 0;
+            btnPayVietQR.Text = "💳 Thanh toán VietQR";
+            btnPayVietQR.UseVisualStyleBackColor = true;
+            btnPayVietQR.Visible = false;
+            // 
+            // btnCheckPayment
+            // 
+            btnCheckPayment.Location = new Point(165, 0);
+            btnCheckPayment.Name = "btnCheckPayment";
+            btnCheckPayment.Size = new Size(160, 35);
+            btnCheckPayment.TabIndex = 1;
+            btnCheckPayment.Text = "🔄 Kiểm tra thanh toán";
+            btnCheckPayment.UseVisualStyleBackColor = true;
+            btnCheckPayment.Visible = false;
+            // 
+            // btnCancelOrder
+            // 
+            btnCancelOrder.BackColor = Color.FromArgb(220, 53, 69);
+            btnCancelOrder.ForeColor = Color.White;
+            btnCancelOrder.Location = new Point(330, 0);
+            btnCancelOrder.Name = "btnCancelOrder";
+            btnCancelOrder.Size = new Size(120, 35);
+            btnCancelOrder.TabIndex = 2;
+            btnCancelOrder.Text = "❌ Hủy đơn";
+            btnCancelOrder.UseVisualStyleBackColor = false;
+            btnCancelOrder.Visible = false;
+            //  
             // btnClose
             // 
             btnClose.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
@@ -206,6 +259,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             ((System.ComponentModel.ISupportInitialize)gridItems).EndInit();
             pnlFooter.ResumeLayout(false);
             pnlFooter.PerformLayout();
+            pnlActions.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -224,5 +278,9 @@ namespace WinFormsFashionShop.Presentation.Forms
         private Panel pnlFooter;
         private Label lblTotal;
         private Button btnClose;
+        private Panel pnlActions;
+        private Button btnPayVietQR;
+        private Button btnCheckPayment;
+        private Button btnCancelOrder;
     }
 }

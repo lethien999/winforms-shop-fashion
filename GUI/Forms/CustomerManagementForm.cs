@@ -79,12 +79,12 @@ namespace WinFormsFashionShop.Presentation.Forms
                 
                 if (txtSearch != null && !string.IsNullOrWhiteSpace(txtSearch.Text))
                 {
-                    var searchText = txtSearch.Text.ToLower();
+                    var searchText = txtSearch.Text?.ToLower() ?? string.Empty;
                     customers = customers.Where(c => 
                         c != null &&
-                        (c.CustomerName?.ToLower().Contains(searchText) ?? false) ||
-                        (c.Phone != null && c.Phone.ToLower().Contains(searchText)) ||
-                        (c.Email != null && c.Email.ToLower().Contains(searchText))
+                        ((c.CustomerName?.ToLower().Contains(searchText) ?? false) ||
+                        (c.Phone?.ToLower().Contains(searchText) ?? false) ||
+                        (c.Email?.ToLower().Contains(searchText) ?? false))
                     ).ToList();
                 }
 

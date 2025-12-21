@@ -86,11 +86,20 @@ namespace WinFormsFashionShop.Data
                 entity.ToTable("Orders");
                 entity.HasKey(e => e.Id);
                 entity.Property(e => e.OrderCode).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.PayOSOrderCode).IsRequired(false);
                 entity.Property(e => e.OrderDate).HasDefaultValueSql("GETDATE()");
                 entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
                 entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Paid");
                 entity.Property(e => e.Notes).HasMaxLength(1000);
+                entity.Property(e => e.PaidAt).IsRequired(false);
+                entity.Property(e => e.TransactionId).HasMaxLength(100);
+                entity.Property(e => e.PrintedAt).IsRequired(false);
+                
+                // Unique index for PayOSOrderCode (only for non-null values)
+                entity.HasIndex(e => e.PayOSOrderCode)
+                    .IsUnique()
+                    .HasFilter("[PayOSOrderCode] IS NOT NULL");
                 
                 entity.HasOne<Customer>()
                     .WithMany()

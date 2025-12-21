@@ -16,6 +16,8 @@ namespace WinFormsFashionShop.DTO
         public string? PaymentMethod { get; set; } // Phương thức thanh toán
         public string? Notes { get; set; }
         public string Status { get; set; } = "Paid";
+        public DateTime? PaidAt { get; set; } // Thời gian thanh toán thành công
+        public DateTime? PrintedAt { get; set; } // Thời gian in hóa đơn (để tránh in trùng)
         public List<OrderItemDTO> Items { get; set; } = new List<OrderItemDTO>();
     }
 

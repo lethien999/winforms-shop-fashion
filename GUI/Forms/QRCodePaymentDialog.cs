@@ -4,10 +4,10 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Net.payOS.Types;
 using QRCoder;
 using WinFormsFashionShop.Presentation.Helpers;
 using WinFormsFashionShop.Presentation.Services;
+using WinFormsFashionShop.Presentation.Models;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -17,23 +17,23 @@ namespace WinFormsFashionShop.Presentation.Forms
     /// </summary>
     public partial class QRCodePaymentDialog : Form
     {
-        private readonly PayOSService _payOSService;
+        private readonly PaymentApiClientWithRetry _apiClient;
         private readonly int _orderId;
         private readonly decimal _totalAmount;
         private readonly string _orderDescription;
-        private CreatePaymentResult? _paymentLinkData;
+        private PaymentData? _paymentLinkData;
         private System.Windows.Forms.Timer? _paymentCheckTimer;
         private bool _isPaymentConfirmed = false;
 
         public bool IsPaymentConfirmed => _isPaymentConfirmed;
-        public CreatePaymentResult? PaymentData => _paymentLinkData;
+        public PaymentData? PaymentData => _paymentLinkData;
 
         public QRCodePaymentDialog(int orderId, decimal totalAmount, string orderDescription)
         {
             _orderId = orderId;
             _totalAmount = totalAmount;
             _orderDescription = orderDescription;
-            _payOSService = new PayOSService();
+            _apiClient = new PaymentApiClientWithRetry(ApiConfig.BaseUrl);
             InitializeComponent();
             InitializeControls();
             LoadPaymentQRCode();
@@ -68,7 +68,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
 
         /// <summary>
-        /// Loads payment QR code from PayOS.
+        /// Loads payment QR code from Backend API.
         /// Single responsibility: only loads QR code.
         /// </summary>
         private async void LoadPaymentQRCode()
@@ -96,25 +96,28 @@ namespace WinFormsFashionShop.Presentation.Forms
                     amountInVND = 1;
                 }
 
-                // Create payment items
-                var items = new List<ItemData>
+                // Tạo payment link qua Backend API
+                var request = new CreatePaymentRequest
                 {
-                    new ItemData(_orderDescription, 1, amountInVND)
+                    OrderId = _orderId,
+                    Amount = amountInVND,
+                    Description = _orderDescription
                 };
 
-                // Create payment link
-                _paymentLinkData = await _payOSService.CreatePaymentLinkAsync(
-                    orderId: _orderId,
-                    amount: amountInVND,
-                    description: _orderDescription,
-                    items: items
-                );
+                var response = await _apiClient.CreatePaymentAsync(request);
+                
+                if (!response.Success || response.Data == null)
+                {
+                    throw new InvalidOperationException(response.Message ?? "Không thể tạo payment link");
+                }
+
+                _paymentLinkData = response.Data;
 
                 // Ưu tiên sử dụng QR code chuẩn VietQR từ PayOS (có thể quét bằng app ngân hàng/Momo)
-                if (!string.IsNullOrWhiteSpace(_paymentLinkData.qrCode))
+                if (!string.IsNullOrWhiteSpace(_paymentLinkData.QrCode))
                 {
                     // Sử dụng QR code chuẩn VietQR từ PayOS
-                    DisplayQRCode(_paymentLinkData.qrCode);
+                    DisplayQRCode(_paymentLinkData.QrCode);
                     if (_lblStatus != null)
                     {
                         _lblStatus.Text = "📱 Quét mã QR bằng app ngân hàng hoặc Momo để thanh toán";
@@ -123,11 +126,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                     if (_btnCheckPayment != null)
                         _btnCheckPayment.Enabled = true;
                     
-                    // Start auto-check timer (check every 3 seconds)
+                    // Start auto-check timer (check every 2-3 seconds)
                     StartPaymentCheckTimer();
                     
                     // Thêm link web làm phương án dự phòng (nếu có checkoutUrl)
-                    if (!string.IsNullOrWhiteSpace(_paymentLinkData.checkoutUrl))
+                    if (!string.IsNullOrWhiteSpace(_paymentLinkData.CheckoutUrl))
                     {
                         var lblOpenLink = new LinkLabel
                         {
@@ -144,17 +147,17 @@ namespace WinFormsFashionShop.Presentation.Forms
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                             {
-                                FileName = _paymentLinkData.checkoutUrl,
+                                FileName = _paymentLinkData.CheckoutUrl,
                                 UseShellExecute = true
                             });
                         };
                         pnlContent.Controls.Add(lblOpenLink);
                     }
                 }
-                else if (!string.IsNullOrWhiteSpace(_paymentLinkData.checkoutUrl))
+                else if (!string.IsNullOrWhiteSpace(_paymentLinkData.CheckoutUrl))
                 {
                     // Fallback: Tạo QR code từ checkout URL (chỉ mở web, không quét trực tiếp được)
-                    DisplayQRCodeFromUrl(_paymentLinkData.checkoutUrl);
+                    DisplayQRCodeFromUrl(_paymentLinkData.CheckoutUrl);
                     if (_lblStatus != null)
                     {
                         _lblStatus.Text = "⚠️ Quét mã QR sẽ mở link thanh toán trên web";
@@ -179,13 +182,13 @@ namespace WinFormsFashionShop.Presentation.Forms
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = _paymentLinkData.checkoutUrl,
+                            FileName = _paymentLinkData.CheckoutUrl,
                             UseShellExecute = true
                         });
                     };
                     pnlContent.Controls.Add(lblOpenLink);
 
-                    // Start auto-check timer (check every 3 seconds)
+                    // Start auto-check timer (check every 2-3 seconds)
                     StartPaymentCheckTimer();
                 }
                 else
@@ -348,18 +351,17 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void StartPaymentCheckTimer()
         {
-            // Delay first check by 10 seconds to allow payment link to be fully processed
-            // Then check every 5 seconds
+            // Check every 2-3 seconds từ Backend API (nhanh hơn vì không gọi PayOS trực tiếp)
             _paymentCheckTimer = new System.Windows.Forms.Timer
             {
-                Interval = 5000 // Check every 5 seconds (increased from 3 seconds)
+                Interval = 3000 // Check every 3 seconds
             };
             _paymentCheckTimer.Tick += async (s, e) => await CheckPaymentStatusAsync();
             
-            // Start timer after 10 seconds delay to avoid immediate API errors
+            // Start timer after 3 seconds delay để webhook có thời gian xử lý
             var delayTimer = new System.Windows.Forms.Timer
             {
-                Interval = 10000 // 10 seconds delay before first check
+                Interval = 3000 // 3 seconds delay before first check
             };
             delayTimer.Tick += (s, e) =>
             {
@@ -408,7 +410,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         /// <summary>
-        /// Checks payment status from PayOS.
+        /// Checks payment status from Backend API (không gọi PayOS trực tiếp).
         /// Single responsibility: only checks payment status.
         /// </summary>
         /// <param name="isManualCheck">True if user manually clicked check button, false if auto-check from timer</param>
@@ -432,16 +434,28 @@ namespace WinFormsFashionShop.Presentation.Forms
                     _lblStatus.ForeColor = Color.Blue;
                 }
 
-                var paymentInfo = await _payOSService.GetPaymentInfoAsync(_paymentLinkData.orderCode);
+                // Gọi Backend API để kiểm tra trạng thái từ database (không gọi PayOS trực tiếp)
+                var statusResponse = await _apiClient.GetPaymentStatusAsync(_orderId);
 
-                // Check payment status from PaymentLinkInformation
-                var status = paymentInfo.status?.ToString() ?? "";
-                if (status.Contains("PAID") || status.Contains("PROCESSING"))
+                if (!statusResponse.Success || statusResponse.Data == null)
+                {
+                    if (isManualCheck && _lblStatus != null)
+                    {
+                        _lblStatus.Text = $"❌ Lỗi: {statusResponse.Message ?? "Không thể lấy trạng thái"}";
+                        _lblStatus.ForeColor = Color.Red;
+                    }
+                    return;
+                }
+
+                var status = statusResponse.Data.Status?.ToUpper() ?? "";
+                
+                // Kiểm tra trạng thái từ database
+                if (status == "PAID")
                 {
                     _isPaymentConfirmed = true;
                     if (_lblStatus != null)
                     {
-                        _lblStatus.Text = "✓ Thanh toán thành công!";
+                        _lblStatus.Text = "✓ Thanh toán thành công! Đang in hóa đơn...";
                         _lblStatus.ForeColor = Color.Green;
                     }
                     StopPaymentCheckTimer();
@@ -451,8 +465,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                         _btnCheckPayment.Text = "✓ Đã thanh toán";
                     }
 
-                    // Auto close after 2 seconds
-                    var closeTimer = new System.Windows.Forms.Timer { Interval = 2000 };
+                    // Tự động in hóa đơn khi thanh toán thành công
+                    PrintInvoiceAfterPayment();
+
+                    // Auto close after 3 seconds (để có thời gian in)
+                    var closeTimer = new System.Windows.Forms.Timer { Interval = 3000 };
                     closeTimer.Tick += (s, e) => 
                     { 
                         closeTimer.Stop();
@@ -462,7 +479,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                     };
                     closeTimer.Start();
                 }
-                else if (status.Contains("CANCELLED"))
+                else if (status == "CANCELLED")
                 {
                     if (_lblStatus != null)
                     {
@@ -486,10 +503,23 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             catch (Exception ex)
             {
-                // Only show error message when user manually clicks "Kiểm tra thanh toán"
-                // For auto-check (timer), just log the error silently to avoid spamming user
-                // The error might be temporary (network issue, API not ready yet, etc.)
-                if (isManualCheck)
+                // Kiểm tra xem có phải lỗi mạng không
+                bool isNetworkError = ex.Message.Contains("kết nối") || 
+                                     ex.Message.Contains("network") || 
+                                     ex.Message.Contains("timeout") ||
+                                     ex.Message.Contains("refused");
+
+                if (isNetworkError && !isManualCheck)
+                {
+                    // Mất mạng: hiển thị thông báo nhưng vẫn tiếp tục retry
+                    if (_lblStatus != null)
+                    {
+                        _lblStatus.Text = "⚠️ Mất kết nối mạng. Đang thử lại...";
+                        _lblStatus.ForeColor = Color.Orange;
+                    }
+                    // Timer sẽ tự động retry ở lần check tiếp theo
+                }
+                else if (isManualCheck)
                 {
                     // Show error to user when they manually check
                     if (_lblStatus != null)
@@ -506,9 +536,43 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
         }
 
+        /// <summary>
+        /// Tự động in hóa đơn sau khi thanh toán thành công
+        /// </summary>
+        private void PrintInvoiceAfterPayment()
+        {
+            try
+            {
+                // Lấy thông tin đơn hàng từ OrderService
+                var services = WinFormsFashionShop.Business.Composition.ServicesComposition.Create();
+                var order = services.OrderService.GetOrderById(_orderId);
+                
+                if (order != null)
+                {
+                    // In tự động (không hiển thị dialog)
+                    var printed = WinFormsFashionShop.Presentation.Helpers.PrintHelper.PrintOrderAuto(order);
+                    
+                    if (!printed && _lblStatus != null)
+                    {
+                        _lblStatus.Text = "✓ Thanh toán thành công! (In hóa đơn thất bại)";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi nhưng không ảnh hưởng đến flow thanh toán
+                System.Diagnostics.Debug.WriteLine($"Lỗi in hóa đơn tự động: {ex.Message}");
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = "✓ Thanh toán thành công! (Không thể in tự động)";
+                }
+            }
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             StopPaymentCheckTimer();
+            _apiClient?.Dispose();
             base.OnFormClosing(e);
         }
 

@@ -17,5 +17,6 @@ namespace WinFormsFashionShop.Business.Services
         bool CheckStockAvailability(int productId, int quantity);
         string GenerateOrderCode();
         void CancelOrder(int orderId);
+        void MarkOrderAsPrinted(int orderId); // Đánh dấu đơn hàng đã in để tránh in trùng
     }
 }

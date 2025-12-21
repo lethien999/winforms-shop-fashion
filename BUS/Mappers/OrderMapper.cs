@@ -28,6 +28,8 @@ namespace WinFormsFashionShop.Business.Mappers
                 PaymentMethod = entity.PaymentMethod,
                 Notes = entity.Notes,
                 Status = entity.Status,
+                PaidAt = entity.PaidAt,
+                PrintedAt = entity.PrintedAt,
                 Items = entity.Items?.Select(item => OrderItemMapper.ToDTO(item)).ToList() ?? new List<OrderItemDTO>()
             };
         }

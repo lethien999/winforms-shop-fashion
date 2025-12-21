@@ -5,6 +5,10 @@ using System.Windows.Forms;
 using WinFormsFashionShop.Business.Constants;
 using WinFormsFashionShop.DTO;
 using System.Drawing;
+using WinFormsFashionShop.Business.Composition;
+using WinFormsFashionShop.Business.Services;
+using WinFormsFashionShop.Presentation.Helpers;
+using WinFormsFashionShop.Presentation.Services;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -14,12 +18,31 @@ namespace WinFormsFashionShop.Presentation.Forms
     public partial class OrderDetailDialog : Form
     {
         private readonly OrderDTO _order;
+        private readonly IOrderService _orderService;
+        private readonly ErrorHandlerService _errorHandler;
+        private readonly PaymentApiClientWithRetry _apiClient;
 
         public OrderDetailDialog(OrderDTO order)
         {
             _order = order ?? throw new ArgumentNullException(nameof(order));
+            var services = ServicesComposition.Create();
+            _orderService = services.OrderService;
+            _errorHandler = new ErrorHandlerService();
+            _apiClient = new PaymentApiClientWithRetry(ApiConfig.BaseUrl);
             InitializeComponent();
+            
+            // Assign event handlers to buttons (from Designer)
+            btnPayVietQR.Click += BtnPayVietQR_Click;
+            btnCheckPayment.Click += BtnCheckPayment_Click;
+            btnCancelOrder.Click += BtnCancelOrder_Click;
+            
             InitializeControls();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            _apiClient?.Dispose();
+            base.OnFormClosing(e);
         }
 
         private void InitializeControls()
@@ -75,8 +98,225 @@ namespace WinFormsFashionShop.Presentation.Forms
             // Update total label
             lblTotal.Text = $"Tổng tiền: {_order.TotalAmount:N0} VNĐ";
 
+            // Setup action buttons for Pending orders
+            SetupPendingOrderActions();
+
             // Wire up event handlers
             btnClose.Click += (s, e) => Close();
+        }
+
+        /// <summary>
+        /// Setup action buttons for pending orders
+        /// </summary>
+        private void SetupPendingOrderActions()
+        {
+            // Only show actions if order is Pending
+            if (_order.Status != OrderStatus.Pending)
+            {
+                pnlActions.Visible = false;
+                btnPayVietQR.Visible = false;
+                btnCheckPayment.Visible = false;
+                btnCancelOrder.Visible = false;
+                return;
+            }
+
+            // Show action panel
+            pnlActions.Visible = true;
+
+            // Setup buttons based on payment method
+            if (_order.PaymentMethod == PaymentMethod.VietQR)
+            {
+                // VietQR payment: Show "Thanh toán VietQR" and "Kiểm tra thanh toán"
+                btnPayVietQR.Visible = true;
+                btnCheckPayment.Visible = true;
+            }
+            else
+            {
+                btnPayVietQR.Visible = false;
+                btnCheckPayment.Visible = false;
+            }
+
+            // Cancel button always visible for pending orders
+            btnCancelOrder.Visible = true;
+        }
+
+        /// <summary>
+        /// Handle VietQR payment button click
+        /// </summary>
+        private void BtnPayVietQR_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // Reload order to get latest status
+                var currentOrder = _orderService.GetOrderById(_order.Id);
+                if (currentOrder == null)
+                {
+                    _errorHandler.ShowError("Không tìm thấy đơn hàng!");
+                    return;
+                }
+
+                // Check if already paid
+                if (currentOrder.Status == OrderStatus.Paid)
+                {
+                    _errorHandler.ShowInfo("Đơn hàng đã được thanh toán!");
+                    // Refresh dialog
+                    DialogResult = DialogResult.OK;
+                    return;
+                }
+
+                // Process VietQR payment
+                var orderDescription = currentOrder.OrderCode.Length > 23
+                    ? $"DH {currentOrder.OrderCode.Substring(0, 21)}"
+                    : $"DH {currentOrder.OrderCode}";
+
+                using var qrPaymentDialog = new QRCodePaymentDialog(currentOrder.Id, currentOrder.TotalAmount, orderDescription);
+                if (qrPaymentDialog.ShowDialog(this) == DialogResult.OK && qrPaymentDialog.IsPaymentConfirmed)
+                {
+                    _errorHandler.ShowSuccess("Thanh toán thành công!");
+                    // Refresh and close
+                    DialogResult = DialogResult.OK;
+                    Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError($"Lỗi khi xử lý thanh toán: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle check payment button click
+        /// </summary>
+        private async void BtnCheckPayment_Click(object? sender, EventArgs e)
+        {
+            Button? btn = sender as Button;
+            try
+            {
+                if (btn != null)
+                {
+                    btn.Enabled = false;
+                    btn.Text = "⏳ Đang kiểm tra...";
+                }
+
+                // Check payment status from API (will also check PayOS directly and update database)
+                var statusResponse = await _apiClient.GetPaymentStatusAsync(_order.Id);
+
+                if (!statusResponse.Success || statusResponse.Data == null)
+                {
+                    var errorMsg = statusResponse.Message ?? "Lỗi không xác định";
+                    
+                    // Log PayOS Order Code nếu có để debug
+                    if (statusResponse.Data != null && statusResponse.Data.PayOSOrderCode.HasValue)
+                    {
+                        errorMsg += $"\n\nPayOS Order Code: {statusResponse.Data.PayOSOrderCode.Value}";
+                        errorMsg += $"\nNếu đã thanh toán trên web, có thể PayOS Order Code trong database không khớp.";
+                        errorMsg += $"\nVui lòng thử lại sau vài giây hoặc kiểm tra lại.";
+                    }
+                    
+                    _errorHandler.ShowWarning(errorMsg);
+                    return;
+                }
+
+                var status = statusResponse.Data.Status?.ToUpper() ?? "";
+                var payOSOrderCode = statusResponse.Data.PayOSOrderCode;
+
+                // Reload order from database to get latest status
+                var updatedOrder = _orderService.GetOrderById(_order.Id);
+                if (updatedOrder == null)
+                {
+                    _errorHandler.ShowError("Không tìm thấy đơn hàng!");
+                    return;
+                }
+
+                if (status == "PAID" || updatedOrder.Status == OrderStatus.Paid)
+                {
+                    _errorHandler.ShowSuccess("Đơn hàng đã được thanh toán thành công!");
+                    
+                    // Update UI to reflect paid status
+                    RefreshOrderDisplay(updatedOrder);
+                    
+                    // Hide action buttons since order is now paid
+                    pnlActions.Visible = false;
+                    
+                    // Close dialog after a short delay
+                    var closeTimer = new System.Windows.Forms.Timer { Interval = 2000 };
+                    closeTimer.Tick += (s, e) =>
+                    {
+                        closeTimer.Stop();
+                        closeTimer.Dispose();
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    };
+                    closeTimer.Start();
+                }
+                else
+                {
+                    var infoMsg = "Đơn hàng chưa được thanh toán.";
+                    if (payOSOrderCode.HasValue)
+                    {
+                        infoMsg += $"\n\nPayOS Order Code: {payOSOrderCode.Value}";
+                        infoMsg += $"\nStatus từ PayOS: {status}";
+                    }
+                    infoMsg += "\n\nNếu bạn đã thanh toán trên web, vui lòng đợi vài giây và thử lại.";
+                    _errorHandler.ShowInfo(infoMsg);
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError($"Lỗi khi kiểm tra thanh toán: {ex.Message}");
+            }
+            finally
+            {
+                if (btn != null)
+                {
+                    btn.Enabled = true;
+                    btn.Text = "🔄 Kiểm tra thanh toán";
+                }
+            }
+        }
+
+        /// <summary>
+        /// Refresh order display with updated order data
+        /// </summary>
+        private void RefreshOrderDisplay(OrderDTO order)
+        {
+            // Update status label
+            string statusText = order.Status == OrderStatus.Paid ? "Đã thanh toán" :
+                               order.Status == OrderStatus.Cancelled ? "Đã hủy" :
+                               order.Status.ToString();
+            lblStatus.Text = $"Trạng thái: {statusText}";
+            lblStatus.ForeColor = order.Status == OrderStatus.Paid ? Color.Green :
+                                 order.Status == OrderStatus.Cancelled ? Color.Red :
+                                 Color.Orange;
+        }
+
+        /// <summary>
+        /// Handle cancel order button click
+        /// </summary>
+        private void BtnCancelOrder_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (!ErrorHandler.ShowConfirmation(
+                    $"Bạn có chắc chắn muốn hủy đơn hàng {_order.OrderCode}?\n\n" +
+                    "Hành động này sẽ:\n" +
+                    "- Hủy đơn hàng\n" +
+                    "- Hoàn trả số lượng tồn kho\n\n" +
+                    "Hành động này không thể hoàn tác!",
+                    "Xác nhận hủy đơn hàng"))
+                {
+                    return;
+                }
+
+                _orderService.CancelOrder(_order.Id);
+                _errorHandler.ShowSuccess("Đã hủy đơn hàng thành công!");
+                DialogResult = DialogResult.OK;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError($"Lỗi khi hủy đơn hàng: {ex.Message}");
+            }
         }
 
         private void SetupGridColumns()

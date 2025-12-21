@@ -133,11 +133,11 @@ namespace WinFormsFashionShop.Presentation.Forms
                 // Filter by search text
                 if (txtSearch != null && !string.IsNullOrWhiteSpace(txtSearch.Text))
                 {
-                    var searchText = txtSearch.Text.ToLower();
+                    var searchText = txtSearch.Text?.ToLower() ?? string.Empty;
                     products = products.Where(p => 
                         p != null &&
-                        (p.ProductCode?.ToLower().Contains(searchText) ?? false) ||
-                        (p.Name?.ToLower().Contains(searchText) ?? false)
+                        ((p.ProductCode?.ToLower().Contains(searchText) ?? false) ||
+                        (p.Name?.ToLower().Contains(searchText) ?? false))
                     ).ToList();
                 }
 

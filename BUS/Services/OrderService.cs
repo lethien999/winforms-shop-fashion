@@ -243,6 +243,24 @@ namespace WinFormsFashionShop.Business.Services
             _orderRepository.Update(order);
         }
 
+        /// <summary>
+        /// Đánh dấu đơn hàng đã in để tránh in trùng hóa đơn
+        /// </summary>
+        public void MarkOrderAsPrinted(int orderId)
+        {
+            if (orderId <= 0) throw new ArgumentOutOfRangeException(nameof(orderId));
+            
+            var order = _orderRepository.GetById(orderId)
+                ?? throw new InvalidOperationException("Order not found");
+            
+            // Chỉ set PrintedAt nếu chưa in (idempotent)
+            if (!order.PrintedAt.HasValue)
+            {
+                order.PrintedAt = DateTime.Now;
+                _orderRepository.Update(order);
+            }
+        }
+
         private void PopulateOrderItems(List<Order> orders)
         {
             var allOrderItems = _orderItemRepository.GetAll().ToList();

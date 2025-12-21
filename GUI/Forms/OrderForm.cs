@@ -667,8 +667,6 @@ namespace WinFormsFashionShop.Presentation.Forms
             if (!ValidateOrderBeforeSave())
                 return;
 
-            // Payment confirmation is handled in ConfirmPaymentBeforeSaveWithDTO
-
             try
             {
                 var orderItems = BuildOrderItemsFromGrid();
@@ -678,8 +676,40 @@ namespace WinFormsFashionShop.Presentation.Forms
             var customerId = GetSelectedCustomerId();
             var (discountPercent, discountAmount) = ParseDiscountFromInputs();
             var createOrderDTO = CreateOrderDTO(orderItems, customerId, discountPercent, discountAmount);
+                var paymentMethod = GetSelectedPaymentMethod();
+                var total = ApplyDiscount(CalculateSubtotal());
 
-            // Confirm payment before saving (this may update Notes field for bank transfer)
+                // Xử lý theo phương thức thanh toán
+                if (paymentMethod == PaymentMethod.VietQR)
+                {
+                    // Tạo đơn hàng trước với Status = "Pending"
+                    createOrderDTO.Status = "Pending";
+                    var createdOrder = SaveOrderToDatabase(createOrderDTO);
+                    
+                    if (createdOrder == null)
+                    {
+                        _errorHandler.ShowError("Không thể tạo đơn hàng!");
+                        return;
+                    }
+
+                    // Hiển thị QR code payment với OrderId thực từ database
+                    if (!ProcessVietQRPayment(createdOrder, total))
+                    {
+                        // Nếu hủy thanh toán, có thể xóa order hoặc giữ lại với Status = "Pending"
+                        // Tạm thời giữ lại để có thể thanh toán sau
+                        _errorHandler.ShowInfo("Đơn hàng đã được tạo với trạng thái 'Chờ thanh toán'. Bạn có thể thanh toán sau.");
+                        Close();
+                        return;
+                    }
+
+                    // Thanh toán thành công (đã được xử lý trong ProcessVietQRPayment)
+                    _errorHandler.ShowSuccess("Thanh toán thành công! Hóa đơn đã được lưu.");
+                    ShowOrderDetailAfterCreate(createdOrder);
+                    Close();
+                }
+                else
+                {
+                    // Các phương thức thanh toán khác: xác nhận trước khi lưu
             if (!ConfirmPaymentBeforeSaveWithDTO(createOrderDTO))
                 return;
 
@@ -695,10 +725,56 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
                 
                 Close();
+                }
             }
             catch (Exception ex)
             {
                 _errorHandler.ShowError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Xử lý thanh toán VietQR: hiển thị QR code và chờ thanh toán
+        /// </summary>
+        private bool ProcessVietQRPayment(OrderDTO order, decimal total)
+        {
+            try
+            {
+                // Tạo description cho PayOS (max 25 ký tự)
+                var orderDescription = order.OrderCode.Length > 23 
+                    ? $"DH {order.OrderCode.Substring(0, 21)}" 
+                    : $"DH {order.OrderCode}";
+                
+                // Hiển thị QR code payment dialog với OrderId thực từ database
+                using var qrPaymentDialog = new QRCodePaymentDialog(order.Id, total, orderDescription);
+                if (qrPaymentDialog.ShowDialog(this) == DialogResult.OK && qrPaymentDialog.IsPaymentConfirmed)
+                {
+                    // Thanh toán thành công - webhook đã cập nhật Status = "Paid" và PaidAt
+                    // Refresh order để lấy trạng thái mới nhất từ database
+                    var updatedOrder = _orderService.GetOrderById(order.Id);
+                    if (updatedOrder != null && updatedOrder.Status == "Paid")
+                    {
+                        // Lưu thông tin PayOS vào Notes nếu cần (tùy chọn)
+                        if (qrPaymentDialog.PaymentData != null)
+                        {
+                            var notes = FormatPayOSPaymentInfo(qrPaymentDialog.PaymentData);
+                            // Có thể update Notes nếu cần, nhưng webhook đã xử lý rồi
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        // Chưa thanh toán thành công, nhưng user đã đóng dialog
+                        // Order vẫn ở trạng thái "Pending", có thể thanh toán sau
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError($"Lỗi khi xử lý thanh toán VietQR: {ex.Message}");
+                return false;
             }
         }
 
@@ -730,24 +806,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
             else if (paymentMethod == PaymentMethod.VietQR)
             {
-                // Show VietQR payment dialog
-                // Generate unique order ID for PayOS (use order code hash or timestamp)
-                var payOSOrderId = GeneratePayOSOrderId();
-                // PayOS description max 25 characters - simple, clear format for bank transfer note
-                // Format: "DH [orderId]" - e.g., "DH 218213659"
-                var orderDescription = $"DH {payOSOrderId}";
-                
-                using var qrPaymentDialog = new QRCodePaymentDialog(payOSOrderId, total, orderDescription);
-                if (qrPaymentDialog.ShowDialog(this) == DialogResult.OK && qrPaymentDialog.IsPaymentConfirmed)
-                {
-                    // Store PayOS payment info in Notes field
-                    if (qrPaymentDialog.PaymentData != null)
-                    {
-                        createOrderDTO.Notes = FormatPayOSPaymentInfo(qrPaymentDialog.PaymentData);
-                    }
-                    return true;
-                }
-                return false;
+                // VietQR payment được xử lý trong SaveOrder() sau khi tạo order
+                // Không xử lý ở đây nữa
+                return true; // Cho phép tiếp tục để tạo order
             }
             else
             {
@@ -765,27 +826,14 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// Formats PayOS payment information for storage in Notes field.
         /// Single responsibility: only formats PayOS payment info.
         /// </summary>
-        private string FormatPayOSPaymentInfo(Net.payOS.Types.CreatePaymentResult paymentData)
+        private string FormatPayOSPaymentInfo(WinFormsFashionShop.Presentation.Models.PaymentData paymentData)
         {
             return $"VIETQR PAYOS:\n" +
-                   $"Mã đơn PayOS: {paymentData.orderCode}\n" +
-                   $"Link thanh toán: {paymentData.checkoutUrl}\n" +
-                   $"Trạng thái: {paymentData.status}\n" +
+                   $"Mã đơn PayOS: {paymentData.OrderCode}\n" +
+                   $"Link thanh toán: {paymentData.CheckoutUrl}\n" +
                    $"Ngày tạo: {DateTime.Now:dd/MM/yyyy HH:mm}";
         }
 
-        /// <summary>
-        /// Generates a unique order ID for PayOS (must be integer).
-        /// Single responsibility: only generates order ID.
-        /// </summary>
-        private int GeneratePayOSOrderId()
-        {
-            // Use timestamp-based ID to ensure uniqueness
-            // Format: YYYYMMDDHHMMSS (last 9 digits to fit in int)
-            var timestamp = DateTime.Now.ToString("yyyyMMddHHmmss");
-            var last9Digits = timestamp.Substring(Math.Max(0, timestamp.Length - 9));
-            return int.Parse(last9Digits);
-        }
 
         /// <summary>
         /// Shows order detail dialog after successful creation.

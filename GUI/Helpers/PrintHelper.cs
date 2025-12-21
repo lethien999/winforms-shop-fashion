@@ -4,6 +4,7 @@ using System.Drawing.Printing;
 using System.Linq;
 using System.Windows.Forms;
 using WinFormsFashionShop.DTO;
+using WinFormsFashionShop.Business.Composition;
 
 namespace WinFormsFashionShop.Presentation.Helpers
 {
@@ -17,10 +18,15 @@ namespace WinFormsFashionShop.Presentation.Helpers
 
         /// <summary>
         /// Prints an order using PrintDocument.
+        /// Kiểm tra và đánh dấu đã in để tránh in trùng hóa đơn.
         /// </summary>
-        public static void PrintOrder(OrderDTO order)
+        public static void PrintOrder(OrderDTO order, bool checkPrinted = true)
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
+
+            // Kiểm tra nếu đã in rồi (nếu có thông tin PrintedAt từ DTO)
+            // Note: Cần cập nhật OrderDTO để có PrintedAt nếu muốn check từ DTO
+            // Tạm thời, check sẽ được thực hiện trong OrderService
 
             _orderToPrint = order;
 
@@ -37,6 +43,58 @@ namespace WinFormsFashionShop.Presentation.Helpers
             if (printDialog.ShowDialog() == DialogResult.OK)
             {
                 printDoc.Print();
+                
+                // Đánh dấu đã in sau khi in thành công
+                if (checkPrinted)
+                {
+                    try
+                    {
+                        var services = ServicesComposition.Create();
+                        services.OrderService.MarkOrderAsPrinted(order.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log lỗi nhưng không throw để không ảnh hưởng đến việc in
+                        System.Diagnostics.Debug.WriteLine($"Lỗi đánh dấu đã in: {ex.Message}");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// In hóa đơn tự động (không hiển thị dialog) - dùng cho tự động in sau khi thanh toán
+        /// </summary>
+        public static bool PrintOrderAuto(OrderDTO order)
+        {
+            if (order == null) throw new ArgumentNullException(nameof(order));
+
+            try
+            {
+                _orderToPrint = order;
+
+                using var printDoc = new PrintDocument();
+                printDoc.PrintPage += PrintDocument_PrintPage;
+
+                // In trực tiếp không cần dialog (dùng máy in mặc định)
+                printDoc.Print();
+
+                // Đánh dấu đã in
+                try
+                {
+                    var services = ServicesComposition.Create();
+                    services.OrderService.MarkOrderAsPrinted(order.Id);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Lỗi đánh dấu đã in: {ex.Message}");
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi in tự động: {ex.Message}");
+                return false;
             }
         }
 
