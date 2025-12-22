@@ -364,6 +364,8 @@ FodyWeavers.xsd
 # DO NOT commit DatabaseConfig.cs with real passwords
 DAO/DatabaseConfig.cs
 WinFormsFashionShop.Data/DatabaseConfig.cs
+**/DatabaseConfig.cs
+!**/DatabaseConfig.example.cs
 
 # Image files (keep folder structure but ignore actual images)
 Images/**/*.jpg
@@ -378,9 +380,31 @@ Images/**/*.webp
 
 # PayOS configuration (contains sensitive API keys)
 GUI/Config/payos.config.json
+**/payos.config.json
+**/Config/payos.config.json
 
 # API configuration files (contains sensitive API keys and connection strings)
 API/appsettings.json
 API/appsettings.*.json
 !API/appsettings.example.json
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.example.json
+
+# Log files (may contain sensitive information)
+GUI/Logs/
+**/Logs/
+**/Log/
+error-*.log
+*.log
+!*.log.example
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+*.secret
+*.secrets
+secrets.json
+.secrets/
 

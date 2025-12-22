@@ -53,6 +53,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                 if (e.KeyCode == Keys.Escape)
                     Close();
             };
+
+            // Wire up close button
+            btnClose!.Click += (s, e) => Close();
         }
 
 

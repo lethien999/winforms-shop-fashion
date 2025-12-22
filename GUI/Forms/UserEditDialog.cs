@@ -31,6 +31,11 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             Text = _existingUser == null ? "Thêm người dùng mới" : "Sửa thông tin người dùng";
             
+            // Setup role ComboBox FIRST (before setting SelectedIndex)
+            cmbRole.Items.Clear();
+            cmbRole.Items.Add(UserRole.Admin);
+            cmbRole.Items.Add(UserRole.Staff);
+            
             // Set initial values
             if (_existingUser != null)
             {
@@ -38,33 +43,31 @@ namespace WinFormsFashionShop.Presentation.Forms
                 txtFullName.Text = _existingUser.FullName ?? "";
                 txtUsername.ReadOnly = true; // Cannot change username
                 
-                // Set role
+                // Set role - use SelectedItem after items are populated
                 if (_existingUser.Role == UserRole.Admin)
                     cmbRole.SelectedItem = UserRole.Admin;
-                else
+                else if (_existingUser.Role == UserRole.Staff)
                     cmbRole.SelectedItem = UserRole.Staff;
+                else
+                    cmbRole.SelectedIndex = 0; // Default to first item if role is unknown
                 
                 chkIsActive.Checked = _existingUser.IsActive;
                 lblPassword.Text = "Mật khẩu mới (để trống nếu không đổi):";
             }
             else
             {
-                cmbRole.SelectedIndex = 1; // Default to Staff
+                // Default to Staff (index 1) for new users
+                if (cmbRole.Items.Count > 1)
+                {
+                    cmbRole.SelectedIndex = 1; // Staff
+                }
+                else if (cmbRole.Items.Count > 0)
+                {
+                    cmbRole.SelectedIndex = 0; // Fallback to first item
+                }
+                
                 chkIsActive.Visible = false; // Hide for new users (always active)
                 lblPassword.Text = "Mật khẩu:";
-            }
-
-            // Setup role ComboBox
-            cmbRole.Items.Clear();
-            cmbRole.Items.Add(UserRole.Admin);
-            cmbRole.Items.Add(UserRole.Staff);
-            if (_existingUser != null)
-            {
-                cmbRole.SelectedItem = _existingUser.Role;
-            }
-            else
-            {
-                cmbRole.SelectedIndex = 1; // Default to Staff
             }
 
             // Wire up event handlers

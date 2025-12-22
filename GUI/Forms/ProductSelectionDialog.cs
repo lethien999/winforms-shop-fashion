@@ -211,6 +211,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
             };
             _btnSelect.Click += (s, e) => SelectProduct();
+            _btnCancel.Click += (s, e) => Close();
         }
 
         private void ApplyFilters()

@@ -26,6 +26,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             _btnTest!.Click += BtnTest_Click;
             _btnSave!.Click += BtnSave_Click;
+            _btnCancel!.Click += (s, e) => Close();
             _txtClientId!.Focus();
         }
 

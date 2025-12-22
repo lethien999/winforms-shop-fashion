@@ -58,7 +58,7 @@ BEGIN
         Username NVARCHAR(50) NOT NULL UNIQUE,
         PasswordHash NVARCHAR(255) NOT NULL,
         FullName NVARCHAR(100) NOT NULL,
-        Role NVARCHAR(20) NOT NULL CHECK (Role IN ('Admin', 'Staff')),  -- Admin, Staff
+        Role NVARCHAR(50) NOT NULL CHECK (Role IN ('Admin', 'Staff')),  -- Admin, Staff (MaxLength 50 trong code)
         IsActive BIT NOT NULL DEFAULT 1,
         CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
         UpdatedAt DATETIME NULL
@@ -84,7 +84,7 @@ BEGIN
     CREATE TABLE Categories (
         Id INT PRIMARY KEY IDENTITY(1,1),
         CategoryName NVARCHAR(100) NOT NULL,            -- Tên danh mục (Áo, Quần, Phụ kiện...)
-        Description NVARCHAR(255) NULL,                 -- Mô tả
+        Description NVARCHAR(500) NULL,                 -- Mô tả (MaxLength 500 trong code)
         IsActive BIT NOT NULL DEFAULT 1
     );
     PRINT '✓ Bảng Categories đã được tạo thành công!';
@@ -138,10 +138,10 @@ IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Customers')
 BEGIN
     CREATE TABLE Customers (
         Id INT PRIMARY KEY IDENTITY(1,1),
-        CustomerName NVARCHAR(150) NOT NULL,            -- Tên khách hàng
+        CustomerName NVARCHAR(100) NOT NULL,            -- Tên khách hàng (MaxLength 100 trong code)
         Phone NVARCHAR(20) NULL,                        -- Số điện thoại
         Email NVARCHAR(100) NULL,                        -- Email
-        Address NVARCHAR(255) NULL,                      -- Địa chỉ
+        Address NVARCHAR(500) NULL,                      -- Địa chỉ (MaxLength 500 trong code)
         IsActive BIT NOT NULL DEFAULT 1,
         CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),
         UpdatedAt DATETIME NULL
@@ -167,24 +167,39 @@ BEGIN
     CREATE TABLE Orders (
         Id INT PRIMARY KEY IDENTITY(1,1),
         OrderCode NVARCHAR(50) NOT NULL UNIQUE,          -- Mã hóa đơn (ORD202412010001)
-        PayOSOrderCode INT NULL UNIQUE,                  -- Mã đơn hàng PayOS (orderCode từ PayOS API)
+        PayOSOrderCode INT NULL,                         -- Mã đơn hàng PayOS (orderCode từ PayOS API) - Unique được đảm bảo bởi index với filter
         OrderDate DATETIME NOT NULL DEFAULT GETDATE(),  -- Ngày lập hóa đơn
         CustomerId INT NULL,                            -- FK -> Customers.Id (nullable - cho phép hóa đơn không gắn khách)
         UserId INT NOT NULL,                             -- FK -> Users.Id (Nhân viên lập hóa đơn)
         TotalAmount DECIMAL(18,2) NOT NULL CHECK (TotalAmount >= 0),  -- Tổng tiền (phải >= 0)
         PaymentMethod NVARCHAR(50) NULL,                 -- Phương thức thanh toán (Tiền mặt, Thẻ, Chuyển khoản...)
-        Notes NVARCHAR(255) NULL,                        -- Ghi chú
-        Status NVARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Processing', 'Paid', 'Failed', 'Cancelled')),  -- Trạng thái: Pending → Processing → Paid/Failed
+        Notes NVARCHAR(1000) NULL,                        -- Ghi chú (MaxLength 1000 trong code)
+        Status NVARCHAR(50) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Processing', 'Paid', 'Failed', 'Cancelled')),  -- Trạng thái: Pending → Processing → Paid/Failed (MaxLength 50 trong code)
         PaidAt DATETIME NULL,                            -- Thời gian thanh toán thành công (từ webhook PayOS)
         TransactionId NVARCHAR(100) NULL,                -- Transaction ID từ PayOS (để tracking)
+        PrintedAt DATETIME NULL,                          -- Thời gian in hóa đơn lần đầu (để tránh in trùng)
         FOREIGN KEY (CustomerId) REFERENCES Customers(Id) ON DELETE SET NULL,
         FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE RESTRICT
     );
+    
+    -- Unique index cho PayOSOrderCode (chỉ unique khi không null) - khớp với code
+    CREATE UNIQUE NONCLUSTERED INDEX IX_Orders_PayOSOrderCode 
+    ON Orders(PayOSOrderCode) 
+    WHERE PayOSOrderCode IS NOT NULL;
+    
     PRINT '✓ Bảng Orders đã được tạo thành công!';
 END
 ELSE
 BEGIN
     PRINT '✓ Bảng Orders đã tồn tại.';
+    -- Đảm bảo index PayOSOrderCode tồn tại (nếu bảng đã có)
+    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Orders_PayOSOrderCode')
+    BEGIN
+        CREATE UNIQUE NONCLUSTERED INDEX IX_Orders_PayOSOrderCode 
+        ON Orders(PayOSOrderCode) 
+        WHERE PayOSOrderCode IS NOT NULL;
+        PRINT '✓ Index IX_Orders_PayOSOrderCode đã được tạo.';
+    END
 END
 GO
 
@@ -426,9 +441,16 @@ PRINT '  ✓ Users (Người dùng)';
 PRINT '  ✓ Categories (Danh mục)';
 PRINT '  ✓ Products (Sản phẩm)';
 PRINT '  ✓ Customers (Khách hàng)';
-PRINT '  ✓ Orders (Đơn hàng)';
+PRINT '  ✓ Orders (Đơn hàng) - với cột PrintedAt và index PayOSOrderCode';
 PRINT '  ✓ OrderItems (Chi tiết đơn hàng)';
 PRINT '  ✓ Inventory (Tồn kho)';
+PRINT '';
+PRINT 'Lưu ý: Schema đã được cập nhật để khớp với code:';
+PRINT '  - Users.Role: NVARCHAR(50)';
+PRINT '  - Categories.Description: NVARCHAR(500)';
+PRINT '  - Customers.CustomerName: NVARCHAR(100), Address: NVARCHAR(500)';
+PRINT '  - Orders.Notes: NVARCHAR(1000), Status: NVARCHAR(50), thêm PrintedAt';
+PRINT '  - Unique index IX_Orders_PayOSOrderCode với filter IS NOT NULL';
 PRINT '';
 PRINT 'THÔNG TIN ĐĂNG NHẬP MẶC ĐỊNH:';
 PRINT '  Username: admin';

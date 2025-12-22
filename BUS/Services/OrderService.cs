@@ -131,9 +131,9 @@ namespace WinFormsFashionShop.Business.Services
             {
                 foreach (var item in order.Items)
                 {
-                    _inventoryService.DecreaseStock(item.ProductId, item.Quantity);
-                }
+                _inventoryService.DecreaseStock(item.ProductId, item.Quantity);
             }
+        }
         }
 
         /// <summary>
@@ -359,9 +359,9 @@ namespace WinFormsFashionShop.Business.Services
             // Nếu order Status = "Pending" (chưa thanh toán) → chưa giảm inventory → không cần restore
             if (order.Status == Constants.OrderStatus.Paid)
             {
-                foreach (var item in order.Items)
-                {
-                    _inventoryService.IncreaseStock(item.ProductId, item.Quantity);
+            foreach (var item in order.Items)
+            {
+                _inventoryService.IncreaseStock(item.ProductId, item.Quantity);
                 }
             }
             

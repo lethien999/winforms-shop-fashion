@@ -90,7 +90,7 @@ namespace WinFormsFashionShop.Data
                 entity.Property(e => e.OrderDate).HasDefaultValueSql("GETDATE()");
                 entity.Property(e => e.TotalAmount).HasColumnType("decimal(18,2)");
                 entity.Property(e => e.PaymentMethod).HasMaxLength(50);
-                entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Paid");
+                entity.Property(e => e.Status).HasMaxLength(50).HasDefaultValue("Pending");
                 entity.Property(e => e.Notes).HasMaxLength(1000);
                 entity.Property(e => e.PaidAt).IsRequired(false);
                 entity.Property(e => e.TransactionId).HasMaxLength(100);
