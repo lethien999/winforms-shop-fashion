@@ -16,6 +16,9 @@ on:
         required: false
         default: true
 
+# Only run on tag pushes or manual dispatch
+# This prevents the workflow from running on regular code pushes
+
 env:
   DOTNET_VERSION: '8.0.x'
   BUILD_CONFIGURATION: 'Release'
@@ -26,18 +29,29 @@ jobs:
   check-trigger:
     name: Check Trigger
     runs-on: ubuntu-latest
+    # Only run if this is a tag push or manual dispatch
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     outputs:
       should-run: ${{ steps.check.outputs.should-run }}
     steps:
       - name: Validate trigger
         id: check
         run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "✅ Manual trigger detected"
             echo "should-run=true" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "✅ Tag push detected: ${{ github.ref }}"
             echo "should-run=true" >> $GITHUB_OUTPUT
           else
+            echo "❌ Invalid trigger - this should not run"
             echo "should-run=false" >> $GITHUB_OUTPUT
+            exit 1
           fi
 
   # Job 2: Determine version
