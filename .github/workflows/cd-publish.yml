@@ -49,10 +49,14 @@ jobs:
             echo "✅ Tag push detected: ${{ github.ref }}"
             echo "should-run=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Invalid trigger - this should not run"
+            echo "❌ Invalid trigger - CD workflow should only run on tags or manual dispatch"
+            echo "Current event: ${{ github.event_name }}"
+            echo "Current ref: ${{ github.ref }}"
             echo "should-run=false" >> $GITHUB_OUTPUT
             exit 1
           fi
+          
+          echo "Workflow will proceed with should-run=${{ steps.check.outputs.should-run }}"
 
   # Job 2: Determine version
   version:
