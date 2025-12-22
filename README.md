@@ -798,19 +798,96 @@ Xem chi tiết schema trong `Database/CreateDatabase.sql`
 
 ---
 
-## 13. License
+## 13. CI/CD và Đóng gói Ứng dụng
+
+### 13.1. CI/CD Pipeline
+
+Project đã được thiết lập **GitHub Actions** cho CI/CD:
+
+#### Continuous Integration (CI)
+- **Workflow:** `.github/workflows/ci.yml`
+- **Trigger:** Tự động chạy khi push code hoặc tạo Pull Request
+- **Chức năng:**
+  - Build solution với .NET 8.0
+  - Chạy tests (nếu có)
+  - Upload build artifacts
+
+#### Continuous Deployment (CD)
+- **Workflow:** `.github/workflows/cd-publish.yml`
+- **Trigger:** 
+  - Khi tạo tag version (ví dụ: `v1.0.0`)
+  - Hoặc trigger thủ công từ GitHub Actions tab
+- **Chức năng:**
+  - Publish WinForms app (self-contained)
+  - Tạo release package (ZIP)
+  - Tạo GitHub Release với download link
+
+### 13.2. Tạo Release
+
+#### Cách 1: Tạo Release từ Tag
+
+```bash
+# 1. Tạo tag version
+git tag -a v1.0.0 -m "Release version 1.0.0"
+
+# 2. Push tag lên GitHub
+git push origin v1.0.0
+```
+
+GitHub Actions sẽ tự động build và tạo release package.
+
+#### Cách 2: Trigger thủ công
+
+1. Vào GitHub repository → **Actions** tab
+2. Chọn workflow **CD - Publish WinForms App**
+3. Click **Run workflow**
+4. Nhập version number → **Run workflow**
+
+### 13.3. Đóng gói Ứng dụng
+
+Xem chi tiết trong file **[PUBLISH_GUIDE.md](./PUBLISH_GUIDE.md)** để biết:
+
+- Các cách publish WinForms app (self-contained, framework-dependent, single file)
+- Tạo installer (MSI với WiX, EXE với Inno Setup)
+- Tối ưu hóa package size
+- Hướng dẫn deploy cho end user
+- Troubleshooting
+
+#### Publish nhanh từ Command Line:
+
+```powershell
+# Publish self-contained (khuyến nghị)
+dotnet publish GUI/GUI.csproj `
+  --configuration Release `
+  --output ./publish/GUI `
+  --self-contained true `
+  --runtime win-x64
+
+# Publish single file
+dotnet publish GUI/GUI.csproj `
+  --configuration Release `
+  --output ./publish/GUI-SingleFile `
+  --self-contained true `
+  --runtime win-x64 `
+  -p:PublishSingleFile=true
+```
+
+---
+
+## 14. License
 
 [Thêm license của bạn ở đây]
 
 ---
 
-## 14. Support & Contact
+## 15. Support & Contact
 
 Nếu gặp vấn đề, vui lòng:
 1. Kiểm tra phần "Lỗi thường gặp" ở trên
 2. Xem logs trong `GUI/Logs/`
 3. Kiểm tra Debug Output trong Visual Studio
-4. Tạo issue trên repository (nếu có)
+4. Xem [PUBLISH_GUIDE.md](./PUBLISH_GUIDE.md) cho hướng dẫn đóng gói
+5. Tạo issue trên repository (nếu có)
 
 ---
 

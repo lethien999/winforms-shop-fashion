@@ -1,0 +1,255 @@
+name: CD - Publish and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v1.0.0, v1.2.3
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+      create_release:
+        description: 'Create GitHub Release?'
+        type: boolean
+        required: false
+        default: true
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  RUNTIME: 'win-x64'
+
+jobs:
+  # Job 1: Determine version
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set_version.outputs.version }}
+      is_prerelease: ${{ steps.set_version.outputs.is_prerelease }}
+    
+    steps:
+    - name: Set version from tag or input
+      id: set_version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+          IS_PRERELEASE="false"
+        else
+          VERSION=${GITHUB_REF#refs/tags/v}
+          # Check if version contains alpha, beta, rc (prerelease)
+          if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
+            IS_PRERELEASE="true"
+          else
+            IS_PRERELEASE="false"
+          fi
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+        echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+  # Job 2: Build and Publish
+  publish:
+    name: Build and Publish
+    runs-on: windows-latest
+    needs: version
+    timeout-minutes: 30
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for release notes
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      
+    - name: Publish WinForms App (Self-contained)
+      run: |
+        dotnet publish GUI/GUI.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/GUI `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:PublishSingleFile=false `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:EnableCompressionInSingleFile=true `
+          -p:Version=${{ needs.version.outputs.version }}
+          
+    - name: Publish WinForms App (Single File)
+      run: |
+        dotnet publish GUI/GUI.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/GUI-SingleFile `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:EnableCompressionInSingleFile=true `
+          -p:Version=${{ needs.version.outputs.version }}
+          
+    - name: Publish API
+      run: |
+        dotnet publish API/API.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/API `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:Version=${{ needs.version.outputs.version }}
+          
+    - name: Get file sizes
+      run: |
+        Write-Host "=== Published File Sizes ===" -ForegroundColor Cyan
+        Get-ChildItem -Path "./publish" -Recurse -File | 
+          Sort-Object Length -Descending | 
+          Select-Object -First 10 FullName, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}} | 
+          Format-Table -AutoSize
+        
+        $totalSize = (Get-ChildItem -Path "./publish" -Recurse -File | Measure-Object -Property Length -Sum).Sum
+        Write-Host "Total size: $([math]::Round($totalSize/1MB, 2)) MB" -ForegroundColor Green
+        
+    - name: Create release package
+      run: |
+        $version = "${{ needs.version.outputs.version }}"
+        $date = Get-Date -Format "yyyyMMdd"
+        $packageName = "WinFormsFashionShop-v$version-$date"
+        
+        # Create package directory
+        New-Item -ItemType Directory -Path "./release-package" -Force | Out-Null
+        
+        # Copy GUI files (self-contained version)
+        Copy-Item -Path "./publish/GUI/*" -Destination "./release-package/" -Recurse -Force
+        
+        # Copy API files to separate folder
+        New-Item -ItemType Directory -Path "./release-package/API" -Force | Out-Null
+        Copy-Item -Path "./publish/API/*" -Destination "./release-package/API/" -Recurse -Force
+        
+        # Copy database script
+        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package/" -Force
+        
+        # Copy documentation
+        Copy-Item -Path "./README.md" -Destination "./release-package/" -Force
+        if (Test-Path "./PUBLISH_GUIDE.md") {
+          Copy-Item -Path "./PUBLISH_GUIDE.md" -Destination "./release-package/" -Force
+        }
+        
+        # Create version file
+        $versionInfo = @"
+Version: $version
+Build Date: $date
+Build Number: ${{ github.run_number }}
+Commit: ${{ github.sha }}
+Runtime: ${{ env.RUNTIME }}
+.NET Version: ${{ env.DOTNET_VERSION }}
+"@
+        $versionInfo | Out-File -FilePath "./release-package/VERSION.txt" -Encoding UTF8
+        
+        # Create zip package
+        Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName.zip" -Force
+        
+        # Also create single-file version package
+        New-Item -ItemType Directory -Path "./release-package-single" -Force | Out-Null
+        Copy-Item -Path "./publish/GUI-SingleFile/GUI.exe" -Destination "./release-package-single/" -Force
+        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package-single/" -Force
+        Copy-Item -Path "./README.md" -Destination "./release-package-single/" -Force
+        $versionInfo | Out-File -FilePath "./release-package-single/VERSION.txt" -Encoding UTF8
+        Compress-Archive -Path "./release-package-single/*" -DestinationPath "./$packageName-singlefile.zip" -Force
+        
+        echo "PACKAGE_NAME=$packageName.zip" >> $env:GITHUB_ENV
+        echo "PACKAGE_SINGLE=$packageName-singlefile.zip" >> $env:GITHUB_ENV
+        
+    - name: Upload release artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: winforms-release-v${{ needs.version.outputs.version }}
+        path: |
+          ${{ env.PACKAGE_NAME }}
+          ${{ env.PACKAGE_SINGLE }}
+          publish/
+        retention-days: 30
+
+  # Job 3: Create GitHub Release
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [version, publish]
+    if: |
+      (startsWith(github.ref, 'refs/tags/') || github.event.inputs.create_release == 'true') &&
+      needs.version.outputs.is_prerelease == 'false'
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: winforms-release-v${{ needs.version.outputs.version }}
+        path: ./artifacts
+        
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        VERSION="${{ needs.version.outputs.version }}"
+        DATE=$(date +"%Y-%m-%d")
+        
+        NOTES=$(cat <<EOF
+        ## WinForms Fashion Shop Management System v${VERSION}
+        
+        **Release Date:** ${DATE}
+        **Build Number:** ${{ github.run_number }}
+        
+        ### 📦 Installation
+        
+        1. Download and extract the zip file
+        2. Run \`CreateDatabase.sql\` on your SQL Server
+        3. Update \`DatabaseConfig.cs\` with your connection string
+        4. Run \`GUI.exe\` to start the application
+        
+        ### 📋 What's Included
+        
+        - **Full Package** (\`WinFormsFashionShop-v${VERSION}-*.zip\`): Complete application with all dependencies
+        - **Single File** (\`*-singlefile.zip\`): Single executable file (smaller, faster startup)
+        
+        ### 🔧 Configuration
+        
+        See \`README.md\` for detailed setup instructions.
+        
+        ### 📝 Changes
+        
+        See commit history for detailed changes.
+        EOF
+        )
+        
+        echo "$NOTES" > release_notes.md
+        echo "notes<<EOF" >> $GITHUB_OUTPUT
+        echo "$NOTES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/*.zip
+        name: Release v${{ needs.version.outputs.version }}
+        body_path: release_notes.md
+        draft: false
+        prerelease: ${{ needs.version.outputs.is_prerelease }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

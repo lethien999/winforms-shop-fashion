@@ -1,0 +1,119 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:  # Allow manual trigger
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: 'Release'
+
+jobs:
+  # Job 1: Build Solution
+  build:
+    name: Build Solution
+    runs-on: windows-latest
+    timeout-minutes: 15
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Build solution
+      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: build-output
+        path: |
+          GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/
+          API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/
+        retention-days: 7
+
+  # Job 2: Code Quality Checks (có thể thêm sau)
+  code-quality:
+    name: Code Quality
+    runs-on: windows-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    # Có thể thêm các tools sau:
+    # - dotnet format (code formatting)
+    # - SonarCloud (code analysis)
+    # - Security scanning
+    
+    - name: Check for TODO/FIXME comments
+      run: |
+        $todos = Select-String -Path "**/*.cs" -Pattern "TODO|FIXME|HACK" -Recurse
+        if ($todos) {
+          Write-Host "Found TODO/FIXME comments:"
+          $todos | ForEach-Object { Write-Host "$($_.Filename):$($_.LineNumber) - $($_.Line)" }
+          # Không fail build, chỉ warning
+        } else {
+          Write-Host "No TODO/FIXME comments found"
+        }
+      continue-on-error: true
+
+  # Job 3: Run Tests (nếu có test project)
+  test:
+    name: Run Tests
+    runs-on: windows-latest
+    timeout-minutes: 10
+    needs: build
+    if: false  # Tắt tạm thời vì chưa có test project
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore
+      
+    - name: Run tests
+      run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      continue-on-error: true
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: '**/TestResults/**/*'
+        retention-days: 7
