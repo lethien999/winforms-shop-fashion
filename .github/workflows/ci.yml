@@ -41,14 +41,32 @@ jobs:
     - name: Build solution
       run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
       
+    - name: List build output directories
+      run: |
+        Write-Host "=== Checking build output ===" -ForegroundColor Cyan
+        if (Test-Path "GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/") {
+          Write-Host "GUI output exists" -ForegroundColor Green
+          Get-ChildItem "GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/" | Select-Object -First 5 Name
+        } else {
+          Write-Host "GUI output NOT found" -ForegroundColor Yellow
+        }
+        if (Test-Path "API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/") {
+          Write-Host "API output exists" -ForegroundColor Green
+          Get-ChildItem "API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/" | Select-Object -First 5 Name
+        } else {
+          Write-Host "API output NOT found" -ForegroundColor Yellow
+        }
+      continue-on-error: true
+      
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: success()
       with:
         name: build-output
         path: |
-          GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/
-          API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/
+          GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
+          API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
+        if-no-files-found: warn
         retention-days: 7
 
   # Job 2: Code Quality Checks (có thể thêm sau)
@@ -76,13 +94,26 @@ jobs:
     
     - name: Check for TODO/FIXME comments
       run: |
-        $todos = Select-String -Path "**/*.cs" -Pattern "TODO|FIXME|HACK" -Recurse
-        if ($todos) {
-          Write-Host "Found TODO/FIXME comments:"
-          $todos | ForEach-Object { Write-Host "$($_.Filename):$($_.LineNumber) - $($_.Line)" }
-          # Không fail build, chỉ warning
-        } else {
-          Write-Host "No TODO/FIXME comments found"
+        Write-Host "=== Checking for TODO/FIXME comments ===" -ForegroundColor Cyan
+        try {
+          $todos = Get-ChildItem -Path . -Filter "*.cs" -Recurse | 
+            Select-String -Pattern "TODO|FIXME|HACK" -ErrorAction SilentlyContinue
+          
+          if ($todos) {
+            Write-Host "Found TODO/FIXME comments:" -ForegroundColor Yellow
+            $todos | ForEach-Object { 
+              Write-Host "  $($_.Path):$($_.LineNumber) - $($_.Line.Trim())" 
+            }
+            Write-Host "`nTotal: $($todos.Count) comments found" -ForegroundColor Yellow
+            # Không fail build, chỉ warning
+            exit 0
+          } else {
+            Write-Host "No TODO/FIXME comments found" -ForegroundColor Green
+            exit 0
+          }
+        } catch {
+          Write-Host "Error checking comments: $($_.Exception.Message)" -ForegroundColor Red
+          exit 0  # Không fail build
         }
       continue-on-error: true
 
