@@ -24,6 +24,9 @@ namespace WinFormsFashionShop.Presentation.Forms
         private PaymentData? _paymentLinkData;
         private System.Windows.Forms.Timer? _paymentCheckTimer;
         private bool _isPaymentConfirmed = false;
+        private DateTime _paymentCheckStartTime; // Thời gian bắt đầu check payment
+        private const int TIMER_INTERVAL_MS = 2500; // 2.5 seconds (khuyến nghị 2-3s)
+        private const int TOTAL_TIMEOUT_SECONDS = 180; // 3 phút (khuyến nghị 2-3 phút)
 
         public bool IsPaymentConfirmed => _isPaymentConfirmed;
         public PaymentData? PaymentData => _paymentLinkData;
@@ -34,6 +37,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             _totalAmount = totalAmount;
             _orderDescription = orderDescription;
             _apiClient = new PaymentApiClientWithRetry(ApiConfig.BaseUrl);
+            _paymentCheckStartTime = DateTime.Now; // Initialize start time
             InitializeComponent();
             InitializeControls();
             LoadPaymentQRCode();
@@ -348,20 +352,24 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// <summary>
         /// Starts automatic payment status checking timer.
         /// Single responsibility: only starts timer.
+        /// Khuyến nghị: Timer 2-3s, Timeout tổng 2-3 phút
         /// </summary>
         private void StartPaymentCheckTimer()
         {
-            // Check every 2-3 seconds từ Backend API (nhanh hơn vì không gọi PayOS trực tiếp)
+            // Lưu thời gian bắt đầu check payment để track timeout
+            _paymentCheckStartTime = DateTime.Now;
+            
+            // Check every 2-3 seconds từ Backend API (khuyến nghị: 2-3s)
             _paymentCheckTimer = new System.Windows.Forms.Timer
             {
-                Interval = 3000 // Check every 3 seconds
+                Interval = TIMER_INTERVAL_MS // 2.5 seconds
             };
             _paymentCheckTimer.Tick += async (s, e) => await CheckPaymentStatusAsync();
             
-            // Start timer after 3 seconds delay để webhook có thời gian xử lý
+            // Start timer after 2.5 seconds delay để webhook có thời gian xử lý
             var delayTimer = new System.Windows.Forms.Timer
             {
-                Interval = 3000 // 3 seconds delay before first check
+                Interval = TIMER_INTERVAL_MS
             };
             delayTimer.Tick += (s, e) =>
             {
@@ -426,6 +434,25 @@ namespace WinFormsFashionShop.Presentation.Forms
                 return;
             }
 
+            // Check timeout tổng (2-3 phút)
+            var elapsedSeconds = (DateTime.Now - _paymentCheckStartTime).TotalSeconds;
+            if (elapsedSeconds > TOTAL_TIMEOUT_SECONDS)
+            {
+                // Timeout - stop timer và thông báo
+                StopPaymentCheckTimer();
+                if (_lblStatus != null)
+                {
+                    _lblStatus.Text = $"⏱ Đã quá thời gian chờ ({TOTAL_TIMEOUT_SECONDS / 60} phút). Vui lòng kiểm tra lại sau.";
+                    _lblStatus.ForeColor = Color.Orange;
+                }
+                if (_btnCheckPayment != null)
+                {
+                    _btnCheckPayment.Enabled = true;
+                    _btnCheckPayment.Text = "🔄 Kiểm tra lại";
+                }
+                return;
+            }
+
             try
             {
                 if (_lblStatus != null && isManualCheck)
@@ -450,7 +477,19 @@ namespace WinFormsFashionShop.Presentation.Forms
                 var status = statusResponse.Data.Status?.ToUpper() ?? "";
                 
                 // Kiểm tra trạng thái từ database
-                if (status == "PAID")
+                // Hỗ trợ Processing status (trạng thái trung gian)
+                if (status == "PROCESSING")
+                {
+                    // Payment đang được xử lý (webhook đã đến nhưng chưa commit xong)
+                    if (_lblStatus != null && isManualCheck)
+                    {
+                        _lblStatus.Text = "⏳ Đang xử lý thanh toán...";
+                        _lblStatus.ForeColor = Color.Blue;
+                    }
+                    // Continue polling (không stop timer)
+                    return;
+                }
+                else if (status == "PAID")
                 {
                     _isPaymentConfirmed = true;
                     if (_lblStatus != null)

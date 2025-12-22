@@ -271,6 +271,47 @@ namespace API.Controllers
         }
 
         /// <summary>
+        /// Recheck payment status từ PayOS API cho invoice đã có PayOSOrderCode
+        /// KHÔNG tạo payment link mới, chỉ check status và update nếu cần
+        /// GET /api/payment/recheck/{orderId}
+        /// </summary>
+        [HttpGet("recheck/{orderId}")]
+        public async Task<ActionResult<PaymentStatusResponse>> RecheckPayment(int orderId)
+        {
+            if (orderId <= 0)
+            {
+                return BadRequest(new PaymentStatusResponse
+                {
+                    Success = false,
+                    Message = "OrderId không hợp lệ"
+                });
+            }
+
+            try
+            {
+                var result = await _paymentService.RecheckPaymentAsync(orderId);
+                
+                System.Diagnostics.Debug.WriteLine($"RecheckPayment API - OrderId: {orderId}, Success: {result.Success}, Status: {result.Data?.Status ?? "null"}");
+                
+                if (!result.Success)
+                {
+                    return BadRequest(result);
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Exception in RecheckPayment API: {ex.Message}");
+                return StatusCode(500, new PaymentStatusResponse
+                {
+                    Success = false,
+                    Message = $"Lỗi khi recheck payment: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
         /// Force update payment status khi PayOS API không kết nối được nhưng đã thanh toán trên PayOS web
         /// POST /api/payment/force-update-paid/{orderId}
         /// </summary>

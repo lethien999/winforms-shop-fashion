@@ -106,9 +106,14 @@ namespace WinFormsFashionShop.Presentation.Forms
                 return;
             }
 
+            // Set payment values
             CustomerPayment = customerPayment;
             Change = customerPayment - _totalAmount;
             IsConfirmed = true;
+            
+            // CRITICAL: Set DialogResult to OK and close dialog
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }

@@ -117,6 +117,32 @@ namespace WinFormsFashionShop.Presentation.Services
         }
 
         /// <summary>
+        /// Recheck payment status từ PayOS API cho invoice đã có PayOSOrderCode
+        /// KHÔNG tạo payment link mới, chỉ check status và update nếu cần
+        /// </summary>
+        public async Task<PaymentStatusResponse> RecheckPaymentAsync(int orderId)
+        {
+            return await ExecuteWithRetryAsync(async () =>
+            {
+                var response = await _httpClient.GetAsync($"/api/payment/recheck/{orderId}");
+                
+                // Nếu 404 (order không tồn tại), không retry
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return new PaymentStatusResponse
+                    {
+                        Success = false,
+                        Message = "Không tìm thấy đơn hàng"
+                    };
+                }
+
+                response.EnsureSuccessStatusCode();
+                return await response.Content.ReadFromJsonAsync<PaymentStatusResponse>() 
+                    ?? throw new InvalidOperationException("Không thể parse response");
+            });
+        }
+
+        /// <summary>
         /// Execute với exponential backoff retry
         /// Chỉ retry cho lỗi mạng (connection refused, timeout, DNS), không retry cho HTTP errors (4xx, 5xx)
         /// </summary>

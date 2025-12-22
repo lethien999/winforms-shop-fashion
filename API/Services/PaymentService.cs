@@ -38,6 +38,7 @@ namespace API.Services
 
         /// <summary>
         /// Tạo payment link từ PayOS và lưu PayOSOrderCode vào database
+        /// CRITICAL: Nếu invoice đã có PayOSOrderCode, KHÔNG tạo payment link mới, chỉ return existing info
         /// </summary>
         public async Task<CreatePaymentResponse> CreatePaymentLinkAsync(CreatePaymentRequest request)
         {
@@ -53,6 +54,99 @@ namespace API.Services
                         Message = $"Không tìm thấy đơn hàng với ID {request.OrderId}"
                     };
                 }
+
+                // CRITICAL CHECK: Nếu invoice đã có PayOSOrderCode, KHÔNG tạo payment link mới
+                var orderEntity = _orderRepository.GetById(request.OrderId);
+                if (orderEntity != null && orderEntity.PayOSOrderCode.HasValue && orderEntity.PayOSOrderCode.Value > 0)
+                {
+                    var existingPayOSOrderCode = orderEntity.PayOSOrderCode.Value;
+                    System.Diagnostics.Debug.WriteLine($"🚫 BLOCKED: Order {request.OrderId} đã có PayOSOrderCode={existingPayOSOrderCode}. KHÔNG tạo payment link mới.");
+                    
+                    // Kiểm tra trạng thái từ PayOS để lấy payment info hiện tại
+                    try
+                    {
+                        var payOSStatus = await CheckPayOSPaymentStatusAsync(existingPayOSOrderCode);
+                        
+                        // Nếu PayOS status = PAID, update database
+                        if (payOSStatus == "PAID" && orderEntity.Status != "Paid")
+                        {
+                            System.Diagnostics.Debug.WriteLine($"✅ PayOS status is PAID, updating order {request.OrderId} via stored procedure");
+                            var webhookId = $"EXISTING_CHECK_{existingPayOSOrderCode}_{DateTime.Now:yyyyMMddHHmmss}";
+                            var webhookResult = await Task.Run(() => _orderRepository.ProcessPayOSWebhook(
+                                webhookId: webhookId,
+                                payOSOrderCode: existingPayOSOrderCode,
+                                code: "00",
+                                amount: (int)orderEntity.TotalAmount,
+                                reference: null,
+                                paymentLinkId: null,
+                                rawData: $"{{\"source\":\"existing_payment_check\",\"orderId\":{request.OrderId},\"payOSOrderCode\":{existingPayOSOrderCode}}}",
+                                ipAddress: "ExistingPaymentCheck",
+                                userAgent: "PaymentService-ExistingCheck"
+                            ));
+                            
+                            if (webhookResult.Result == "Success")
+                            {
+                                System.Diagnostics.Debug.WriteLine($"✅ Order {request.OrderId} updated to Paid from existing PayOSOrderCode. Decreasing inventory...");
+                                try
+                                {
+                                    _orderService.DecreaseInventoryForPaidOrder(request.OrderId);
+                                    System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {request.OrderId}");
+                                }
+                                catch (Exception invEx)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {request.OrderId}: {invEx.Message}");
+                                }
+                                orderEntity = _orderRepository.GetById(request.OrderId); // Reload để lấy status mới
+                            }
+                        }
+                        
+                        // Return existing payment info (không tạo mới)
+                        // orderEntity đã được reload ở dòng 99 nếu có update, hoặc vẫn là từ dòng 59
+                        if (orderEntity == null)
+                        {
+                            throw new InvalidOperationException($"Order {request.OrderId} not found after reload");
+                        }
+                        return new CreatePaymentResponse
+                        {
+                            Success = true,
+                            Message = $"Payment link đã tồn tại (PayOSOrderCode: {existingPayOSOrderCode}). Không tạo payment link mới.",
+                            Data = new API.Models.PaymentData
+                            {
+                                OrderCode = existingPayOSOrderCode,
+                                QrCode = string.Empty, // Không có QR code vì không tạo mới
+                                CheckoutUrl = $"https://pay.payos.vn/web/{existingPayOSOrderCode}", // Construct URL từ orderCode
+                                Amount = (int)orderEntity.TotalAmount,
+                                Description = orderEntity.Notes ?? $"Đơn hàng #{request.OrderId}"
+                            }
+                        };
+                    }
+                    catch (Exception checkEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️  Cannot check PayOS status for existing PayOSOrderCode {existingPayOSOrderCode}: {checkEx.Message}");
+                        // Vẫn return success với existing PayOSOrderCode
+                        // orderEntity đã được định nghĩa ở dòng 59
+                        if (orderEntity == null)
+                        {
+                            throw new InvalidOperationException($"Order {request.OrderId} not found");
+                        }
+                        return new CreatePaymentResponse
+                        {
+                            Success = true,
+                            Message = $"Payment link đã tồn tại (PayOSOrderCode: {existingPayOSOrderCode}). Không tạo payment link mới.",
+                            Data = new API.Models.PaymentData
+                            {
+                                OrderCode = existingPayOSOrderCode,
+                                QrCode = string.Empty,
+                                CheckoutUrl = $"https://pay.payos.vn/web/{existingPayOSOrderCode}",
+                                Amount = (int)orderEntity.TotalAmount,
+                                Description = orderEntity.Notes ?? $"Đơn hàng #{request.OrderId}"
+                            }
+                        };
+                    }
+                }
+
+                // CHỈ TẠO PAYMENT LINK MỚI NẾU CHƯA CÓ PayOSOrderCode
+                System.Diagnostics.Debug.WriteLine($"✅ Creating NEW payment link for order {request.OrderId} (no existing PayOSOrderCode)");
 
                 // Tạo unique PayOS orderCode từ OrderId và timestamp để tránh trùng
                 // PayOS yêu cầu orderCode phải unique, nên kết hợp OrderId với timestamp
@@ -87,25 +181,16 @@ namespace API.Services
                 System.Diagnostics.Debug.WriteLine($"PaymentService - CreatePaymentLink: OrderId={request.OrderId}, Calculated payOSOrderCode={payOSOrderCode}, PayOS result.orderCode={result.orderCode}");
 
                 // Cập nhật PayOSOrderCode vào database (LUÔN sử dụng result.orderCode từ PayOS response)
-                var orderEntity = _orderRepository.GetById(request.OrderId);
+                // LƯU Ý: Đến đây chắc chắn orderEntity.PayOSOrderCode IS NULL (đã check ở trên)
+                // Reload orderEntity để đảm bảo có dữ liệu mới nhất (orderEntity đã được định nghĩa ở dòng 59)
+                orderEntity = _orderRepository.GetById(request.OrderId);
                 if (orderEntity != null)
                 {
-                    // CRITICAL: Nếu có PayOSOrderCode cũ và chưa paid, cancel payment link cũ
-                    if (orderEntity.PayOSOrderCode.HasValue && 
-                        orderEntity.PayOSOrderCode.Value > 0 && 
-                        orderEntity.Status != "Paid")
+                    // Đảm bảo không có PayOSOrderCode cũ (defensive check)
+                    if (orderEntity.PayOSOrderCode.HasValue && orderEntity.PayOSOrderCode.Value > 0)
                     {
-                        var oldPayOSOrderCode = orderEntity.PayOSOrderCode.Value;
-                        try
-                        {
-                            await _payOS.cancelPaymentLink(oldPayOSOrderCode, "Replaced by new payment link");
-                            System.Diagnostics.Debug.WriteLine($"✅ Cancelled old payment link {oldPayOSOrderCode} for order {request.OrderId}");
-                        }
-                        catch (Exception cancelEx)
-                        {
-                            // Ignore cancel errors (payment link might be expired or already paid)
-                            System.Diagnostics.Debug.WriteLine($"⚠️  Could not cancel old payment link {oldPayOSOrderCode}: {cancelEx.Message}");
-                        }
+                        System.Diagnostics.Debug.WriteLine($"❌ CRITICAL ERROR: Order {request.OrderId} đã có PayOSOrderCode={orderEntity.PayOSOrderCode.Value} nhưng code vẫn tạo payment mới! Điều này không nên xảy ra.");
+                        throw new InvalidOperationException($"Order {request.OrderId} đã có PayOSOrderCode. Không được tạo payment link mới.");
                     }
 
                     // PayOS trả về result.orderCode - đây là PayOSOrderCode thực sự cần lưu
@@ -162,7 +247,16 @@ namespace API.Services
                             
                             if (webhookResult.Result == "Success")
                             {
-                                System.Diagnostics.Debug.WriteLine($"✅ Order {request.OrderId} auto-updated to Paid");
+                                System.Diagnostics.Debug.WriteLine($"✅ Order {request.OrderId} auto-updated to Paid. Decreasing inventory...");
+                                try
+                                {
+                                    _orderService.DecreaseInventoryForPaidOrder(request.OrderId);
+                                    System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {request.OrderId}");
+                                }
+                                catch (Exception invEx)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {request.OrderId}: {invEx.Message}");
+                                }
                             }
                         }
                     }
@@ -294,6 +388,16 @@ namespace API.Services
                                 if (webhookResult.Result == "Success")
                                 {
                                     status = "Paid";
+                                    System.Diagnostics.Debug.WriteLine($"✅ Order {orderId} updated to Paid via GetPaymentStatus. Decreasing inventory...");
+                                    try
+                                    {
+                                        _orderService.DecreaseInventoryForPaidOrder(orderId);
+                                        System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {orderId}");
+                                    }
+                                    catch (Exception invEx)
+                                    {
+                                        System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {orderId}: {invEx.Message}");
+                                    }
                                     // Reload entity để lấy PaidAt mới nhất
                                     var reloadedEntity = _orderRepository.GetById(orderId);
                                     if (reloadedEntity != null)
@@ -667,9 +771,27 @@ namespace API.Services
                 // - Transaction (atomic)
                 // - Idempotency check (chống trùng lặp)
                 // - Validation (số tiền, code)
-                // - Update Orders table
+                // - Update Orders table (Status = "Paid")
                 // - Insert vào PaymentWebhooks
                 // - Insert vào PaymentAuditLog
+
+                // CRITICAL: Nếu webhook update Status = "Paid" thành công, giảm inventory
+                // (Vì với VietQR, order được tạo với Status = "Pending" → chưa giảm inventory)
+                if (result.Result == "Success" && result.OrderId.HasValue && result.CurrentStatus == "Paid")
+                {
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✅ Webhook update order {result.OrderId.Value} to Paid. Decreasing inventory...");
+                        _orderService.DecreaseInventoryForPaidOrder(result.OrderId.Value);
+                        System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {result.OrderId.Value}");
+                    }
+                    catch (Exception invEx)
+                    {
+                        // Log error nhưng không fail webhook (order đã Paid rồi)
+                        System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {result.OrderId.Value}: {invEx.Message}");
+                        System.Diagnostics.Debug.WriteLine($"Stack trace: {invEx.StackTrace}");
+                    }
+                }
 
                 // Trả về success nếu kết quả là "Success"
                 return result.Result == "Success";
@@ -770,6 +892,17 @@ namespace API.Services
 
                 if (result.Result == "Success")
                 {
+                    // CRITICAL: Nếu force update Paid thành công, giảm inventory
+                    try
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✅ ForceUpdate order {orderId} to Paid. Decreasing inventory...");
+                        _orderService.DecreaseInventoryForPaidOrder(orderId);
+                        System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {orderId}");
+                    }
+                    catch (Exception invEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {orderId}: {invEx.Message}");
+                    }
                     // Reload order để lấy thông tin mới nhất
                     var updatedOrder = _orderRepository.GetById(orderId);
                     return new PaymentStatusResponse
@@ -802,6 +935,140 @@ namespace API.Services
                 {
                     Success = false,
                     Message = $"Lỗi khi cập nhật: {ex.Message}"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Recheck payment status từ PayOS API cho invoice đã có PayOSOrderCode
+        /// KHÔNG tạo payment link mới, chỉ check status và update nếu cần
+        /// </summary>
+        public async Task<PaymentStatusResponse> RecheckPaymentAsync(int orderId)
+        {
+            try
+            {
+                // Load invoice từ database
+                var orderEntity = _orderRepository.GetById(orderId);
+                if (orderEntity == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ RecheckPayment: Order {orderId} not found");
+                    return new PaymentStatusResponse
+                    {
+                        Success = false,
+                        Message = $"Không tìm thấy đơn hàng với ID {orderId}"
+                    };
+                }
+
+                // Nếu đã Paid, return ngay
+                if (orderEntity.Status == "Paid")
+                {
+                    System.Diagnostics.Debug.WriteLine($"✅ RecheckPayment: Order {orderId} already Paid, returning status");
+                    return new PaymentStatusResponse
+                    {
+                        Success = true,
+                        Message = "Đơn hàng đã được thanh toán",
+                        Data = new PaymentStatusData
+                        {
+                            OrderId = orderId,
+                            PayOSOrderCode = orderEntity.PayOSOrderCode,
+                            Status = orderEntity.Status,
+                            PaidAt = orderEntity.PaidAt,
+                            TransactionId = orderEntity.TransactionId
+                        }
+                    };
+                }
+
+                // Nếu PayOSOrderCode IS NULL, return error
+                if (!orderEntity.PayOSOrderCode.HasValue || orderEntity.PayOSOrderCode.Value <= 0)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ RecheckPayment: Order {orderId} has no PayOSOrderCode (invalid state)");
+                    return new PaymentStatusResponse
+                    {
+                        Success = false,
+                        Message = $"Đơn hàng {orderId} chưa có PayOSOrderCode. Không thể recheck payment status."
+                    };
+                }
+
+                var payOSOrderCode = orderEntity.PayOSOrderCode.Value;
+                System.Diagnostics.Debug.WriteLine($"🔄 RecheckPayment: Checking PayOS status for order {orderId}, PayOSOrderCode {payOSOrderCode}");
+
+                // Gọi PayOS API để check status
+                try
+                {
+                    var payOSStatus = await CheckPayOSPaymentStatusAsync(payOSOrderCode);
+                    System.Diagnostics.Debug.WriteLine($"📊 RecheckPayment: PayOS returned status '{payOSStatus}' for order {orderId}");
+
+                    // Nếu PayOS status = PAID, update database
+                    if (payOSStatus == "PAID" && orderEntity.Status != "Paid")
+                    {
+                        System.Diagnostics.Debug.WriteLine($"✅ RecheckPayment: PayOS status is PAID, updating order {orderId} via stored procedure");
+                        
+                        var webhookId = $"RECHECK_{payOSOrderCode}_{DateTime.Now:yyyyMMddHHmmss}";
+                        var webhookResult = await Task.Run(() => _orderRepository.ProcessPayOSWebhook(
+                            webhookId: webhookId,
+                            payOSOrderCode: payOSOrderCode,
+                            code: "00",
+                            amount: (int)orderEntity.TotalAmount,
+                            reference: null,
+                            paymentLinkId: null,
+                            rawData: $"{{\"source\":\"recheck\",\"orderId\":{orderId},\"payOSOrderCode\":{payOSOrderCode}}}",
+                            ipAddress: "RecheckPayment",
+                            userAgent: "PaymentService-Recheck"
+                        ));
+
+                        System.Diagnostics.Debug.WriteLine($"📝 RecheckPayment: Stored procedure result: {webhookResult.Result}, Message: {webhookResult.Message}");
+
+                        if (webhookResult.Result == "Success")
+                        {
+                            System.Diagnostics.Debug.WriteLine($"✅ RecheckPayment: Order {orderId} updated to Paid. Decreasing inventory...");
+                            try
+                            {
+                                _orderService.DecreaseInventoryForPaidOrder(orderId);
+                                System.Diagnostics.Debug.WriteLine($"✅ Inventory decreased for order {orderId}");
+                            }
+                            catch (Exception invEx)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot decrease inventory for order {orderId}: {invEx.Message}");
+                            }
+                            // Reload entity để lấy status mới
+                            orderEntity = _orderRepository.GetById(orderId);
+                        }
+                    }
+
+                    // Return current status
+                    return new PaymentStatusResponse
+                    {
+                        Success = true,
+                        Message = "Recheck payment status thành công",
+                        Data = new PaymentStatusData
+                        {
+                            OrderId = orderId,
+                            PayOSOrderCode = orderEntity?.PayOSOrderCode,
+                            Status = orderEntity?.Status ?? "Pending",
+                            PaidAt = orderEntity?.PaidAt,
+                            TransactionId = orderEntity?.TransactionId
+                        }
+                    };
+                }
+                catch (InvalidOperationException ex)
+                {
+                    // Network/DNS error khi gọi PayOS API
+                    System.Diagnostics.Debug.WriteLine($"⚠️  RecheckPayment: Cannot connect to PayOS API: {ex.Message}");
+                    return new PaymentStatusResponse
+                    {
+                        Success = false,
+                        Message = $"Không thể kết nối đến PayOS API để recheck: {ex.Message}"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ RecheckPayment error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                return new PaymentStatusResponse
+                {
+                    Success = false,
+                    Message = $"Lỗi khi recheck payment: {ex.Message}"
                 };
             }
         }

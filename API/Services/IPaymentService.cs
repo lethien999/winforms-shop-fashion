@@ -32,6 +32,12 @@ namespace API.Services
         /// Force update payment status khi PayOS API không kết nối được nhưng đã thanh toán trên PayOS web
         /// </summary>
         Task<PaymentStatusResponse> ForceUpdatePaidStatusAsync(int orderId);
+
+        /// <summary>
+        /// Recheck payment status từ PayOS API cho invoice đã có PayOSOrderCode
+        /// KHÔNG tạo payment link mới, chỉ check status và update nếu cần
+        /// </summary>
+        Task<PaymentStatusResponse> RecheckPaymentAsync(int orderId);
     }
 }
 

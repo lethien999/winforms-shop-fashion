@@ -101,8 +101,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             // Setup action buttons for Pending orders
             SetupPendingOrderActions();
 
+            // Setup print button for Paid orders
+            SetupPrintButton();
+
             // Wire up event handlers
             btnClose.Click += (s, e) => Close();
+            btnPrint.Click += BtnPrint_Click;
         }
 
         /// <summary>
@@ -138,6 +142,22 @@ namespace WinFormsFashionShop.Presentation.Forms
 
             // Cancel button always visible for pending orders
             btnCancelOrder.Visible = true;
+        }
+
+        /// <summary>
+        /// Setup print button for paid orders
+        /// </summary>
+        private void SetupPrintButton()
+        {
+            // Only show print button if order is Paid
+            if (_order.Status == OrderStatus.Paid)
+            {
+                btnPrint.Visible = true;
+            }
+            else
+            {
+                btnPrint.Visible = false;
+            }
         }
 
         /// <summary>
@@ -186,6 +206,9 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         /// <summary>
         /// Handle check payment button click
+        /// CRITICAL: Sử dụng RecheckPaymentAsync để đảm bảo workflow đúng:
+        /// - KHÔNG tạo payment link mới nếu đã có PayOSOrderCode
+        /// - Chỉ check status từ PayOS và update database nếu cần
         /// </summary>
         private async void BtnCheckPayment_Click(object? sender, EventArgs e)
         {
@@ -198,8 +221,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                     btn.Text = "⏳ Đang kiểm tra...";
                 }
 
-                // Check payment status from API (will also check PayOS directly and update database)
-                var statusResponse = await _apiClient.GetPaymentStatusAsync(_order.Id);
+                // CRITICAL: Sử dụng RecheckPaymentAsync thay vì GetPaymentStatusAsync
+                // RecheckPaymentAsync đảm bảo KHÔNG tạo payment link mới, chỉ check status từ PayOS
+                var statusResponse = await _apiClient.RecheckPaymentAsync(_order.Id);
 
                 if (!statusResponse.Success || statusResponse.Data == null)
                 {
@@ -237,6 +261,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                     
                     // Hide action buttons since order is now paid
                     pnlActions.Visible = false;
+                    
+                    // Show print button since order is now paid
+                    btnPrint.Visible = true;
                     
                     // Close dialog after a short delay
                     var closeTimer = new System.Windows.Forms.Timer { Interval = 2000 };
@@ -316,6 +343,31 @@ namespace WinFormsFashionShop.Presentation.Forms
             catch (Exception ex)
             {
                 _errorHandler.ShowError($"Lỗi khi hủy đơn hàng: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handle print button click - opens invoice preview dialog
+        /// </summary>
+        private void BtnPrint_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                // Reload order to get latest data
+                var currentOrder = _orderService.GetOrderById(_order.Id);
+                if (currentOrder == null)
+                {
+                    _errorHandler.ShowError("Không tìm thấy đơn hàng!");
+                    return;
+                }
+
+                // Show invoice preview dialog
+                using var previewDialog = new InvoicePreviewDialog(currentOrder);
+                previewDialog.ShowDialog(this);
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.ShowError($"Lỗi khi in hóa đơn: {ex.Message}");
             }
         }
 

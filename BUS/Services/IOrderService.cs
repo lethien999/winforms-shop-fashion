@@ -18,5 +18,10 @@ namespace WinFormsFashionShop.Business.Services
         string GenerateOrderCode();
         void CancelOrder(int orderId);
         void MarkOrderAsPrinted(int orderId); // Đánh dấu đơn hàng đã in để tránh in trùng
+        /// <summary>
+        /// Decrease inventory for order items when order status changes to Paid.
+        /// Used when webhook updates order from Pending to Paid.
+        /// </summary>
+        void DecreaseInventoryForPaidOrder(int orderId);
     }
 }

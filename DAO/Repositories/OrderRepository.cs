@@ -149,7 +149,7 @@ namespace WinFormsFashionShop.Data.Repositories
                 TotalAmount = rdr.GetDecimal(6),
                 PaymentMethod = rdr.IsDBNull(7) ? null : rdr.GetString(7),
                 Notes = rdr.IsDBNull(8) ? null : rdr.GetString(8),
-                Status = rdr.IsDBNull(9) ? "Paid" : rdr.GetString(9),
+                Status = rdr.IsDBNull(9) ? "Pending" : rdr.GetString(9),
                 PaidAt = rdr.IsDBNull(10) ? null : rdr.GetDateTime(10),
                 TransactionId = rdr.IsDBNull(11) ? null : rdr.GetString(11),
                 PrintedAt = rdr.IsDBNull(12) ? null : rdr.GetDateTime(12)

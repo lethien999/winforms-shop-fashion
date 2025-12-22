@@ -174,7 +174,7 @@ BEGIN
         TotalAmount DECIMAL(18,2) NOT NULL CHECK (TotalAmount >= 0),  -- Tổng tiền (phải >= 0)
         PaymentMethod NVARCHAR(50) NULL,                 -- Phương thức thanh toán (Tiền mặt, Thẻ, Chuyển khoản...)
         Notes NVARCHAR(255) NULL,                        -- Ghi chú
-        Status NVARCHAR(20) NOT NULL DEFAULT 'Paid' CHECK (Status IN ('Pending', 'Paid', 'Cancelled')),  -- Trạng thái: Pending, Paid, Cancelled
+        Status NVARCHAR(20) NOT NULL DEFAULT 'Pending' CHECK (Status IN ('Pending', 'Processing', 'Paid', 'Failed', 'Cancelled')),  -- Trạng thái: Pending → Processing → Paid/Failed
         PaidAt DATETIME NULL,                            -- Thời gian thanh toán thành công (từ webhook PayOS)
         TransactionId NVARCHAR(100) NULL,                -- Transaction ID từ PayOS (để tracking)
         FOREIGN KEY (CustomerId) REFERENCES Customers(Id) ON DELETE SET NULL,

@@ -7,7 +7,9 @@ namespace WinFormsFashionShop.Business.Constants
     public static class OrderStatus
     {
         public const string Pending = "Pending";
+        public const string Processing = "Processing"; // Trạng thái trung gian: Webhook đã đến nhưng chưa commit xong transaction
         public const string Paid = "Paid";
+        public const string Failed = "Failed"; // Thanh toán thất bại
         public const string Cancelled = "Cancelled";
     }
 
