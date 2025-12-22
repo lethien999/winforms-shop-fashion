@@ -127,3 +127,4 @@ WinFormsFashionShop/
 
 [Thêm license của bạn ở đây]
 
+MIT
