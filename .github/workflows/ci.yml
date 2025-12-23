@@ -1,5 +1,9 @@
 name: CI - Build and Test
 
+# CI Pipeline: Build, quality checks, and tests
+# Trigger: Push to main/develop, PR to main/develop
+# Fail-fast: Build errors will stop pipeline immediately
+
 on:
   push:
     branches: [ main, develop ]
@@ -10,9 +14,10 @@ on:
 env:
   DOTNET_VERSION: '8.0.x'
   BUILD_CONFIGURATION: 'Release'
+  SOLUTION_FILE: 'WinFormsFashionShop.sln'
 
 jobs:
-  # Job 1: Build Solution
+  # Job 1: Build Solution (Fail-fast)
   build:
     name: Build Solution
     runs-on: windows-latest
@@ -22,7 +27,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup .NET
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -36,27 +41,11 @@ jobs:
           ${{ runner.os }}-nuget-
           
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
       
     - name: Build solution
-      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
-      
-    - name: List build output directories
-      run: |
-        Write-Host "=== Checking build output ===" -ForegroundColor Cyan
-        if (Test-Path "GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/") {
-          Write-Host "GUI output exists" -ForegroundColor Green
-          Get-ChildItem "GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/" | Select-Object -First 5 Name
-        } else {
-          Write-Host "GUI output NOT found" -ForegroundColor Yellow
-        }
-        if (Test-Path "API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/") {
-          Write-Host "API output exists" -ForegroundColor Green
-          Get-ChildItem "API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/" | Select-Object -First 5 Name
-        } else {
-          Write-Host "API output NOT found" -ForegroundColor Yellow
-        }
-      continue-on-error: true
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      # Fail-fast: If build fails, pipeline stops here
       
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -66,10 +55,12 @@ jobs:
         path: |
           GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
           API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
+          BUS/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
+          DAO/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/**
         if-no-files-found: warn
         retention-days: 7
 
-  # Job 2: Code Quality Checks (có thể thêm sau)
+  # Job 2: Code Quality Checks
   code-quality:
     name: Code Quality
     runs-on: windows-latest
@@ -79,67 +70,66 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup .NET
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
       
-    # Có thể thêm các tools sau:
-    # - dotnet format (code formatting)
-    # - SonarCloud (code analysis)
-    # - Security scanning
-    
+    - name: Run dotnet format check
+      run: dotnet format ${{ env.SOLUTION_FILE }} --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+      
     - name: Check for TODO/FIXME comments
       run: |
         Write-Host "=== Checking for TODO/FIXME comments ===" -ForegroundColor Cyan
-        try {
-          $todos = Get-ChildItem -Path . -Filter "*.cs" -Recurse | 
-            Select-String -Pattern "TODO|FIXME|HACK" -ErrorAction SilentlyContinue
-          
-          if ($todos) {
-            Write-Host "Found TODO/FIXME comments:" -ForegroundColor Yellow
-            $todos | ForEach-Object { 
-              Write-Host "  $($_.Path):$($_.LineNumber) - $($_.Line.Trim())" 
-            }
-            Write-Host "`nTotal: $($todos.Count) comments found" -ForegroundColor Yellow
-            # Không fail build, chỉ warning
-            exit 0
-          } else {
-            Write-Host "No TODO/FIXME comments found" -ForegroundColor Green
-            exit 0
+        $todos = Get-ChildItem -Path . -Filter "*.cs" -Recurse -Exclude "*\obj\*", "*\bin\*" | 
+          Select-String -Pattern "TODO|FIXME|HACK" -ErrorAction SilentlyContinue
+        
+        if ($todos) {
+          Write-Host "Found TODO/FIXME comments:" -ForegroundColor Yellow
+          $todos | ForEach-Object { 
+            Write-Host "  $($_.Path):$($_.LineNumber) - $($_.Line.Trim())" 
           }
-        } catch {
-          Write-Host "Error checking comments: $($_.Exception.Message)" -ForegroundColor Red
-          exit 0  # Không fail build
+          Write-Host "`nTotal: $($todos.Count) comments found" -ForegroundColor Yellow
+        } else {
+          Write-Host "No TODO/FIXME comments found" -ForegroundColor Green
         }
       continue-on-error: true
 
-  # Job 3: Run Tests (nếu có test project)
+  # Job 3: Run Tests (when test project exists)
   test:
     name: Run Tests
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: build
-    if: false  # Tắt tạm thời vì chưa có test project
+    if: false  # Disabled until test project is added
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup .NET
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
         
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
       
     - name: Run tests
-      run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --collect:"XPlat Code Coverage"
-      continue-on-error: true
+      run: dotnet test ${{ env.SOLUTION_FILE }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./TestResults
+      # Fail-fast: If tests fail, pipeline stops
       
     - name: Upload test results
       uses: actions/upload-artifact@v4

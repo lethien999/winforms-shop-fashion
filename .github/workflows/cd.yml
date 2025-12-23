@@ -1,10 +1,14 @@
 name: CD - Publish and Release
 
+# CD Pipeline: Build, package, and create GitHub Release
+# Trigger: Git tags (v*.*.*) or manual dispatch
+# Output: Release packages (Full, Single-file, ClickOnce)
+
 on:
   push:
     tags:
-      - 'v*.*.*'  # Trigger on version tags like v1.0.0, v1.2.3
-  workflow_dispatch:  # Allow manual trigger
+      - 'v*.*.*'  # Semantic versioning: v1.0.0, v1.2.3, etc.
+  workflow_dispatch:  # Manual trigger
     inputs:
       version:
         description: 'Version number (e.g., 1.0.0)'
@@ -16,68 +20,30 @@ on:
         required: false
         default: true
 
-# Only run on tag pushes or manual dispatch
-# This prevents the workflow from running on regular code pushes
-
 env:
   DOTNET_VERSION: '8.0.x'
   BUILD_CONFIGURATION: 'Release'
   RUNTIME: 'win-x64'
+  SOLUTION_FILE: 'WinFormsFashionShop.sln'
 
 jobs:
-  # Job 1: Check trigger (prevent running on non-tag pushes)
-  check-trigger:
-    name: Check Trigger
-    runs-on: ubuntu-latest
-    # Only run if this is a tag push or manual dispatch
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
-    outputs:
-      should-run: ${{ steps.check.outputs.should-run }}
-    steps:
-      - name: Validate trigger
-        id: check
-        run: |
-          echo "Event: ${{ github.event_name }}"
-          echo "Ref: ${{ github.ref }}"
-          echo "Base ref: ${{ github.base_ref }}"
-          
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "✅ Manual trigger detected"
-            echo "should-run=true" >> $GITHUB_OUTPUT
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            echo "✅ Tag push detected: ${{ github.ref }}"
-            echo "should-run=true" >> $GITHUB_OUTPUT
-          else
-            echo "⚠️ Invalid trigger - CD workflow should only run on tags or manual dispatch"
-            echo "Current event: ${{ github.event_name }}"
-            echo "Current ref: ${{ github.ref }}"
-            echo "should-run=false" >> $GITHUB_OUTPUT
-            # Don't exit 1 here, just set should-run=false so other jobs skip
-          fi
-          
-          echo "Workflow will proceed with should-run=${{ steps.check.outputs.should-run }}"
-
-  # Job 2: Determine version
+  # Job 1: Validate trigger and extract version
   version:
     name: Determine Version
     runs-on: ubuntu-latest
-    needs: check-trigger
-    if: needs.check-trigger.outputs.should-run == 'true'
     outputs:
       version: ${{ steps.set_version.outputs.version }}
       is_prerelease: ${{ steps.set_version.outputs.is_prerelease }}
+      version_display: ${{ steps.set_version.outputs.version_display }}
     
     steps:
-    - name: Set version from tag or input
+    - name: Extract version from tag or input
       id: set_version
       run: |
         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
           VERSION="${{ github.event.inputs.version }}"
           IS_PRERELEASE="false"
         elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-          # Extract version from tag (remove 'refs/tags/v' prefix)
           VERSION="${GITHUB_REF#refs/tags/v}"
           # Check if version contains alpha, beta, rc (prerelease)
           if [[ "$VERSION" =~ (alpha|beta|rc) ]]; then
@@ -95,17 +61,23 @@ jobs:
           exit 1
         fi
         
+        # Validate version format (X.Y.Z)
+        if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.*)?$ ]]; then
+          echo "Error: Invalid version format. Expected X.Y.Z" >&2
+          exit 1
+        fi
+        
         echo "version=$VERSION" >> $GITHUB_OUTPUT
         echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+        echo "version_display=v$VERSION" >> $GITHUB_OUTPUT
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "Determined version: $VERSION (prerelease: $IS_PRERELEASE)"
+        echo "✅ Version determined: $VERSION (prerelease: $IS_PRERELEASE)"
 
-  # Job 3: Build and Publish
+  # Job 2: Build and Publish
   publish:
     name: Build and Publish
     runs-on: windows-latest
-    needs: [check-trigger, version]
-    if: needs.check-trigger.outputs.should-run == 'true'
+    needs: version
     timeout-minutes: 30
     
     steps:
@@ -113,8 +85,8 @@ jobs:
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Full history for release notes
-      
-    - name: Setup .NET
+        
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
@@ -128,10 +100,11 @@ jobs:
           ${{ runner.os }}-nuget-
           
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
       
     - name: Build solution
-      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      # Fail-fast: Build must succeed
       
     - name: Publish WinForms App (Self-contained)
       run: |
@@ -166,7 +139,7 @@ jobs:
           --runtime ${{ env.RUNTIME }} `
           -p:Version=${{ needs.version.outputs.version }}
           
-    - name: Publish ClickOnce
+    - name: Publish ClickOnce (if MSBuild available)
       run: |
         $version = "${{ needs.version.outputs.version }}"
         $versionParts = $version -split '\.'
@@ -181,40 +154,25 @@ jobs:
         # Update version in .csproj
         $csprojPath = ".\GUI\GUI.csproj"
         $csprojContent = Get-Content $csprojPath -Raw
-        
-        # Update ApplicationVersion
         $csprojContent = $csprojContent -replace '<ApplicationVersion>.*?</ApplicationVersion>', "<ApplicationVersion>$appVersion</ApplicationVersion>"
-        
-        # Update PublishUrl
         $csprojContent = $csprojContent -replace '<PublishUrl>.*?</PublishUrl>', '<PublishUrl>.\publish\ClickOnce\</PublishUrl>'
-        
-        # Set InstallFrom to Disk
         $csprojContent = $csprojContent -replace '<InstallFrom>.*?</InstallFrom>', '<InstallFrom>Disk</InstallFrom>'
-        
-        # Disable updates for ClickOnce (since we're packaging for download)
         $csprojContent = $csprojContent -replace '<UpdateEnabled>.*?</UpdateEnabled>', '<UpdateEnabled>false</UpdateEnabled>'
-        
         Set-Content -Path $csprojPath -Value $csprojContent -NoNewline
         
-        # Publish using MSBuild
-        $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        if (-not (Test-Path $msbuildPath)) {
-          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
-        }
-        if (-not (Test-Path $msbuildPath)) {
-          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-        }
-        if (-not (Test-Path $msbuildPath)) {
-          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
-        }
-        if (-not (Test-Path $msbuildPath)) {
-          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
-        }
-        if (-not (Test-Path $msbuildPath)) {
-          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
-        }
+        # Try to find MSBuild
+        $msbuildPaths = @(
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+        )
         
-        if (Test-Path $msbuildPath) {
+        $msbuildPath = $msbuildPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+        
+        if ($msbuildPath) {
           Write-Host "Using MSBuild: $msbuildPath" -ForegroundColor Green
           & $msbuildPath GUI\GUI.csproj `
             /t:Publish `
@@ -226,116 +184,84 @@ jobs:
             /p:IsWebBootstrapper=false
         } else {
           Write-Host "MSBuild not found. Skipping ClickOnce publish." -ForegroundColor Yellow
-          Write-Host "Note: ClickOnce requires Visual Studio MSBuild." -ForegroundColor Yellow
         }
       continue-on-error: true
-          
-    - name: Get file sizes
-      run: |
-        Write-Host "=== Published File Sizes ===" -ForegroundColor Cyan
-        Get-ChildItem -Path "./publish" -Recurse -File | 
-          Sort-Object Length -Descending | 
-          Select-Object -First 10 FullName, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}} | 
-          Format-Table -AutoSize
-        
-        $totalSize = (Get-ChildItem -Path "./publish" -Recurse -File | Measure-Object -Property Length -Sum).Sum
-        Write-Host "Total size: $([math]::Round($totalSize/1MB, 2)) MB" -ForegroundColor Green
-        
-    - name: Create release package
+      
+    - name: Create release packages
       run: |
         $version = "${{ needs.version.outputs.version }}"
         $date = Get-Date -Format "yyyyMMdd"
-        $packageName = "WinFormsFashionShop-v$version-$date"
+        $commitHash = "${{ github.sha }}"
+        $buildNumber = "${{ github.run_number }}"
         
-        # Create package directory
-        New-Item -ItemType Directory -Path "./release-package" -Force | Out-Null
-        
-        # Copy GUI files (self-contained version)
-        Copy-Item -Path "./publish/GUI/*" -Destination "./release-package/" -Recurse -Force
-        
-        # Copy API files to separate folder
-        New-Item -ItemType Directory -Path "./release-package/API" -Force | Out-Null
-        Copy-Item -Path "./publish/API/*" -Destination "./release-package/API/" -Recurse -Force
-        
-        # Copy database script
-        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package/" -Force
-        
-        # Copy documentation
-        Copy-Item -Path "./README.md" -Destination "./release-package/" -Force
-        if (Test-Path "./PUBLISH_GUIDE.md") {
-          Copy-Item -Path "./PUBLISH_GUIDE.md" -Destination "./release-package/" -Force
-        }
-        
-        # Create version file
+        # Create version info
         $versionInfo = @"
 Version: $version
 Build Date: $date
-Build Number: ${{ github.run_number }}
-Commit: ${{ github.sha }}
+Build Number: $buildNumber
+Commit: $commitHash
 Runtime: ${{ env.RUNTIME }}
 .NET Version: ${{ env.DOTNET_VERSION }}
 "@
+        
+        # Package 1: Full Package (Self-contained)
+        Write-Host "Creating full package..." -ForegroundColor Cyan
+        $packageName = "WinFormsFashionShop-v$version-$date"
+        New-Item -ItemType Directory -Path "./release-package" -Force | Out-Null
+        Copy-Item -Path "./publish/GUI/*" -Destination "./release-package/" -Recurse -Force
+        New-Item -ItemType Directory -Path "./release-package/API" -Force | Out-Null
+        Copy-Item -Path "./publish/API/*" -Destination "./release-package/API/" -Recurse -Force
+        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package/" -Force
+        Copy-Item -Path "./README.md" -Destination "./release-package/" -Force
         $versionInfo | Out-File -FilePath "./release-package/VERSION.txt" -Encoding UTF8
-        
-        # Create zip package
         Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName.zip" -Force
+        echo "PACKAGE_FULL=$packageName.zip" >> $env:GITHUB_ENV
         
-        # Also create single-file version package
+        # Package 2: Single File Package
+        Write-Host "Creating single-file package..." -ForegroundColor Cyan
+        $singlePackageName = "$packageName-singlefile"
         New-Item -ItemType Directory -Path "./release-package-single" -Force | Out-Null
         Copy-Item -Path "./publish/GUI-SingleFile/GUI.exe" -Destination "./release-package-single/" -Force
         Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package-single/" -Force
         Copy-Item -Path "./README.md" -Destination "./release-package-single/" -Force
         $versionInfo | Out-File -FilePath "./release-package-single/VERSION.txt" -Encoding UTF8
-        Compress-Archive -Path "./release-package-single/*" -DestinationPath "./$packageName-singlefile.zip" -Force
+        Compress-Archive -Path "./release-package-single/*" -DestinationPath "./$singlePackageName.zip" -Force
+        echo "PACKAGE_SINGLE=$singlePackageName.zip" >> $env:GITHUB_ENV
         
-        # Create ClickOnce package (if available)
+        # Package 3: ClickOnce Package (if available)
         if (Test-Path "./publish/ClickOnce/setup.exe") {
           Write-Host "Creating ClickOnce package..." -ForegroundColor Cyan
-          $clickOncePackageName = "WinFormsFashionShop-v$version-ClickOnce-$date"
+          $clickOncePackageName = "$packageName-ClickOnce"
           New-Item -ItemType Directory -Path "./release-package-clickonce" -Force | Out-Null
-          
-          # Copy ClickOnce files
           Copy-Item -Path "./publish/ClickOnce/setup.exe" -Destination "./release-package-clickonce/" -Force
           Copy-Item -Path "./publish/ClickOnce/GUI.application" -Destination "./release-package-clickonce/" -Force
           if (Test-Path "./publish/ClickOnce/Application Files") {
             Copy-Item -Path "./publish/ClickOnce/Application Files" -Destination "./release-package-clickonce/" -Recurse -Force
           }
-          
-          # Copy database script and docs
           Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package-clickonce/" -Force
           Copy-Item -Path "./README.md" -Destination "./release-package-clickonce/" -Force
           $versionInfo | Out-File -FilePath "./release-package-clickonce/VERSION.txt" -Encoding UTF8
-          
-          # Create zip
           Compress-Archive -Path "./release-package-clickonce/*" -DestinationPath "./$clickOncePackageName.zip" -Force
           echo "PACKAGE_CLICKONCE=$clickOncePackageName.zip" >> $env:GITHUB_ENV
-          Write-Host "ClickOnce package created: $clickOncePackageName.zip" -ForegroundColor Green
-        } else {
-          Write-Host "ClickOnce files not found. Skipping ClickOnce package." -ForegroundColor Yellow
         }
-        
-        echo "PACKAGE_NAME=$packageName.zip" >> $env:GITHUB_ENV
-        echo "PACKAGE_SINGLE=$packageName-singlefile.zip" >> $env:GITHUB_ENV
         
     - name: Upload release artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: winforms-release-v${{ needs.version.outputs.version }}
+        name: release-packages-v${{ needs.version.outputs.version }}
         path: |
-          ${{ env.PACKAGE_NAME }}
+          ${{ env.PACKAGE_FULL }}
           ${{ env.PACKAGE_SINGLE }}
           ${{ env.PACKAGE_CLICKONCE }}
-          publish/
-        if-no-files-found: warn
+        if-no-files-found: error
         retention-days: 30
 
-  # Job 4: Create GitHub Release
+  # Job 3: Create GitHub Release
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [check-trigger, version, publish]
+    needs: [version, publish]
     if: |
-      needs.check-trigger.outputs.should-run == 'true' &&
       (startsWith(github.ref, 'refs/tags/') || github.event.inputs.create_release == 'true') &&
       needs.version.outputs.is_prerelease == 'false'
     
@@ -343,7 +269,7 @@ Runtime: ${{ env.RUNTIME }}
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        name: winforms-release-v${{ needs.version.outputs.version }}
+        name: release-packages-v${{ needs.version.outputs.version }}
         path: ./artifacts
         
     - name: Generate release notes
@@ -351,30 +277,34 @@ Runtime: ${{ env.RUNTIME }}
       run: |
         VERSION="${{ needs.version.outputs.version }}"
         DATE=$(date +"%Y-%m-%d")
+        COMMIT_HASH="${{ github.sha }}"
+        BUILD_NUMBER="${{ github.run_number }}"
         
         NOTES=$(cat <<EOF
-        ## WinForms Fashion Shop Management System v${VERSION}
+        ## WinForms Fashion Shop Management System ${{ needs.version.outputs.version_display }}
         
-        **Release Date:** ${DATE}
-        **Build Number:** ${{ github.run_number }}
+        **Release Date:** ${DATE}  
+        **Build Number:** ${BUILD_NUMBER}  
+        **Commit:** \`${COMMIT_HASH:0:7}\`
         
         ### 📦 Installation
         
-        1. Download and extract the zip file
+        1. Download and extract the appropriate package
         2. Run \`CreateDatabase.sql\` on your SQL Server
         3. Update \`DatabaseConfig.cs\` with your connection string
         4. Run \`GUI.exe\` to start the application
         
-        ### 📋 What's Included
+        ### 📋 Packages Included
         
-        - **Full Package** (\`WinFormsFashionShop-v${VERSION}-*.zip\`): Complete application with all dependencies
+        - **Full Package** (\`*-*.zip\`): Complete application with all dependencies (recommended)
         - **Single File** (\`*-singlefile.zip\`): Single executable file (smaller, faster startup)
+        - **ClickOnce** (\`*-ClickOnce.zip\`): ClickOnce installer with auto-update support
         
         ### 🔧 Configuration
         
         See \`README.md\` for detailed setup instructions.
         
-        ### 📝 Changes
+        ### 📝 Changelog
         
         See commit history for detailed changes.
         EOF
@@ -385,29 +315,16 @@ Runtime: ${{ env.RUNTIME }}
         echo "$NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         
-    - name: List artifacts before release
-      run: |
-        echo "=== Artifacts directory ==="
-        ls -la ./artifacts/ || echo "Artifacts directory not found"
-        echo ""
-        echo "=== ZIP files ==="
-        find ./artifacts -name "*.zip" -type f || echo "No ZIP files found"
-        
-    - name: List release files
-      run: |
-        Write-Host "=== Release Files ===" -ForegroundColor Cyan
-        Get-ChildItem -Path "./artifacts" -Filter "*.zip" -ErrorAction SilentlyContinue | 
-          ForEach-Object { Write-Host "  - $($_.Name) ($([math]::Round($_.Length/1MB, 2)) MB)" }
-        
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/**/*.zip
-        name: Release v${{ needs.version.outputs.version }}
+          artifacts/*.zip
+        name: Release ${{ needs.version.outputs.version_display }}
         body_path: release_notes.md
         draft: false
         prerelease: ${{ needs.version.outputs.is_prerelease }}
         generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
