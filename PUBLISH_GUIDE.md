@@ -32,7 +32,67 @@ Project đã được thiết lập CI/CD với GitHub Actions theo best practic
 
 ## 2. Các cách đóng gói WinForms App
 
-### 2.1. Publish Self-Contained (Khuyến nghị)
+### 2.1. ClickOnce Deployment (Khuyến nghị cho Production)
+
+**Ưu điểm:**
+- ✅ Tự động update khi có phiên bản mới
+- ✅ Dễ cài đặt (chỉ cần click)
+- ✅ Không cần quyền admin
+- ✅ Tích hợp với Windows
+- ✅ Rollback về phiên bản cũ nếu cần
+
+**Cách sử dụng:**
+
+#### Option A: Publish Local (File Share hoặc USB)
+
+```powershell
+# Chạy script publish ClickOnce
+.\Scripts\Publish-ClickOnce-Local.ps1 -Version "1.0.0.0"
+```
+
+**Kết quả:**
+- Files được publish vào `publish/ClickOnce-Local/`
+- Có file `setup.exe` và `GUI.application`
+- Copy folder này lên file share hoặc USB
+- Users chạy `setup.exe` để cài đặt
+
+#### Option B: Publish Web (Cần web server)
+
+```powershell
+# Publish với URL web server
+.\Scripts\Publish-ClickOnce.ps1 -Version "1.0.0.0" -PublishUrl "https://your-server.com/clickonce/"
+```
+
+**Yêu cầu:**
+- Web server (IIS, Apache, Nginx)
+- Cấu hình MIME types:
+  - `.application` → `application/x-ms-application`
+  - `.manifest` → `application/manifest`
+  - `.deploy` → `application/octet-stream`
+
+**Cài đặt:**
+- Users truy cập URL và click vào `GUI.application`
+- App sẽ tự động cài đặt và update
+
+#### Option C: Publish từ Visual Studio
+
+1. Right-click vào project `GUI`
+2. Chọn **Publish**
+3. Chọn **ClickOnce**
+4. Cấu hình:
+   - **Where to publish:** Chọn folder hoặc URL
+   - **Install mode:** Online/Offline
+   - **Update settings:** Cấu hình auto-update
+5. Click **Publish**
+
+**Lưu ý:**
+- ClickOnce yêu cầu MSBuild (có trong Visual Studio)
+- Nếu không có Visual Studio, dùng script PowerShell
+- Version sẽ tự động increment mỗi lần publish
+
+---
+
+### 2.2. Publish Self-Contained (Khuyến nghị cho Standalone)
 
 **Ưu điểm:**
 - Không cần cài .NET Runtime trên máy client

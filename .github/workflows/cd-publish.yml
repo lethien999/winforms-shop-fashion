@@ -165,6 +165,70 @@ jobs:
           --runtime ${{ env.RUNTIME }} `
           -p:Version=${{ needs.version.outputs.version }}
           
+    - name: Publish ClickOnce
+      run: |
+        $version = "${{ needs.version.outputs.version }}"
+        $versionParts = $version -split '\.'
+        $major = if ($versionParts.Length -gt 0) { $versionParts[0] } else { "1" }
+        $minor = if ($versionParts.Length -gt 1) { $versionParts[1] } else { "0" }
+        $build = if ($versionParts.Length -gt 2) { $versionParts[2] } else { "0" }
+        $revision = if ($versionParts.Length -gt 3) { $versionParts[3] } else { "0" }
+        $appVersion = "$major.$minor.$build.$revision"
+        
+        Write-Host "Publishing ClickOnce with version: $appVersion" -ForegroundColor Cyan
+        
+        # Update version in .csproj
+        $csprojPath = ".\GUI\GUI.csproj"
+        $csprojContent = Get-Content $csprojPath -Raw
+        
+        # Update ApplicationVersion
+        $csprojContent = $csprojContent -replace '<ApplicationVersion>.*?</ApplicationVersion>', "<ApplicationVersion>$appVersion</ApplicationVersion>"
+        
+        # Update PublishUrl
+        $csprojContent = $csprojContent -replace '<PublishUrl>.*?</PublishUrl>', '<PublishUrl>.\publish\ClickOnce\</PublishUrl>'
+        
+        # Set InstallFrom to Disk
+        $csprojContent = $csprojContent -replace '<InstallFrom>.*?</InstallFrom>', '<InstallFrom>Disk</InstallFrom>'
+        
+        # Disable updates for ClickOnce (since we're packaging for download)
+        $csprojContent = $csprojContent -replace '<UpdateEnabled>.*?</UpdateEnabled>', '<UpdateEnabled>false</UpdateEnabled>'
+        
+        Set-Content -Path $csprojPath -Value $csprojContent -NoNewline
+        
+        # Publish using MSBuild
+        $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+        if (-not (Test-Path $msbuildPath)) {
+          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
+        }
+        if (-not (Test-Path $msbuildPath)) {
+          $msbuildPath = "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+        }
+        if (-not (Test-Path $msbuildPath)) {
+          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe"
+        }
+        if (-not (Test-Path $msbuildPath)) {
+          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe"
+        }
+        if (-not (Test-Path $msbuildPath)) {
+          $msbuildPath = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe"
+        }
+        
+        if (Test-Path $msbuildPath) {
+          Write-Host "Using MSBuild: $msbuildPath" -ForegroundColor Green
+          & $msbuildPath GUI\GUI.csproj `
+            /t:Publish `
+            /p:Configuration=${{ env.BUILD_CONFIGURATION }} `
+            /p:PublishUrl=.\publish\ClickOnce\ `
+            /p:ApplicationVersion=$appVersion `
+            /p:InstallFrom=Disk `
+            /p:UpdateEnabled=false `
+            /p:IsWebBootstrapper=false
+        } else {
+          Write-Host "MSBuild not found. Skipping ClickOnce publish." -ForegroundColor Yellow
+          Write-Host "Note: ClickOnce requires Visual Studio MSBuild." -ForegroundColor Yellow
+        }
+      continue-on-error: true
+          
     - name: Get file sizes
       run: |
         Write-Host "=== Published File Sizes ===" -ForegroundColor Cyan
@@ -223,6 +287,32 @@ Runtime: ${{ env.RUNTIME }}
         $versionInfo | Out-File -FilePath "./release-package-single/VERSION.txt" -Encoding UTF8
         Compress-Archive -Path "./release-package-single/*" -DestinationPath "./$packageName-singlefile.zip" -Force
         
+        # Create ClickOnce package (if available)
+        if (Test-Path "./publish/ClickOnce/setup.exe") {
+          Write-Host "Creating ClickOnce package..." -ForegroundColor Cyan
+          $clickOncePackageName = "WinFormsFashionShop-v$version-ClickOnce-$date"
+          New-Item -ItemType Directory -Path "./release-package-clickonce" -Force | Out-Null
+          
+          # Copy ClickOnce files
+          Copy-Item -Path "./publish/ClickOnce/setup.exe" -Destination "./release-package-clickonce/" -Force
+          Copy-Item -Path "./publish/ClickOnce/GUI.application" -Destination "./release-package-clickonce/" -Force
+          if (Test-Path "./publish/ClickOnce/Application Files") {
+            Copy-Item -Path "./publish/ClickOnce/Application Files" -Destination "./release-package-clickonce/" -Recurse -Force
+          }
+          
+          # Copy database script and docs
+          Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./release-package-clickonce/" -Force
+          Copy-Item -Path "./README.md" -Destination "./release-package-clickonce/" -Force
+          $versionInfo | Out-File -FilePath "./release-package-clickonce/VERSION.txt" -Encoding UTF8
+          
+          # Create zip
+          Compress-Archive -Path "./release-package-clickonce/*" -DestinationPath "./$clickOncePackageName.zip" -Force
+          echo "PACKAGE_CLICKONCE=$clickOncePackageName.zip" >> $env:GITHUB_ENV
+          Write-Host "ClickOnce package created: $clickOncePackageName.zip" -ForegroundColor Green
+        } else {
+          Write-Host "ClickOnce files not found. Skipping ClickOnce package." -ForegroundColor Yellow
+        }
+        
         echo "PACKAGE_NAME=$packageName.zip" >> $env:GITHUB_ENV
         echo "PACKAGE_SINGLE=$packageName-singlefile.zip" >> $env:GITHUB_ENV
         
@@ -233,7 +323,9 @@ Runtime: ${{ env.RUNTIME }}
         path: |
           ${{ env.PACKAGE_NAME }}
           ${{ env.PACKAGE_SINGLE }}
+          ${{ env.PACKAGE_CLICKONCE }}
           publish/
+        if-no-files-found: warn
         retention-days: 30
 
   # Job 4: Create GitHub Release
@@ -292,11 +384,25 @@ Runtime: ${{ env.RUNTIME }}
         echo "$NOTES" >> $GITHUB_OUTPUT
         echo "EOF" >> $GITHUB_OUTPUT
         
+    - name: List artifacts before release
+      run: |
+        echo "=== Artifacts directory ==="
+        ls -la ./artifacts/ || echo "Artifacts directory not found"
+        echo ""
+        echo "=== ZIP files ==="
+        find ./artifacts -name "*.zip" -type f || echo "No ZIP files found"
+        
+    - name: List release files
+      run: |
+        Write-Host "=== Release Files ===" -ForegroundColor Cyan
+        Get-ChildItem -Path "./artifacts" -Filter "*.zip" -ErrorAction SilentlyContinue | 
+          ForEach-Object { Write-Host "  - $($_.Name) ($([math]::Round($_.Length/1MB, 2)) MB)" }
+        
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          artifacts/*.zip
+          artifacts/**/*.zip
         name: Release v${{ needs.version.outputs.version }}
         body_path: release_notes.md
         draft: false
