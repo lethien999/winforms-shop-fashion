@@ -41,6 +41,7 @@ jobs:
         run: |
           echo "Event: ${{ github.event_name }}"
           echo "Ref: ${{ github.ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
           
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "✅ Manual trigger detected"
@@ -49,11 +50,11 @@ jobs:
             echo "✅ Tag push detected: ${{ github.ref }}"
             echo "should-run=true" >> $GITHUB_OUTPUT
           else
-            echo "❌ Invalid trigger - CD workflow should only run on tags or manual dispatch"
+            echo "⚠️ Invalid trigger - CD workflow should only run on tags or manual dispatch"
             echo "Current event: ${{ github.event_name }}"
             echo "Current ref: ${{ github.ref }}"
             echo "should-run=false" >> $GITHUB_OUTPUT
-            exit 1
+            # Don't exit 1 here, just set should-run=false so other jobs skip
           fi
           
           echo "Workflow will proceed with should-run=${{ steps.check.outputs.should-run }}"
