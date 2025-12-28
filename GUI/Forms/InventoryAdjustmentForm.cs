@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.DTO;
 using WinFormsFashionShop.Presentation.Helpers;
+using UIThemeConstants = WinFormsFashionShop.Presentation.Helpers.UIThemeConstants;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -29,12 +30,26 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         private void InitializeControls()
         {
+            // Load logo if available
+            var logo = LogoHelper.LoadLogo(UIThemeConstants.Spacing.LogoSizeMedium);
+            if (logo != null && picLogo != null)
+            {
+                picLogo.Image = logo;
+            }
+            else if (picLogo != null)
+            {
+                picLogo.Visible = false;
+            }
+
             // Validate grid is initialized
             if (grid == null)
             {
                 _errorHandler.ShowError("Lỗi khởi tạo form: Grid chưa được khởi tạo!");
                 return;
             }
+
+            // Apply grid styling
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(grid);
 
             // Clear existing columns if any
             grid.Columns.Clear();

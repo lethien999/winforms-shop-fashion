@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.Data.Entities;
 using WinFormsFashionShop.Presentation.Helpers;
+using UIThemeConstants = WinFormsFashionShop.Presentation.Helpers.UIThemeConstants;
 
 namespace WinFormsFashionShop.Presentation.Forms
 {
@@ -27,6 +28,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             // Set default values
             dtpFrom.Value = DateTime.Now.AddDays(-30);
             dtpTo.Value = DateTime.Now;
+
+            // Apply grid styling
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(gridRevenue);
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(gridInventory);
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(gridCustomers);
             
             // Wire up event handlers
             btnLoadRevenue.Click += (s, e) => LoadRevenueReport();

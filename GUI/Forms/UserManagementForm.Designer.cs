@@ -204,63 +204,105 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // btnAdd
             // 
+            btnAdd.BackColor = Color.FromArgb(34, 139, 34);
+            btnAdd.Cursor = Cursors.Hand;
+            btnAdd.FlatAppearance.BorderSize = 0;
+            btnAdd.FlatAppearance.MouseOverBackColor = Color.FromArgb(28, 120, 28);
+            btnAdd.FlatStyle = FlatStyle.Flat;
+            btnAdd.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnAdd.ForeColor = Color.White;
             btnAdd.Location = new Point(12, 12);
             btnAdd.Margin = new Padding(0);
             btnAdd.Name = "btnAdd";
-            btnAdd.Size = new Size(100, 35);
+            btnAdd.Size = new Size(120, 35);
             btnAdd.TabIndex = 0;
-            btnAdd.Text = "Thêm mới";
-            btnAdd.UseVisualStyleBackColor = true;
+            btnAdd.Text = "➕ Thêm mới";
+            btnAdd.UseVisualStyleBackColor = false;
             // 
             // btnEdit
             // 
-            btnEdit.Location = new Point(118, 12);
+            btnEdit.BackColor = Color.FromArgb(0, 123, 255);
+            btnEdit.Cursor = Cursors.Hand;
+            btnEdit.FlatAppearance.BorderSize = 0;
+            btnEdit.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 105, 217);
+            btnEdit.FlatStyle = FlatStyle.Flat;
+            btnEdit.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnEdit.ForeColor = Color.White;
+            btnEdit.Location = new Point(138, 12);
             btnEdit.Margin = new Padding(0);
             btnEdit.Name = "btnEdit";
             btnEdit.Size = new Size(100, 35);
             btnEdit.TabIndex = 1;
-            btnEdit.Text = "Sửa";
-            btnEdit.UseVisualStyleBackColor = true;
+            btnEdit.Text = "✏️ Sửa";
+            btnEdit.UseVisualStyleBackColor = false;
             // 
             // btnDelete
             // 
-            btnDelete.Location = new Point(224, 12);
+            btnDelete.BackColor = Color.FromArgb(220, 53, 69);
+            btnDelete.Cursor = Cursors.Hand;
+            btnDelete.FlatAppearance.BorderSize = 0;
+            btnDelete.FlatAppearance.MouseOverBackColor = Color.FromArgb(200, 35, 51);
+            btnDelete.FlatStyle = FlatStyle.Flat;
+            btnDelete.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnDelete.ForeColor = Color.White;
+            btnDelete.Location = new Point(244, 12);
             btnDelete.Margin = new Padding(0);
             btnDelete.Name = "btnDelete";
             btnDelete.Size = new Size(100, 35);
             btnDelete.TabIndex = 2;
-            btnDelete.Text = "Xóa";
-            btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Text = "🗑️ Xóa";
+            btnDelete.UseVisualStyleBackColor = false;
             // 
             // btnChangePassword
             // 
-            btnChangePassword.Location = new Point(330, 12);
+            btnChangePassword.BackColor = Color.FromArgb(255, 165, 0);
+            btnChangePassword.Cursor = Cursors.Hand;
+            btnChangePassword.FlatAppearance.BorderSize = 0;
+            btnChangePassword.FlatAppearance.MouseOverBackColor = Color.FromArgb(230, 145, 0);
+            btnChangePassword.FlatStyle = FlatStyle.Flat;
+            btnChangePassword.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnChangePassword.ForeColor = Color.White;
+            btnChangePassword.Location = new Point(350, 12);
             btnChangePassword.Margin = new Padding(0);
             btnChangePassword.Name = "btnChangePassword";
-            btnChangePassword.Size = new Size(120, 35);
+            btnChangePassword.Size = new Size(151, 35);
             btnChangePassword.TabIndex = 3;
-            btnChangePassword.Text = "Đổi mật khẩu";
-            btnChangePassword.UseVisualStyleBackColor = true;
+            btnChangePassword.Text = "🔒 Đổi mật khẩu";
+            btnChangePassword.UseVisualStyleBackColor = false;
             // 
             // btnActivate
             // 
-            btnActivate.Location = new Point(456, 12);
+            btnActivate.BackColor = Color.FromArgb(23, 162, 184);
+            btnActivate.Cursor = Cursors.Hand;
+            btnActivate.FlatAppearance.BorderSize = 0;
+            btnActivate.FlatAppearance.MouseOverBackColor = Color.FromArgb(19, 140, 160);
+            btnActivate.FlatStyle = FlatStyle.Flat;
+            btnActivate.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnActivate.ForeColor = Color.White;
+            btnActivate.Location = new Point(513, 12);
             btnActivate.Margin = new Padding(0);
             btnActivate.Name = "btnActivate";
-            btnActivate.Size = new Size(130, 35);
+            btnActivate.Size = new Size(177, 35);
             btnActivate.TabIndex = 4;
-            btnActivate.Text = "Kích hoạt/Ngừng";
-            btnActivate.UseVisualStyleBackColor = true;
+            btnActivate.Text = "⚡ Kích hoạt/Ngừng";
+            btnActivate.UseVisualStyleBackColor = false;
             // 
             // btnRefresh
             // 
-            btnRefresh.Location = new Point(592, 12);
+            btnRefresh.BackColor = Color.FromArgb(108, 117, 125);
+            btnRefresh.Cursor = Cursors.Hand;
+            btnRefresh.FlatAppearance.BorderSize = 0;
+            btnRefresh.FlatAppearance.MouseOverBackColor = Color.FromArgb(90, 98, 104);
+            btnRefresh.FlatStyle = FlatStyle.Flat;
+            btnRefresh.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnRefresh.ForeColor = Color.White;
+            btnRefresh.Location = new Point(701, 12);
             btnRefresh.Margin = new Padding(0);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(100, 35);
+            btnRefresh.Size = new Size(120, 35);
             btnRefresh.TabIndex = 5;
-            btnRefresh.Text = "Làm mới";
-            btnRefresh.UseVisualStyleBackColor = true;
+            btnRefresh.Text = "🔄 Làm mới";
+            btnRefresh.UseVisualStyleBackColor = false;
             // 
             // UserManagementForm
             // 

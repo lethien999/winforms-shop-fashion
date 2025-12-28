@@ -42,6 +42,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                 picLogo.Visible = false;
             }
 
+            // Apply grid styling
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(grid);
+
             // Load categories for filter
             LoadCategoriesForFilter();
 

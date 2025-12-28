@@ -40,6 +40,10 @@ namespace WinFormsFashionShop.Presentation.Forms
                 picLogo.Visible = false;
             }
 
+            // Apply grid styling
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(gridCustomers);
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(gridOrders);
+
             // Wire up event handlers
             btnSearch.Click += (s, e) => LoadCustomers();
             gridCustomers.SelectionChanged += (s, e) => LoadCustomerOrders();

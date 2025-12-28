@@ -35,6 +35,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlQRCode = new Panel();
             _picQRCode = new PictureBox();
             lblQRCode = new Label();
+            pnlBankInfo = new Panel();
+            _lblBankName = new Label();
+            _lblAccountNumber = new Label();
+            _lblAccountName = new Label();
+            _lblTransferContent = new Label();
             pnlOrderInfo = new Panel();
             lblDescription = new Label();
             _lblAmount = new Label();
@@ -46,6 +51,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlContent.SuspendLayout();
             pnlQRCode.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)_picQRCode).BeginInit();
+            pnlBankInfo.SuspendLayout();
             pnlOrderInfo.SuspendLayout();
             pnlFooter.SuspendLayout();
             SuspendLayout();
@@ -77,6 +83,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             pnlContent.AutoScroll = true;
             pnlContent.Controls.Add(pnlQRCode);
+            pnlContent.Controls.Add(pnlBankInfo);
             pnlContent.Controls.Add(pnlOrderInfo);
             pnlContent.Controls.Add(_lblStatus);
             pnlContent.Dock = DockStyle.Fill;
@@ -84,7 +91,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlContent.Margin = new Padding(0);
             pnlContent.Name = "pnlContent";
             pnlContent.Padding = new Padding(20, 20, 20, 20);
-            pnlContent.Size = new Size(550, 620);
+            pnlContent.Size = new Size(550, 720);
             pnlContent.TabIndex = 1;
             // 
             // _lblStatus
@@ -92,7 +99,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             _lblStatus.Dock = DockStyle.Bottom;
             _lblStatus.Font = new Font("Arial", 9F, FontStyle.Italic);
             _lblStatus.ForeColor = Color.Blue;
-            _lblStatus.Location = new Point(20, 545);
+            _lblStatus.Location = new Point(20, 645);
             _lblStatus.Name = "_lblStatus";
             _lblStatus.Size = new Size(510, 35);
             _lblStatus.TabIndex = 2;
@@ -104,11 +111,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlQRCode.Controls.Add(_picQRCode);
             pnlQRCode.Controls.Add(lblQRCode);
             pnlQRCode.Dock = DockStyle.Fill;
-            pnlQRCode.Location = new Point(20, 173);
+            pnlQRCode.Location = new Point(20, 323);
             pnlQRCode.Margin = new Padding(0);
             pnlQRCode.Name = "pnlQRCode";
             pnlQRCode.Padding = new Padding(10, 10, 10, 10);
-            pnlQRCode.Size = new Size(510, 372);
+            pnlQRCode.Size = new Size(510, 322);
             pnlQRCode.TabIndex = 1;
             // 
             // _picQRCode
@@ -120,7 +127,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             _picQRCode.Margin = new Padding(0);
             _picQRCode.Name = "_picQRCode";
             _picQRCode.Padding = new Padding(10);
-            _picQRCode.Size = new Size(490, 312);
+            _picQRCode.Size = new Size(490, 262);
             _picQRCode.SizeMode = PictureBoxSizeMode.Zoom;
             _picQRCode.TabIndex = 1;
             _picQRCode.TabStop = false;
@@ -135,6 +142,66 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblQRCode.TabIndex = 0;
             lblQRCode.Text = "📱 Quét mã QR để thanh toán";
             lblQRCode.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // pnlBankInfo
+            // 
+            pnlBankInfo.BackColor = Color.FromArgb(240, 248, 255);
+            pnlBankInfo.BorderStyle = BorderStyle.FixedSingle;
+            pnlBankInfo.Controls.Add(_lblTransferContent);
+            pnlBankInfo.Controls.Add(_lblAccountName);
+            pnlBankInfo.Controls.Add(_lblAccountNumber);
+            pnlBankInfo.Controls.Add(_lblBankName);
+            pnlBankInfo.Dock = DockStyle.Top;
+            pnlBankInfo.Location = new Point(20, 173);
+            pnlBankInfo.Margin = new Padding(0, 10, 0, 10);
+            pnlBankInfo.Name = "pnlBankInfo";
+            pnlBankInfo.Padding = new Padding(15, 10, 15, 10);
+            pnlBankInfo.Size = new Size(510, 150);
+            pnlBankInfo.TabIndex = 3;
+            // 
+            // _lblBankName
+            // 
+            _lblBankName.Dock = DockStyle.Top;
+            _lblBankName.Font = new Font("Arial", 11F, FontStyle.Bold);
+            _lblBankName.ForeColor = Color.FromArgb(70, 130, 180);
+            _lblBankName.Location = new Point(15, 10);
+            _lblBankName.Name = "_lblBankName";
+            _lblBankName.Size = new Size(478, 30);
+            _lblBankName.TabIndex = 0;
+            _lblBankName.Text = "🏦 Ngân hàng: Đang tải...";
+            // 
+            // _lblAccountNumber
+            // 
+            _lblAccountNumber.Dock = DockStyle.Top;
+            _lblAccountNumber.Font = new Font("Consolas", 13F, FontStyle.Bold);
+            _lblAccountNumber.ForeColor = Color.FromArgb(0, 100, 0);
+            _lblAccountNumber.Location = new Point(15, 40);
+            _lblAccountNumber.Name = "_lblAccountNumber";
+            _lblAccountNumber.Size = new Size(478, 35);
+            _lblAccountNumber.TabIndex = 1;
+            _lblAccountNumber.Text = "💳 STK: ---";
+            // 
+            // _lblAccountName
+            // 
+            _lblAccountName.Dock = DockStyle.Top;
+            _lblAccountName.Font = new Font("Arial", 10F, FontStyle.Bold);
+            _lblAccountName.ForeColor = Color.FromArgb(25, 25, 112);
+            _lblAccountName.Location = new Point(15, 75);
+            _lblAccountName.Name = "_lblAccountName";
+            _lblAccountName.Size = new Size(478, 28);
+            _lblAccountName.TabIndex = 2;
+            _lblAccountName.Text = "👤 Chủ TK: ---";
+            // 
+            // _lblTransferContent
+            // 
+            _lblTransferContent.Dock = DockStyle.Top;
+            _lblTransferContent.Font = new Font("Consolas", 10F, FontStyle.Bold);
+            _lblTransferContent.ForeColor = Color.FromArgb(139, 69, 19);
+            _lblTransferContent.Location = new Point(15, 103);
+            _lblTransferContent.Name = "_lblTransferContent";
+            _lblTransferContent.Size = new Size(478, 35);
+            _lblTransferContent.TabIndex = 3;
+            _lblTransferContent.Text = "📝 Nội dung CK: ---";
             // 
             // pnlOrderInfo
             // 
@@ -233,7 +300,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.FromArgb(245, 245, 250);
-            ClientSize = new Size(550, 750);
+            ClientSize = new Size(550, 850);
             Controls.Add(pnlContent);
             Controls.Add(pnlFooter);
             Controls.Add(pnlHeader);
@@ -248,6 +315,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlContent.ResumeLayout(false);
             pnlQRCode.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)_picQRCode).EndInit();
+            pnlBankInfo.ResumeLayout(false);
             pnlOrderInfo.ResumeLayout(false);
             pnlFooter.ResumeLayout(false);
             ResumeLayout(false);
@@ -262,6 +330,11 @@ namespace WinFormsFashionShop.Presentation.Forms
         private System.Windows.Forms.Label _lblOrderCode;
         private System.Windows.Forms.Label _lblAmount;
         private System.Windows.Forms.Label lblDescription;
+        private System.Windows.Forms.Panel pnlBankInfo;
+        private System.Windows.Forms.Label _lblBankName;
+        private System.Windows.Forms.Label _lblAccountNumber;
+        private System.Windows.Forms.Label _lblAccountName;
+        private System.Windows.Forms.Label _lblTransferContent;
         private System.Windows.Forms.Panel pnlQRCode;
         private System.Windows.Forms.Label lblQRCode;
         private System.Windows.Forms.PictureBox _picQRCode;

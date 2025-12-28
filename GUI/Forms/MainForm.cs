@@ -222,14 +222,45 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         /// <summary>
         /// Makes all controls in a card clickable and forwards clicks to the card's handler.
+        /// Also adds hover effect for better UX.
         /// </summary>
         private void MakeCardClickable(Panel card, EventHandler handler)
         {
+            var originalColor = card.BackColor;
+            var hoverColor = ControlPaint.Light(originalColor, 0.3f);
+            
             card.Cursor = Cursors.Hand;
+            
+            // Add hover effects to the card
+            card.MouseEnter += (s, e) => 
+            {
+                card.BackColor = hoverColor;
+            };
+            card.MouseLeave += (s, e) => 
+            {
+                // Only reset if mouse is not over any child control
+                var mousePos = card.PointToClient(Cursor.Position);
+                if (!card.ClientRectangle.Contains(mousePos))
+                {
+                    card.BackColor = originalColor;
+                }
+            };
+
             foreach (Control ctrl in card.Controls)
             {
                 ctrl.Cursor = Cursors.Hand;
                 ctrl.Click += handler;
+                
+                // Forward hover events from child controls
+                ctrl.MouseEnter += (s, e) => card.BackColor = hoverColor;
+                ctrl.MouseLeave += (s, e) =>
+                {
+                    var mousePos = card.PointToClient(Cursor.Position);
+                    if (!card.ClientRectangle.Contains(mousePos))
+                    {
+                        card.BackColor = originalColor;
+                    }
+                };
             }
         }
 

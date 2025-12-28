@@ -13,20 +13,22 @@ namespace WinFormsFashionShop.Presentation.Forms
 {
     /// <summary>
     /// Dialog for displaying QR code payment via PayOS/VietQR.
-    /// Single responsibility: only displays QR code payment UI.
+    /// Sử dụng Hybrid Polling: Poll PayOS API trực tiếp + Backend API nếu có
     /// </summary>
     public partial class QRCodePaymentDialog : Form
     {
         private readonly PaymentApiClientWithRetry _apiClient;
+        private readonly PayOSDirectClient _payOSDirectClient; // Direct PayOS polling
         private readonly int _orderId;
         private readonly decimal _totalAmount;
         private readonly string _orderDescription;
         private PaymentData? _paymentLinkData;
+        private long _payOSOrderCode; // Lưu PayOS order code để poll trực tiếp
         private System.Windows.Forms.Timer? _paymentCheckTimer;
         private bool _isPaymentConfirmed = false;
         private DateTime _paymentCheckStartTime; // Thời gian bắt đầu check payment
-        private const int TIMER_INTERVAL_MS = 2500; // 2.5 seconds (khuyến nghị 2-3s)
-        private const int TOTAL_TIMEOUT_SECONDS = 180; // 3 phút (khuyến nghị 2-3 phút)
+        private const int TIMER_INTERVAL_MS = 5000; // 5 seconds (poll PayOS trực tiếp)
+        private const int TOTAL_TIMEOUT_SECONDS = 180; // 3 phút
 
         public bool IsPaymentConfirmed => _isPaymentConfirmed;
         public PaymentData? PaymentData => _paymentLinkData;
@@ -37,6 +39,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             _totalAmount = totalAmount;
             _orderDescription = orderDescription;
             _apiClient = new PaymentApiClientWithRetry(ApiConfig.BaseUrl);
+            
+            // Initialize PayOS Direct Client for hybrid polling
+            // PayOSConfig auto-loads when accessing properties
+            _payOSDirectClient = new PayOSDirectClient(PayOSConfig.ClientId, PayOSConfig.ApiKey);
+            
             _paymentCheckStartTime = DateTime.Now; // Initialize start time
             InitializeComponent();
             InitializeControls();
@@ -53,6 +60,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             _lblOrderCode!.Text = $"📋 Mã đơn: {_orderId}";
             _lblAmount!.Text = $"💰 Số tiền: {_totalAmount:N0} VNĐ";
             lblDescription!.Text = $"📝 {_orderDescription}";
+            
+            // Set initial bank info (loading state)
+            _lblBankName!.Text = "🏦 Ngân hàng: Đang tải...";
+            _lblAccountNumber!.Text = "💳 STK: ---";
+            _lblAccountName!.Text = "👤 Chủ TK: ---";
+            _lblTransferContent!.Text = "📝 Nội dung CK: ---";
 
             // Wire up event handlers
             _btnCheckPayment!.Click += BtnCheckPayment_Click;
@@ -116,6 +129,13 @@ namespace WinFormsFashionShop.Presentation.Forms
                 }
 
                 _paymentLinkData = response.Data;
+                
+                // Lưu PayOS OrderCode để hybrid polling trực tiếp
+                _payOSOrderCode = _paymentLinkData.OrderCode;
+                System.Diagnostics.Debug.WriteLine($"[QRCodePaymentDialog] PayOS OrderCode saved: {_payOSOrderCode}");
+
+                // ========== HIỂN THỊ THÔNG TIN NGÂN HÀNG ==========
+                UpdateBankInfoDisplay(_paymentLinkData);
 
                 // Ưu tiên sử dụng QR code chuẩn VietQR từ PayOS (có thể quét bằng app ngân hàng/Momo)
                 if (!string.IsNullOrWhiteSpace(_paymentLinkData.QrCode))
@@ -309,6 +329,74 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         /// <summary>
+        /// Cập nhật thông tin ngân hàng hiển thị từ PayOS response.
+        /// Giúp người dùng dễ dàng chuyển khoản thủ công nếu cần.
+        /// </summary>
+        private void UpdateBankInfoDisplay(PaymentData paymentData)
+        {
+            try
+            {
+                // Hiển thị tên ngân hàng
+                var bankName = !string.IsNullOrEmpty(paymentData.BankName) 
+                    ? paymentData.BankName 
+                    : !string.IsNullOrEmpty(paymentData.Bin) 
+                        ? $"Ngân hàng (BIN: {paymentData.Bin})" 
+                        : "Đang tải...";
+                _lblBankName!.Text = $"🏦 {bankName}";
+                
+                // Hiển thị số tài khoản (format dễ đọc)
+                var accountNumber = !string.IsNullOrEmpty(paymentData.AccountNumber) 
+                    ? FormatAccountNumber(paymentData.AccountNumber) 
+                    : "---";
+                _lblAccountNumber!.Text = $"💳 STK: {accountNumber}";
+                
+                // Hiển thị tên chủ tài khoản
+                var accountName = !string.IsNullOrEmpty(paymentData.AccountName) 
+                    ? paymentData.AccountName.ToUpper() 
+                    : "---";
+                _lblAccountName!.Text = $"👤 {accountName}";
+                
+                // Hiển thị nội dung chuyển khoản (từ Description hoặc tạo từ OrderCode)
+                var transferContent = !string.IsNullOrEmpty(paymentData.Description) 
+                    ? paymentData.Description 
+                    : $"DH{paymentData.OrderCode}";
+                _lblTransferContent!.Text = $"📝 Nội dung CK: {transferContent}";
+                
+                // Log để debug
+                System.Diagnostics.Debug.WriteLine($"=== BANK INFO DISPLAYED ===");
+                System.Diagnostics.Debug.WriteLine($"Bank: {bankName}");
+                System.Diagnostics.Debug.WriteLine($"Account: {paymentData.AccountNumber}");
+                System.Diagnostics.Debug.WriteLine($"Name: {paymentData.AccountName}");
+                System.Diagnostics.Debug.WriteLine($"Content: {transferContent}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error updating bank info display: {ex.Message}");
+                // Không throw exception, để form vẫn hiển thị QR code
+            }
+        }
+        
+        /// <summary>
+        /// Format số tài khoản để dễ đọc (thêm space mỗi 4 số)
+        /// VD: 1234567890 -> 1234 5678 90
+        /// </summary>
+        private string FormatAccountNumber(string accountNumber)
+        {
+            if (string.IsNullOrEmpty(accountNumber)) return accountNumber;
+            
+            // Loại bỏ khoảng trắng hiện có
+            var cleaned = accountNumber.Replace(" ", "");
+            
+            // Thêm space mỗi 4 ký tự để dễ đọc
+            var formatted = string.Join(" ", 
+                System.Text.RegularExpressions.Regex.Matches(cleaned, ".{1,4}")
+                    .Cast<System.Text.RegularExpressions.Match>()
+                    .Select(m => m.Value));
+            
+            return formatted;
+        }
+
+        /// <summary>
         /// Checks if a string is a valid base64 image.
         /// Single responsibility: only validates base64 image string.
         /// </summary>
@@ -418,13 +506,14 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         /// <summary>
-        /// Checks payment status from Backend API (không gọi PayOS trực tiếp).
-        /// Single responsibility: only checks payment status.
+        /// Checks payment status using HYBRID approach:
+        /// 1. Primary: Poll PayOS API trực tiếp (không cần backend/webhook)
+        /// 2. Fallback: Gọi Backend API nếu có
         /// </summary>
         /// <param name="isManualCheck">True if user manually clicked check button, false if auto-check from timer</param>
         private async Task CheckPaymentStatusAsync(bool isManualCheck = false)
         {
-            if (_paymentLinkData == null)
+            if (_paymentLinkData == null || _payOSOrderCode <= 0)
             {
                 if (_lblStatus != null && isManualCheck)
                 {
@@ -461,23 +550,37 @@ namespace WinFormsFashionShop.Presentation.Forms
                     _lblStatus.ForeColor = Color.Blue;
                 }
 
-                // Gọi Backend API để kiểm tra trạng thái từ database (không gọi PayOS trực tiếp)
-                var statusResponse = await _apiClient.GetPaymentStatusAsync(_orderId);
-
-                if (!statusResponse.Success || statusResponse.Data == null)
-                {
-                    if (isManualCheck && _lblStatus != null)
-                    {
-                        _lblStatus.Text = $"❌ Lỗi: {statusResponse.Message ?? "Không thể lấy trạng thái"}";
-                        _lblStatus.ForeColor = Color.Red;
-                    }
-                    return;
-                }
-
-                var status = statusResponse.Data.Status?.ToUpper() ?? "";
+                // ========== HYBRID POLLING: Primary = PayOS Direct ==========
+                var payOSStatus = await _payOSDirectClient.CheckPaymentStatusAsync(_payOSOrderCode);
                 
-                // Kiểm tra trạng thái từ database
-                // Hỗ trợ Processing status (trạng thái trung gian)
+                string status = "PENDING";
+                
+                if (payOSStatus.Success)
+                {
+                    status = payOSStatus.Status;
+                    System.Diagnostics.Debug.WriteLine($"[Hybrid] PayOS Direct status: {status}");
+                }
+                else
+                {
+                    // Fallback: Gọi Backend API nếu PayOS Direct thất bại
+                    System.Diagnostics.Debug.WriteLine($"[Hybrid] PayOS Direct failed, trying Backend API...");
+                    try
+                    {
+                        var statusResponse = await _apiClient.GetPaymentStatusAsync(_orderId);
+                        if (statusResponse.Success && statusResponse.Data != null)
+                        {
+                            status = statusResponse.Data.Status?.ToUpper() ?? "PENDING";
+                            System.Diagnostics.Debug.WriteLine($"[Hybrid] Backend API status: {status}");
+                        }
+                    }
+                    catch (Exception backendEx)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Hybrid] Backend API also failed: {backendEx.Message}");
+                        // Keep status as PENDING
+                    }
+                }
+                
+                // Kiểm tra trạng thái
                 if (status == "PROCESSING")
                 {
                     // Payment đang được xử lý (webhook đã đến nhưng chưa commit xong)
@@ -503,6 +606,16 @@ namespace WinFormsFashionShop.Presentation.Forms
                         _btnCheckPayment.Enabled = false;
                         _btnCheckPayment.Text = "✓ Đã thanh toán";
                     }
+                    
+                    // Cập nhật database thông qua Backend API (fire and forget)
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _apiClient.GetPaymentStatusAsync(_orderId); // Trigger backend to sync
+                        }
+                        catch { /* Ignore */ }
+                    });
 
                     // Tự động in hóa đơn khi thanh toán thành công
                     PrintInvoiceAfterPayment();
@@ -612,6 +725,7 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             StopPaymentCheckTimer();
             _apiClient?.Dispose();
+            _payOSDirectClient?.Dispose();
             base.OnFormClosing(e);
         }
 

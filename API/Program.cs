@@ -49,6 +49,9 @@ builder.Services.AddSingleton(businessServices.AuthService);
 var orderRepo = new WinFormsFashionShop.Data.Repositories.OrderRepository();
 builder.Services.AddSingleton<WinFormsFashionShop.Data.Repositories.IOrderRepository>(orderRepo);
 
+var paymentTransactionRepo = new WinFormsFashionShop.Data.Repositories.PaymentTransactionRepository();
+builder.Services.AddSingleton<WinFormsFashionShop.Data.Repositories.IPaymentTransactionRepository>(paymentTransactionRepo);
+
 // Register Payment Service
 builder.Services.AddScoped<API.Services.IPaymentService, API.Services.PaymentService>();
 

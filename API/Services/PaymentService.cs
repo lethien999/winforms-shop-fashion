@@ -1,31 +1,38 @@
 using API.Models;
-using Net.payOS;
-using PayOSTypes = Net.payOS.Types;
+using PayOS;
+using PayOS.Models;
+using PayOS.Models.V2.PaymentRequests;
+using PayOS.Models.Webhooks;
 using WinFormsFashionShop.Business.Services;
 using WinFormsFashionShop.Data.Repositories;
 using WinFormsFashionShop.Data;
 using Microsoft.Extensions.Configuration;
-using WinFormsFashionShop.Data.Entities;
+// Alias để tránh conflict với PayOS.Models.V2.PaymentRequests.PaymentTransaction
+using PaymentTransactionEntity = WinFormsFashionShop.Data.Entities.PaymentTransaction;
 
 namespace API.Services
 {
     /// <summary>
     /// Service xử lý thanh toán PayOS
+    /// Sử dụng PayOS SDK v2.0.1 với API mới
     /// </summary>
     public class PaymentService : IPaymentService
     {
-        private readonly PayOS _payOS;
+        private readonly PayOSClient _payOS;
         private readonly IOrderService _orderService;
         private readonly IOrderRepository _orderRepository;
+        private readonly IPaymentTransactionRepository _paymentTransactionRepository;
         private readonly IConfiguration _configuration;
 
         public PaymentService(
             IOrderService orderService,
             IOrderRepository orderRepository,
+            IPaymentTransactionRepository paymentTransactionRepository,
             IConfiguration configuration)
         {
             _orderService = orderService;
             _orderRepository = orderRepository;
+            _paymentTransactionRepository = paymentTransactionRepository;
             _configuration = configuration;
 
             // Lấy PayOS config từ appsettings.json hoặc environment variables
@@ -33,7 +40,13 @@ namespace API.Services
             var apiKey = _configuration["PayOS:ApiKey"] ?? throw new InvalidOperationException("PayOS:ApiKey chưa được cấu hình");
             var checksumKey = _configuration["PayOS:ChecksumKey"] ?? throw new InvalidOperationException("PayOS:ChecksumKey chưa được cấu hình");
 
-            _payOS = new PayOS(clientId, apiKey, checksumKey);
+            // SDK v2.0.1: Sử dụng PayOSClient thay vì PayOS
+            _payOS = new PayOSClient(new PayOSOptions
+            {
+                ClientId = clientId,
+                ApiKey = apiKey,
+                ChecksumKey = checksumKey
+            });
         }
 
         /// <summary>
@@ -151,36 +164,60 @@ namespace API.Services
                 // Tạo unique PayOS orderCode từ OrderId và timestamp để tránh trùng
                 // PayOS yêu cầu orderCode phải unique, nên kết hợp OrderId với timestamp
                 var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                var payOSOrderCode = (int)((request.OrderId * 1000L + (timestamp % 1000)) % int.MaxValue);
+                var payOSOrderCode = (long)((request.OrderId * 1000L + (timestamp % 1000)) % long.MaxValue);
                 
                 // Đảm bảo orderCode > 0 (PayOS requirement)
                 if (payOSOrderCode <= 0)
                 {
-                    payOSOrderCode = (int)(timestamp % int.MaxValue);
+                    payOSOrderCode = timestamp % long.MaxValue;
                     if (payOSOrderCode <= 0) payOSOrderCode = 1;
                 }
 
-                // Tạo payment link từ PayOS
-                var paymentData = new PayOSTypes.PaymentData(
-                    orderCode: payOSOrderCode, // Sử dụng unique orderCode
-                    amount: request.Amount,
-                    description: request.Description.Length > 25 
+                // SDK v2.0.1: Sử dụng CreatePaymentLinkRequest thay vì PaymentData
+                var paymentRequest = new CreatePaymentLinkRequest
+                {
+                    OrderCode = payOSOrderCode,
+                    Amount = request.Amount,
+                    Description = request.Description.Length > 25 
                         ? request.Description.Substring(0, 25) 
                         : request.Description,
-                    items: new List<PayOSTypes.ItemData>
+                    Items = new List<PaymentLinkItem>
                     {
-                        new PayOSTypes.ItemData(request.Description, 1, request.Amount)
+                        new PaymentLinkItem
+                        {
+                            Name = request.Description.Length > 25 
+                                ? request.Description.Substring(0, 25) 
+                                : request.Description,
+                            Quantity = 1,
+                            Price = request.Amount
+                        }
                     },
-                    cancelUrl: request.CancelUrl ?? "https://payos.vn",
-                    returnUrl: request.ReturnUrl ?? "https://payos.vn"
-                );
+                    CancelUrl = request.CancelUrl ?? "https://payos.vn",
+                    ReturnUrl = request.ReturnUrl ?? "https://payos.vn"
+                };
 
-                var result = await _payOS.createPaymentLink(paymentData);
+                // SDK v2.0.1: Sử dụng PaymentRequests.CreateAsync thay vì createPaymentLink
+                var result = await _payOS.PaymentRequests.CreateAsync(paymentRequest);
 
-                // Log để debug
-                System.Diagnostics.Debug.WriteLine($"PaymentService - CreatePaymentLink: OrderId={request.OrderId}, Calculated payOSOrderCode={payOSOrderCode}, PayOS result.orderCode={result.orderCode}");
+                // Log chi tiết để debug - PayOS SDK v2.0.1 properties
+                System.Diagnostics.Debug.WriteLine($"");
+                System.Diagnostics.Debug.WriteLine($"=== PAYOS CREATE PAYMENT LINK RESPONSE (SDK v2.0.1) ===");
+                System.Diagnostics.Debug.WriteLine($"OrderId (local): {request.OrderId}");
+                System.Diagnostics.Debug.WriteLine($"PayOS OrderCode: {result.OrderCode}");
+                System.Diagnostics.Debug.WriteLine($"BIN: {result.Bin ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Account Number: {result.AccountNumber ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Account Name: {result.AccountName ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Payment Link ID: {result.PaymentLinkId ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Status: {result.Status}");
+                System.Diagnostics.Debug.WriteLine($"Amount: {result.Amount}");
+                System.Diagnostics.Debug.WriteLine($"Currency: {result.Currency ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Description: {result.Description ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"Checkout URL: {result.CheckoutUrl ?? "NULL"}");
+                System.Diagnostics.Debug.WriteLine($"QR Code: {(string.IsNullOrEmpty(result.QrCode) ? "NULL" : $"{result.QrCode.Substring(0, Math.Min(50, result.QrCode.Length))}...")}");
+                System.Diagnostics.Debug.WriteLine($"============================================");
+                System.Diagnostics.Debug.WriteLine($"");
 
-                // Cập nhật PayOSOrderCode vào database (LUÔN sử dụng result.orderCode từ PayOS response)
+                // Cập nhật PayOSOrderCode vào database (LUÔN sử dụng result.OrderCode từ PayOS response)
                 // LƯU Ý: Đến đây chắc chắn orderEntity.PayOSOrderCode IS NULL (đã check ở trên)
                 // Reload orderEntity để đảm bảo có dữ liệu mới nhất (orderEntity đã được định nghĩa ở dòng 59)
                 orderEntity = _orderRepository.GetById(request.OrderId);
@@ -193,18 +230,18 @@ namespace API.Services
                         throw new InvalidOperationException($"Order {request.OrderId} đã có PayOSOrderCode. Không được tạo payment link mới.");
                     }
 
-                    // PayOS trả về result.orderCode - đây là PayOSOrderCode thực sự cần lưu
-                    // Lưu ý: result.orderCode có thể khác với payOSOrderCode đã tính toán nếu PayOS tự động điều chỉnh
-                    if (result.orderCode > 0)
+                    // PayOS trả về result.OrderCode - đây là PayOSOrderCode thực sự cần lưu
+                    // Lưu ý: result.OrderCode có thể khác với payOSOrderCode đã tính toán nếu PayOS tự động điều chỉnh
+                    if (result.OrderCode > 0)
                     {
-                        orderEntity.PayOSOrderCode = result.orderCode;
-                        System.Diagnostics.Debug.WriteLine($"✅ Updating order {request.OrderId} with PayOSOrderCode={result.orderCode} (from PayOS response)");
+                        orderEntity.PayOSOrderCode = (int)result.OrderCode;
+                        System.Diagnostics.Debug.WriteLine($"✅ Updating order {request.OrderId} with PayOSOrderCode={result.OrderCode} (from PayOS response)");
                     }
                     else
                     {
-                        System.Diagnostics.Debug.WriteLine($"❌ ERROR: PayOS returned invalid orderCode: {result.orderCode} for OrderId={request.OrderId}");
+                        System.Diagnostics.Debug.WriteLine($"❌ ERROR: PayOS returned invalid orderCode: {result.OrderCode} for OrderId={request.OrderId}");
                         // Vẫn lưu payOSOrderCode đã tính toán nếu PayOS không trả về hợp lệ
-                        orderEntity.PayOSOrderCode = payOSOrderCode;
+                        orderEntity.PayOSOrderCode = (int)payOSOrderCode;
                         System.Diagnostics.Debug.WriteLine($"⚠️  Fallback: Using calculated payOSOrderCode={payOSOrderCode}");
                     }
                     
@@ -225,22 +262,22 @@ namespace API.Services
                     
                     try
                     {
-                        var payOSStatus = await CheckPayOSPaymentStatusAsync(result.orderCode);
+                        var payOSStatus = await CheckPayOSPaymentStatusAsync((int)result.OrderCode);
                         if (payOSStatus == "PAID")
                         {
                             // Payment đã được thanh toán, update ngay
-                            System.Diagnostics.Debug.WriteLine($"✅ Payment link {result.orderCode} already PAID, updating order {request.OrderId}");
+                            System.Diagnostics.Debug.WriteLine($"✅ Payment link {result.OrderCode} already PAID, updating order {request.OrderId}");
                             
                             // Gọi stored procedure để update
-                            var webhookId = $"AUTO_CHECK_{result.orderCode}_{DateTime.Now:yyyyMMddHHmmss}";
+                            var webhookId = $"AUTO_CHECK_{result.OrderCode}_{DateTime.Now:yyyyMMddHHmmss}";
                             var webhookResult = await Task.Run(() => _orderRepository.ProcessPayOSWebhook(
                                 webhookId: webhookId,
-                                payOSOrderCode: result.orderCode,
+                                payOSOrderCode: (int)result.OrderCode,
                                 code: "00",
                                 amount: request.Amount,
                                 reference: null,
                                 paymentLinkId: null,
-                                rawData: $"{{\"code\":\"00\",\"desc\":\"Success\",\"data\":{{\"orderCode\":{result.orderCode},\"amount\":{request.Amount}}}}}",
+                                rawData: $"{{\"code\":\"00\",\"desc\":\"Success\",\"data\":{{\"orderCode\":{result.OrderCode},\"amount\":{request.Amount}}}}}",
                                 ipAddress: "AUTO_CHECK",
                                 userAgent: "PaymentService-AutoCheck"
                             ));
@@ -283,17 +320,76 @@ namespace API.Services
                     throw new InvalidOperationException($"Không tìm thấy đơn hàng với ID {request.OrderId}");
                 }
 
+                // Lưu payment transaction vào database để tracking
+                try
+                {
+                    var paymentTransaction = new PaymentTransactionEntity
+                    {
+                        OrderId = request.OrderId,
+                        PayOSOrderCode = result.OrderCode,
+                        PaymentLinkId = result.PaymentLinkId,
+                        Amount = (int)result.Amount,
+                        Description = result.Description,
+                        Bin = result.Bin,
+                        AccountNumber = result.AccountNumber,
+                        AccountName = result.AccountName,
+                        BankName = GetBankNameFromBin(result.Bin),
+                        Currency = result.Currency ?? "VND",
+                        Status = result.Status.ToString().ToUpper(),
+                        CheckoutUrl = result.CheckoutUrl,
+                        QrCode = result.QrCode,
+                        CreatedAt = DateTime.Now,
+                        ExpiredAt = result.ExpiredAt.HasValue 
+                            ? DateTimeOffset.FromUnixTimeSeconds(result.ExpiredAt.Value).LocalDateTime 
+                            : null,
+                        Source = "API",
+                        RawData = System.Text.Json.JsonSerializer.Serialize(new 
+                        { 
+                            result.OrderCode, 
+                            result.Amount, 
+                            result.Description,
+                            result.Bin,
+                            result.AccountNumber,
+                            result.AccountName,
+                            result.PaymentLinkId,
+                            Status = result.Status.ToString(),
+                            result.Currency,
+                            result.CheckoutUrl,
+                            result.ExpiredAt
+                        })
+                    };
+                    
+                    _paymentTransactionRepository.Create(paymentTransaction);
+                    System.Diagnostics.Debug.WriteLine($"✅ PaymentTransaction saved: OrderId={request.OrderId}, PayOSOrderCode={result.OrderCode}");
+                }
+                catch (Exception ptEx)
+                {
+                    // Không fail toàn bộ request nếu lưu transaction thất bại
+                    System.Diagnostics.Debug.WriteLine($"⚠️  WARNING: Cannot save PaymentTransaction: {ptEx.Message}");
+                }
+
                 return new CreatePaymentResponse
                 {
                     Success = true,
                     Message = "Tạo payment link thành công",
                     Data = new API.Models.PaymentData
                     {
-                        OrderCode = result.orderCode,
-                        QrCode = result.qrCode ?? string.Empty,
-                        CheckoutUrl = result.checkoutUrl ?? string.Empty,
-                        Amount = result.amount,
-                        Description = result.description ?? string.Empty
+                        // SDK v2.0.1: Sử dụng PascalCase properties
+                        OrderCode = (int)result.OrderCode,
+                        QrCode = result.QrCode ?? string.Empty,
+                        CheckoutUrl = result.CheckoutUrl ?? string.Empty,
+                        Amount = (int)result.Amount,
+                        Description = result.Description ?? string.Empty,
+                        // Thông tin ngân hàng từ PayOS response - SDK v2.0.1 có đầy đủ
+                        Bin = result.Bin ?? string.Empty,
+                        AccountNumber = result.AccountNumber ?? string.Empty,
+                        AccountName = result.AccountName ?? string.Empty, // SDK v2.0.1 có AccountName
+                        PaymentLinkId = result.PaymentLinkId ?? string.Empty,
+                        Status = result.Status.ToString().ToUpper(),
+                        Currency = result.Currency ?? "VND", // SDK v2.0.1 có Currency
+                        // Thông tin bổ sung
+                        BankName = GetBankNameFromBin(result.Bin),
+                        CreatedAt = DateTime.Now
                     }
                 };
             }
@@ -495,7 +591,8 @@ namespace API.Services
                 // Tăng timeout để tránh lỗi network
                 httpClient.Timeout = TimeSpan.FromSeconds(30);
                 
-                var apiUrl = $"https://api.payos.vn/v2/payment-requests/{payOSOrderCode}";
+                // IMPORTANT: Phải dùng api-merchant.payos.vn (không phải api.payos.vn)
+                var apiUrl = $"https://api-merchant.payos.vn/v2/payment-requests/{payOSOrderCode}";
 
                 var clientId = _configuration["PayOS:ClientId"] ?? throw new InvalidOperationException("PayOS:ClientId chưa được cấu hình");
                 var apiKey = _configuration["PayOS:ApiKey"] ?? throw new InvalidOperationException("PayOS:ApiKey chưa được cấu hình");
@@ -1070,6 +1167,116 @@ namespace API.Services
                     Success = false,
                     Message = $"Lỗi khi recheck payment: {ex.Message}"
                 };
+            }
+        }
+
+        /// <summary>
+        /// Mapping BIN code sang tên ngân hàng Việt Nam
+        /// Reference: https://www.sbv.gov.vn
+        /// </summary>
+        private static string? GetBankNameFromBin(string? bin)
+        {
+            if (string.IsNullOrEmpty(bin)) return null;
+            
+            return bin switch
+            {
+                // Ngân hàng thương mại
+                "970415" => "VietinBank",
+                "970436" => "Vietcombank",
+                "970418" => "BIDV",
+                "970405" => "Agribank",
+                "970407" => "Techcombank",
+                "970422" => "MB Bank",
+                "970416" => "ACB",
+                "970432" => "VPBank",
+                "970423" => "TPBank",
+                "970426" => "MSB",
+                "970403" => "Sacombank",
+                "970448" => "OCB",
+                "970441" => "VIB",
+                "970443" => "SHB",
+                "970431" => "Eximbank",
+                "970454" => "VietABank",
+                "970449" => "LienVietPostBank",
+                "970428" => "NamABank",
+                "970425" => "ABBank",
+                "970424" => "ShinhanBank",
+                "970430" => "PGBank",
+                "970437" => "HDBank",
+                "970442" => "HLBank",
+                "970433" => "VietBank",
+                "970438" => "BaoVietBank",
+                "970440" => "SeABank",
+                "970446" => "COOP Bank",
+                "970452" => "KienLongBank",
+                "970439" => "PublicBank",
+                "970412" => "DongABank",
+                "970429" => "SCB",
+                "970414" => "OceanBank",
+                "970406" => "DBS",
+                "970427" => "VietNamPostalBank",
+                "970434" => "IndovinaBank",
+                // Ví điện tử
+                "970410" => "StandardChartered",
+                "970458" => "UnitedOverseas",
+                "970400" => "SaigonBank",
+                "970408" => "GPBank",
+                "970421" => "VRB",
+                // Default
+                _ => $"Ngân hàng (BIN: {bin})"
+            };
+        }
+        
+        /// <summary>
+        /// Lấy tên chủ tài khoản từ PayOS API (vì SDK v1.0.2 không có property accountName)
+        /// Sử dụng endpoint GET /v2/payment-requests/{orderCode} để lấy thông tin chi tiết
+        /// </summary>
+        private string GetAccountNameFromPayOS(int payOSOrderCode)
+        {
+            try
+            {
+                // Gọi API PayOS để lấy thông tin chi tiết payment link
+                using var httpClient = new System.Net.Http.HttpClient();
+                httpClient.Timeout = TimeSpan.FromSeconds(5);
+                
+                // IMPORTANT: Phải dùng api-merchant.payos.vn (không phải api.payos.vn)
+                var apiUrl = $"https://api-merchant.payos.vn/v2/payment-requests/{payOSOrderCode}";
+                
+                var clientId = _configuration["PayOS:ClientId"];
+                var apiKey = _configuration["PayOS:ApiKey"];
+                
+                if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(apiKey))
+                {
+                    return ""; // Return empty if not configured
+                }
+                
+                httpClient.DefaultRequestHeaders.Add("x-client-id", clientId);
+                httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+                
+                var response = httpClient.GetAsync(apiUrl).GetAwaiter().GetResult();
+                if (!response.IsSuccessStatusCode)
+                {
+                    System.Diagnostics.Debug.WriteLine($"PayOS API returned {response.StatusCode} for orderCode {payOSOrderCode}");
+                    return "";
+                }
+                
+                var responseContent = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                var jsonResponse = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(responseContent);
+                
+                if (jsonResponse.TryGetProperty("data", out var dataElement))
+                {
+                    if (dataElement.TryGetProperty("accountName", out var accountNameElement))
+                    {
+                        return accountNameElement.GetString() ?? "";
+                    }
+                }
+                
+                return "";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting accountName from PayOS: {ex.Message}");
+                return "";
             }
         }
     }

@@ -122,37 +122,37 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // menuStrip
             // 
-            menuStrip.BackColor = Color.FromArgb(70, 130, 180);
+            menuStrip.BackColor = Color.FromArgb(25, 55, 109);
             menuStrip.ForeColor = Color.White;
             menuStrip.ImageScalingSize = new Size(20, 20);
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(7, 3, 0, 3);
-            menuStrip.Size = new Size(1583, 24);
+            menuStrip.Size = new Size(1583, 30);
             menuStrip.TabIndex = 0;
             menuStrip.Text = "menuStrip";
             // 
             // pnlHeader
             // 
-            pnlHeader.BackColor = Color.FromArgb(70, 130, 180);
+            pnlHeader.BackColor = Color.FromArgb(30, 60, 114);
             pnlHeader.Controls.Add(picLogo);
             pnlHeader.Controls.Add(lblWelcome);
             pnlHeader.Controls.Add(lblUserInfo);
             pnlHeader.Dock = DockStyle.Top;
-            pnlHeader.Location = new Point(0, 24);
+            pnlHeader.Location = new Point(0, 30);
             pnlHeader.Margin = new Padding(3, 4, 3, 4);
             pnlHeader.Name = "pnlHeader";
-            pnlHeader.Padding = new Padding(23, 20, 23, 20);
-            pnlHeader.Size = new Size(1583, 107);
+            pnlHeader.Padding = new Padding(30, 25, 30, 25);
+            pnlHeader.Size = new Size(1583, 120);
             pnlHeader.TabIndex = 1;
             // 
             // picLogo
             // 
             picLogo.Image = GUI.Properties.Resources.Logo_3T;
-            picLogo.Location = new Point(23, 20);
+            picLogo.Location = new Point(30, 22);
             picLogo.Margin = new Padding(3, 4, 3, 4);
             picLogo.Name = "picLogo";
-            picLogo.Size = new Size(57, 67);
+            picLogo.Size = new Size(75, 75);
             picLogo.SizeMode = PictureBoxSizeMode.Zoom;
             picLogo.TabIndex = 0;
             picLogo.TabStop = false;
@@ -160,50 +160,55 @@ namespace WinFormsFashionShop.Presentation.Forms
             // lblWelcome
             // 
             lblWelcome.AutoSize = true;
-            lblWelcome.Font = new Font("Arial", 18F, FontStyle.Bold);
+            lblWelcome.Font = new Font("Segoe UI", 22F, FontStyle.Bold);
             lblWelcome.ForeColor = Color.White;
-            lblWelcome.Location = new Point(91, 27);
+            lblWelcome.Location = new Point(120, 18);
             lblWelcome.Name = "lblWelcome";
-            lblWelcome.Size = new Size(309, 35);
+            lblWelcome.Size = new Size(356, 50);
             lblWelcome.TabIndex = 1;
-            lblWelcome.Text = "🏠 Dashboard Chính";
+            lblWelcome.Text = "✨ Fashion Shop";
             // 
             // lblUserInfo
             // 
             lblUserInfo.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            lblUserInfo.Font = new Font("Arial", 10F);
+            lblUserInfo.BackColor = Color.FromArgb(40, 255, 255, 255);
+            lblUserInfo.Font = new Font("Segoe UI", 10F);
             lblUserInfo.ForeColor = Color.White;
-            lblUserInfo.Location = new Point(1275, 27);
+            lblUserInfo.Location = new Point(1280, 35);
             lblUserInfo.Name = "lblUserInfo";
-            lblUserInfo.Size = new Size(286, 40);
+            lblUserInfo.Padding = new Padding(15, 8, 15, 8);
+            lblUserInfo.Size = new Size(280, 50);
             lblUserInfo.TabIndex = 2;
-            lblUserInfo.Text = "Người dùng: ... | Vai trò: ...";
+            lblUserInfo.Text = "👤 Người dùng: ... | Vai trò: ...";
             lblUserInfo.TextAlign = ContentAlignment.MiddleRight;
             // 
             // pnlDashboard
             // 
             pnlDashboard.AutoScroll = true;
+            pnlDashboard.BackColor = Color.FromArgb(243, 246, 251);
             pnlDashboard.Controls.Add(pnlRecentOrders);
             pnlDashboard.Controls.Add(pnlQuickActions);
             pnlDashboard.Controls.Add(pnlStatsCards);
             pnlDashboard.Dock = DockStyle.Fill;
-            pnlDashboard.Location = new Point(0, 131);
+            pnlDashboard.Location = new Point(0, 150);
             pnlDashboard.Margin = new Padding(3, 4, 3, 4);
             pnlDashboard.Name = "pnlDashboard";
-            pnlDashboard.Padding = new Padding(17, 20, 17, 20);
-            pnlDashboard.Size = new Size(1583, 892);
+            pnlDashboard.Padding = new Padding(25, 25, 25, 25);
+            pnlDashboard.Size = new Size(1583, 873);
             pnlDashboard.TabIndex = 2;
             // 
             // pnlRecentOrders
             // 
             pnlRecentOrders.AutoSize = true;
+            pnlRecentOrders.BackColor = Color.White;
             pnlRecentOrders.Controls.Add(gridRecentOrders);
             pnlRecentOrders.Controls.Add(lblRecentOrders);
-            pnlRecentOrders.Dock = DockStyle.Top;
-            pnlRecentOrders.Location = new Point(17, 547);
+            pnlRecentOrders.Dock = DockStyle.Fill;
+            pnlRecentOrders.Location = new Point(25, 380);
             pnlRecentOrders.Margin = new Padding(0);
             pnlRecentOrders.Name = "pnlRecentOrders";
-            pnlRecentOrders.Size = new Size(1549, 334);
+            pnlRecentOrders.Padding = new Padding(20, 15, 20, 20);
+            pnlRecentOrders.Size = new Size(1533, 380);
             pnlRecentOrders.TabIndex = 2;
             // 
             // gridRecentOrders
@@ -212,19 +217,19 @@ namespace WinFormsFashionShop.Presentation.Forms
             gridRecentOrders.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridRecentOrders.BackgroundColor = Color.White;
             gridRecentOrders.BorderStyle = BorderStyle.None;
-            gridRecentOrders.ColumnHeadersHeight = 35;
+            gridRecentOrders.ColumnHeadersHeight = 45;
             gridRecentOrders.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             gridRecentOrders.Columns.AddRange(new DataGridViewColumn[] { colOrderCode, colOrderDate, colCustomerName, colTotalAmount, colPaymentMethod, colStatus });
             gridRecentOrders.EnableHeadersVisualStyles = false;
-            gridRecentOrders.Location = new Point(0, 47);
-            gridRecentOrders.Margin = new Padding(0, 11, 0, 0);
+            gridRecentOrders.Location = new Point(20, 55);
+            gridRecentOrders.Margin = new Padding(0, 10, 0, 0);
             gridRecentOrders.MultiSelect = false;
             gridRecentOrders.Name = "gridRecentOrders";
             gridRecentOrders.ReadOnly = true;
             gridRecentOrders.RowHeadersWidth = 40;
-            gridRecentOrders.RowTemplate.Height = 32;
+            gridRecentOrders.RowTemplate.Height = 38;
             gridRecentOrders.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-            gridRecentOrders.Size = new Size(1337, 287);
+            gridRecentOrders.Size = new Size(1490, 300);
             gridRecentOrders.TabIndex = 1;
             // 
             // colOrderCode
@@ -273,11 +278,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             // lblRecentOrders
             // 
             lblRecentOrders.AutoSize = true;
-            lblRecentOrders.Font = new Font("Arial", 14F, FontStyle.Bold);
-            lblRecentOrders.ForeColor = Color.FromArgb(30, 30, 40);
-            lblRecentOrders.Location = new Point(0, 0);
+            lblRecentOrders.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblRecentOrders.ForeColor = Color.FromArgb(45, 52, 54);
+            lblRecentOrders.Location = new Point(20, 12);
             lblRecentOrders.Name = "lblRecentOrders";
-            lblRecentOrders.Size = new Size(259, 29);
+            lblRecentOrders.Size = new Size(262, 32);
             lblRecentOrders.TabIndex = 0;
             lblRecentOrders.Text = "📋 Đơn hàng gần đây";
             // 
@@ -287,11 +292,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlQuickActions.Controls.Add(pnlActionsFlow);
             pnlQuickActions.Controls.Add(lblQuickActions);
             pnlQuickActions.Dock = DockStyle.Top;
-            pnlQuickActions.Location = new Point(17, 240);
+            pnlQuickActions.Location = new Point(25, 165);
             pnlQuickActions.Margin = new Padding(3, 4, 3, 4);
             pnlQuickActions.Name = "pnlQuickActions";
-            pnlQuickActions.Padding = new Padding(0, 0, 0, 20);
-            pnlQuickActions.Size = new Size(1549, 307);
+            pnlQuickActions.Padding = new Padding(0, 0, 0, 15);
+            pnlQuickActions.Size = new Size(1533, 215);
             pnlQuickActions.TabIndex = 1;
             // 
             // pnlActionsFlow
@@ -305,336 +310,343 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlActionsFlow.Controls.Add(cardAction5);
             pnlActionsFlow.Controls.Add(cardAction6);
             pnlActionsFlow.Controls.Add(cardAction7);
-            pnlActionsFlow.Location = new Point(0, 47);
+            pnlActionsFlow.Location = new Point(0, 45);
             pnlActionsFlow.Margin = new Padding(0);
             pnlActionsFlow.Name = "pnlActionsFlow";
-            pnlActionsFlow.Size = new Size(1543, 240);
+            pnlActionsFlow.Size = new Size(1533, 155);
             pnlActionsFlow.TabIndex = 1;
             pnlActionsFlow.WrapContents = false;
             // 
             // cardAction1
             // 
             cardAction1.BackColor = Color.White;
-            cardAction1.BorderStyle = BorderStyle.FixedSingle;
             cardAction1.Controls.Add(lblAction1Icon);
             cardAction1.Controls.Add(lblAction1Title);
             cardAction1.Controls.Add(lblAction1Desc);
+            cardAction1.Cursor = Cursors.Hand;
             cardAction1.Location = new Point(0, 0);
-            cardAction1.Margin = new Padding(0, 0, 17, 20);
+            cardAction1.Margin = new Padding(0, 0, 15, 0);
             cardAction1.Name = "cardAction1";
-            cardAction1.Padding = new Padding(17, 20, 17, 20);
-            cardAction1.Size = new Size(205, 219);
+            cardAction1.Size = new Size(200, 145);
             cardAction1.TabIndex = 0;
             // 
             // lblAction1Icon
             // 
-            lblAction1Icon.AutoSize = true;
-            lblAction1Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction1Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction1Icon.Location = new Point(46, 16);
+            lblAction1Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction1Icon.ForeColor = Color.FromArgb(46, 204, 113);
+            lblAction1Icon.Location = new Point(0, 5);
             lblAction1Icon.Name = "lblAction1Icon";
-            lblAction1Icon.Size = new Size(104, 72);
+            lblAction1Icon.Size = new Size(200, 60);
             lblAction1Icon.TabIndex = 0;
             lblAction1Icon.Text = "📝";
+            lblAction1Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction1Title
             // 
-            lblAction1Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction1Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction1Title.Location = new Point(14, 108);
+            lblAction1Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction1Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction1Title.Location = new Point(0, 70);
             lblAction1Title.Name = "lblAction1Title";
-            lblAction1Title.Size = new Size(178, 29);
+            lblAction1Title.Size = new Size(200, 25);
             lblAction1Title.TabIndex = 1;
             lblAction1Title.Text = "Lập hóa đơn";
+            lblAction1Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction1Desc
             // 
-            lblAction1Desc.Font = new Font("Arial", 9F);
-            lblAction1Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction1Desc.Location = new Point(14, 155);
+            lblAction1Desc.Font = new Font("Segoe UI", 9F);
+            lblAction1Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction1Desc.Location = new Point(0, 98);
             lblAction1Desc.Name = "lblAction1Desc";
-            lblAction1Desc.Size = new Size(178, 42);
+            lblAction1Desc.Size = new Size(200, 40);
             lblAction1Desc.TabIndex = 2;
             lblAction1Desc.Text = "Tạo đơn hàng mới";
+            lblAction1Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction2
             // 
             cardAction2.BackColor = Color.White;
-            cardAction2.BorderStyle = BorderStyle.FixedSingle;
             cardAction2.Controls.Add(lblAction2Icon);
             cardAction2.Controls.Add(lblAction2Title);
             cardAction2.Controls.Add(lblAction2Desc);
-            cardAction2.Location = new Point(222, 0);
-            cardAction2.Margin = new Padding(0, 0, 17, 20);
+            cardAction2.Cursor = Cursors.Hand;
+            cardAction2.Location = new Point(215, 0);
+            cardAction2.Margin = new Padding(0, 0, 15, 0);
             cardAction2.Name = "cardAction2";
-            cardAction2.Padding = new Padding(17, 20, 17, 20);
-            cardAction2.Size = new Size(205, 219);
+            cardAction2.Size = new Size(200, 145);
             cardAction2.TabIndex = 1;
             // 
             // lblAction2Icon
             // 
-            lblAction2Icon.AutoSize = true;
-            lblAction2Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction2Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction2Icon.Location = new Point(56, 16);
+            lblAction2Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction2Icon.ForeColor = Color.FromArgb(155, 89, 182);
+            lblAction2Icon.Location = new Point(0, 5);
             lblAction2Icon.Name = "lblAction2Icon";
-            lblAction2Icon.Size = new Size(104, 72);
+            lblAction2Icon.Size = new Size(200, 60);
             lblAction2Icon.TabIndex = 0;
-            lblAction2Icon.Text = "🛍️";
+            lblAction2Icon.Text = "👗";
+            lblAction2Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction2Title
             // 
-            lblAction2Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction2Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction2Title.Location = new Point(14, 111);
+            lblAction2Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction2Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction2Title.Location = new Point(0, 70);
             lblAction2Title.Name = "lblAction2Title";
-            lblAction2Title.Size = new Size(178, 29);
+            lblAction2Title.Size = new Size(200, 25);
             lblAction2Title.TabIndex = 1;
             lblAction2Title.Text = "Quản lý sản phẩm";
+            lblAction2Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction2Desc
             // 
-            lblAction2Desc.Font = new Font("Arial", 9F);
-            lblAction2Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction2Desc.Location = new Point(10, 155);
+            lblAction2Desc.Font = new Font("Segoe UI", 9F);
+            lblAction2Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction2Desc.Location = new Point(0, 98);
             lblAction2Desc.Name = "lblAction2Desc";
-            lblAction2Desc.Size = new Size(178, 36);
+            lblAction2Desc.Size = new Size(200, 40);
             lblAction2Desc.TabIndex = 2;
             lblAction2Desc.Text = "Xem, thêm, sửa sản phẩm";
+            lblAction2Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction3
             // 
             cardAction3.BackColor = Color.White;
-            cardAction3.BorderStyle = BorderStyle.FixedSingle;
             cardAction3.Controls.Add(lblAction3Icon);
             cardAction3.Controls.Add(lblAction3Title);
             cardAction3.Controls.Add(lblAction3Desc);
-            cardAction3.Location = new Point(444, 0);
-            cardAction3.Margin = new Padding(0, 0, 17, 20);
+            cardAction3.Cursor = Cursors.Hand;
+            cardAction3.Location = new Point(430, 0);
+            cardAction3.Margin = new Padding(0, 0, 15, 0);
             cardAction3.Name = "cardAction3";
-            cardAction3.Padding = new Padding(17, 20, 17, 20);
-            cardAction3.Size = new Size(205, 219);
+            cardAction3.Size = new Size(200, 145);
             cardAction3.TabIndex = 2;
             // 
             // lblAction3Icon
             // 
-            lblAction3Icon.AutoSize = true;
-            lblAction3Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction3Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction3Icon.Location = new Point(50, 16);
+            lblAction3Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction3Icon.ForeColor = Color.FromArgb(52, 152, 219);
+            lblAction3Icon.Location = new Point(0, 5);
             lblAction3Icon.Name = "lblAction3Icon";
-            lblAction3Icon.Size = new Size(104, 72);
+            lblAction3Icon.Size = new Size(200, 60);
             lblAction3Icon.TabIndex = 0;
             lblAction3Icon.Text = "📋";
+            lblAction3Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction3Title
             // 
-            lblAction3Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction3Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction3Title.Location = new Point(11, 108);
+            lblAction3Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction3Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction3Title.Location = new Point(0, 70);
             lblAction3Title.Name = "lblAction3Title";
-            lblAction3Title.Size = new Size(178, 29);
+            lblAction3Title.Size = new Size(200, 25);
             lblAction3Title.TabIndex = 1;
             lblAction3Title.Text = "Quản lý đơn hàng";
+            lblAction3Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction3Desc
             // 
-            lblAction3Desc.Font = new Font("Arial", 9F);
-            lblAction3Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction3Desc.Location = new Point(14, 155);
+            lblAction3Desc.Font = new Font("Segoe UI", 9F);
+            lblAction3Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction3Desc.Location = new Point(0, 98);
             lblAction3Desc.Name = "lblAction3Desc";
-            lblAction3Desc.Size = new Size(178, 36);
+            lblAction3Desc.Size = new Size(200, 40);
             lblAction3Desc.TabIndex = 2;
             lblAction3Desc.Text = "Xem danh sách đơn hàng";
+            lblAction3Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction4
             // 
             cardAction4.BackColor = Color.White;
-            cardAction4.BorderStyle = BorderStyle.FixedSingle;
             cardAction4.Controls.Add(lblAction4Icon);
             cardAction4.Controls.Add(lblAction4Title);
             cardAction4.Controls.Add(lblAction4Desc);
-            cardAction4.Location = new Point(666, 0);
-            cardAction4.Margin = new Padding(0, 0, 17, 20);
+            cardAction4.Cursor = Cursors.Hand;
+            cardAction4.Location = new Point(645, 0);
+            cardAction4.Margin = new Padding(0, 0, 15, 0);
             cardAction4.Name = "cardAction4";
-            cardAction4.Padding = new Padding(17, 20, 17, 20);
-            cardAction4.Size = new Size(205, 219);
+            cardAction4.Size = new Size(200, 145);
             cardAction4.TabIndex = 3;
             // 
             // lblAction4Icon
             // 
-            lblAction4Icon.AutoSize = true;
-            lblAction4Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction4Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction4Icon.Location = new Point(54, 16);
+            lblAction4Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction4Icon.ForeColor = Color.FromArgb(231, 76, 60);
+            lblAction4Icon.Location = new Point(0, 5);
             lblAction4Icon.Name = "lblAction4Icon";
-            lblAction4Icon.Size = new Size(104, 72);
+            lblAction4Icon.Size = new Size(200, 60);
             lblAction4Icon.TabIndex = 0;
             lblAction4Icon.Text = "👥";
+            lblAction4Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction4Title
             // 
-            lblAction4Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction4Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction4Title.Location = new Point(14, 111);
+            lblAction4Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction4Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction4Title.Location = new Point(0, 70);
             lblAction4Title.Name = "lblAction4Title";
-            lblAction4Title.Size = new Size(178, 29);
+            lblAction4Title.Size = new Size(200, 25);
             lblAction4Title.TabIndex = 1;
             lblAction4Title.Text = "Quản lý khách hàng";
+            lblAction4Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction4Desc
             // 
-            lblAction4Desc.Font = new Font("Arial", 9F);
-            lblAction4Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction4Desc.Location = new Point(14, 155);
+            lblAction4Desc.Font = new Font("Segoe UI", 9F);
+            lblAction4Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction4Desc.Location = new Point(0, 98);
             lblAction4Desc.Name = "lblAction4Desc";
-            lblAction4Desc.Size = new Size(178, 36);
+            lblAction4Desc.Size = new Size(200, 40);
             lblAction4Desc.TabIndex = 2;
             lblAction4Desc.Text = "Xem thông tin khách hàng";
+            lblAction4Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction5
             // 
             cardAction5.BackColor = Color.White;
-            cardAction5.BorderStyle = BorderStyle.FixedSingle;
             cardAction5.Controls.Add(lblAction5Icon);
             cardAction5.Controls.Add(lblAction5Title);
             cardAction5.Controls.Add(lblAction5Desc);
-            cardAction5.Location = new Point(888, 0);
-            cardAction5.Margin = new Padding(0, 0, 17, 20);
+            cardAction5.Cursor = Cursors.Hand;
+            cardAction5.Location = new Point(860, 0);
+            cardAction5.Margin = new Padding(0, 0, 15, 0);
             cardAction5.Name = "cardAction5";
-            cardAction5.Padding = new Padding(17, 20, 17, 20);
-            cardAction5.Size = new Size(205, 219);
+            cardAction5.Size = new Size(200, 145);
             cardAction5.TabIndex = 4;
             // 
             // lblAction5Icon
             // 
-            lblAction5Icon.AutoSize = true;
-            lblAction5Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction5Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction5Icon.Location = new Point(47, 20);
+            lblAction5Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction5Icon.ForeColor = Color.FromArgb(241, 196, 15);
+            lblAction5Icon.Location = new Point(0, 5);
             lblAction5Icon.Name = "lblAction5Icon";
-            lblAction5Icon.Size = new Size(104, 72);
+            lblAction5Icon.Size = new Size(200, 60);
             lblAction5Icon.TabIndex = 0;
             lblAction5Icon.Text = "📦";
+            lblAction5Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction5Title
             // 
-            lblAction5Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction5Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction5Title.Location = new Point(47, 108);
+            lblAction5Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction5Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction5Title.Location = new Point(0, 70);
             lblAction5Title.Name = "lblAction5Title";
-            lblAction5Title.Size = new Size(114, 29);
+            lblAction5Title.Size = new Size(200, 25);
             lblAction5Title.TabIndex = 1;
             lblAction5Title.Text = "Nhập hàng";
+            lblAction5Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction5Desc
             // 
-            lblAction5Desc.Font = new Font("Arial", 9F);
-            lblAction5Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction5Desc.Location = new Point(14, 155);
+            lblAction5Desc.Font = new Font("Segoe UI", 9F);
+            lblAction5Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction5Desc.Location = new Point(0, 98);
             lblAction5Desc.Name = "lblAction5Desc";
-            lblAction5Desc.Size = new Size(178, 36);
+            lblAction5Desc.Size = new Size(200, 40);
             lblAction5Desc.TabIndex = 2;
             lblAction5Desc.Text = "Cập nhật tồn kho";
+            lblAction5Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction6
             // 
             cardAction6.BackColor = Color.White;
-            cardAction6.BorderStyle = BorderStyle.FixedSingle;
             cardAction6.Controls.Add(lblAction6Icon);
             cardAction6.Controls.Add(lblAction6Title);
             cardAction6.Controls.Add(lblAction6Desc);
-            cardAction6.Location = new Point(1110, 0);
-            cardAction6.Margin = new Padding(0, 0, 0, 20);
+            cardAction6.Cursor = Cursors.Hand;
+            cardAction6.Location = new Point(1075, 0);
+            cardAction6.Margin = new Padding(0, 0, 15, 0);
             cardAction6.Name = "cardAction6";
-            cardAction6.Padding = new Padding(17, 20, 17, 20);
-            cardAction6.Size = new Size(205, 219);
+            cardAction6.Size = new Size(200, 145);
             cardAction6.TabIndex = 5;
             // 
             // lblAction6Icon
             // 
-            lblAction6Icon.AutoSize = true;
-            lblAction6Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction6Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction6Icon.Location = new Point(59, 16);
+            lblAction6Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction6Icon.ForeColor = Color.FromArgb(30, 60, 114);
+            lblAction6Icon.Location = new Point(0, 5);
             lblAction6Icon.Name = "lblAction6Icon";
-            lblAction6Icon.Size = new Size(104, 72);
+            lblAction6Icon.Size = new Size(200, 60);
             lblAction6Icon.TabIndex = 0;
             lblAction6Icon.Text = "📊";
+            lblAction6Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction6Title
             // 
-            lblAction6Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction6Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction6Title.Location = new Point(65, 108);
+            lblAction6Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction6Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction6Title.Location = new Point(0, 70);
             lblAction6Title.Name = "lblAction6Title";
-            lblAction6Title.Size = new Size(98, 29);
+            lblAction6Title.Size = new Size(200, 25);
             lblAction6Title.TabIndex = 1;
             lblAction6Title.Text = "Báo cáo";
+            lblAction6Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction6Desc
             // 
-            lblAction6Desc.Font = new Font("Arial", 9F);
-            lblAction6Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction6Desc.Location = new Point(14, 155);
+            lblAction6Desc.Font = new Font("Segoe UI", 9F);
+            lblAction6Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction6Desc.Location = new Point(0, 98);
             lblAction6Desc.Name = "lblAction6Desc";
-            lblAction6Desc.Size = new Size(178, 36);
+            lblAction6Desc.Size = new Size(200, 40);
             lblAction6Desc.TabIndex = 2;
             lblAction6Desc.Text = "Xem báo cáo doanh thu";
+            lblAction6Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // cardAction7
             // 
             cardAction7.BackColor = Color.White;
-            cardAction7.BorderStyle = BorderStyle.FixedSingle;
             cardAction7.Controls.Add(lblAction7Icon);
             cardAction7.Controls.Add(lblAction7Title);
             cardAction7.Controls.Add(lblAction7Desc);
-            cardAction7.Location = new Point(1315, 0);
-            cardAction7.Margin = new Padding(0, 0, 0, 20);
+            cardAction7.Cursor = Cursors.Hand;
+            cardAction7.Location = new Point(1290, 0);
+            cardAction7.Margin = new Padding(0, 0, 0, 0);
             cardAction7.Name = "cardAction7";
-            cardAction7.Padding = new Padding(17, 20, 17, 20);
-            cardAction7.Size = new Size(205, 219);
+            cardAction7.Size = new Size(200, 145);
             cardAction7.TabIndex = 6;
             // 
             // lblAction7Icon
             // 
-            lblAction7Icon.AutoSize = true;
-            lblAction7Icon.Font = new Font("Segoe UI Emoji", 32F, FontStyle.Bold);
-            lblAction7Icon.ForeColor = Color.FromArgb(70, 130, 180);
-            lblAction7Icon.Location = new Point(58, 20);
+            lblAction7Icon.Font = new Font("Segoe UI Emoji", 32F);
+            lblAction7Icon.ForeColor = Color.FromArgb(142, 68, 173);
+            lblAction7Icon.Location = new Point(0, 5);
             lblAction7Icon.Name = "lblAction7Icon";
-            lblAction7Icon.Size = new Size(104, 72);
+            lblAction7Icon.Size = new Size(200, 60);
             lblAction7Icon.TabIndex = 0;
-            lblAction7Icon.Text = "👤";
+            lblAction7Icon.Text = "⚙️";
+            lblAction7Icon.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction7Title
             // 
-            lblAction7Title.Font = new Font("Arial", 11F, FontStyle.Bold);
-            lblAction7Title.ForeColor = Color.FromArgb(30, 30, 40);
-            lblAction7Title.Location = new Point(14, 108);
+            lblAction7Title.Font = new Font("Segoe UI Semibold", 11F, FontStyle.Bold);
+            lblAction7Title.ForeColor = Color.FromArgb(45, 52, 54);
+            lblAction7Title.Location = new Point(0, 70);
             lblAction7Title.Name = "lblAction7Title";
-            lblAction7Title.Size = new Size(178, 29);
+            lblAction7Title.Size = new Size(200, 25);
             lblAction7Title.TabIndex = 1;
             lblAction7Title.Text = "Quản lý người dùng";
+            lblAction7Title.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblAction7Desc
             // 
-            lblAction7Desc.Font = new Font("Arial", 9F);
-            lblAction7Desc.ForeColor = Color.FromArgb(108, 117, 125);
-            lblAction7Desc.Location = new Point(14, 155);
+            lblAction7Desc.Font = new Font("Segoe UI", 9F);
+            lblAction7Desc.ForeColor = Color.FromArgb(99, 110, 114);
+            lblAction7Desc.Location = new Point(0, 98);
             lblAction7Desc.Name = "lblAction7Desc";
-            lblAction7Desc.Size = new Size(178, 36);
+            lblAction7Desc.Size = new Size(200, 40);
             lblAction7Desc.TabIndex = 2;
             lblAction7Desc.Text = "Quản trị hệ thống";
+            lblAction7Desc.TextAlign = ContentAlignment.TopCenter;
             // 
             // lblQuickActions
             // 
             lblQuickActions.AutoSize = true;
-            lblQuickActions.Font = new Font("Arial", 14F, FontStyle.Bold);
-            lblQuickActions.ForeColor = Color.FromArgb(30, 30, 40);
+            lblQuickActions.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblQuickActions.ForeColor = Color.FromArgb(45, 52, 54);
             lblQuickActions.Location = new Point(0, 0);
             lblQuickActions.Name = "lblQuickActions";
-            lblQuickActions.Size = new Size(226, 29);
+            lblQuickActions.Size = new Size(210, 32);
             lblQuickActions.TabIndex = 0;
             lblQuickActions.Text = "⚡ Thao tác nhanh";
             // 
@@ -647,253 +659,269 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlStatsCards.Controls.Add(cardStat4);
             pnlStatsCards.Controls.Add(cardStat5);
             pnlStatsCards.Dock = DockStyle.Top;
-            pnlStatsCards.Location = new Point(17, 20);
+            pnlStatsCards.Location = new Point(25, 25);
             pnlStatsCards.Margin = new Padding(0);
             pnlStatsCards.Name = "pnlStatsCards";
-            pnlStatsCards.Padding = new Padding(0, 0, 0, 20);
-            pnlStatsCards.Size = new Size(1549, 220);
+            pnlStatsCards.Padding = new Padding(0, 0, 0, 15);
+            pnlStatsCards.Size = new Size(1533, 140);
             pnlStatsCards.TabIndex = 0;
             pnlStatsCards.WrapContents = false;
             // 
             // cardStat1
             // 
-            cardStat1.BackColor = Color.FromArgb(34, 193, 195);
+            cardStat1.BackColor = Color.FromArgb(46, 204, 113);
             cardStat1.Controls.Add(lblStat1Icon);
             cardStat1.Controls.Add(lblStat1Title);
             cardStat1.Controls.Add(lblStat1Value);
+            cardStat1.Cursor = Cursors.Hand;
             cardStat1.Location = new Point(0, 0);
-            cardStat1.Margin = new Padding(0, 0, 17, 0);
+            cardStat1.Margin = new Padding(0, 0, 15, 0);
             cardStat1.Name = "cardStat1";
-            cardStat1.Padding = new Padding(17, 20, 17, 20);
-            cardStat1.Size = new Size(206, 200);
+            cardStat1.Padding = new Padding(15, 12, 15, 12);
+            cardStat1.Size = new Size(280, 120);
             cardStat1.TabIndex = 0;
             // 
             // lblStat1Icon
             // 
             lblStat1Icon.AutoSize = true;
-            lblStat1Icon.Font = new Font("Segoe UI Emoji", 28F, FontStyle.Bold);
-            lblStat1Icon.ForeColor = Color.White;
-            lblStat1Icon.Location = new Point(58, 0);
+            lblStat1Icon.Font = new Font("Segoe UI Emoji", 26F);
+            lblStat1Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
+            lblStat1Icon.Location = new Point(195, 8);
             lblStat1Icon.Name = "lblStat1Icon";
-            lblStat1Icon.Size = new Size(93, 63);
+            lblStat1Icon.Size = new Size(70, 58);
             lblStat1Icon.TabIndex = 0;
             lblStat1Icon.Text = "💰";
             // 
             // lblStat1Title
             // 
-            lblStat1Title.Font = new Font("Arial", 9F);
-            lblStat1Title.ForeColor = Color.FromArgb(200, 255, 255, 255);
-            lblStat1Title.Location = new Point(17, 91);
+            lblStat1Title.AutoSize = true;
+            lblStat1Title.Font = new Font("Segoe UI", 10F);
+            lblStat1Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
+            lblStat1Title.Location = new Point(15, 12);
             lblStat1Title.Name = "lblStat1Title";
-            lblStat1Title.Size = new Size(171, 23);
+            lblStat1Title.Size = new Size(130, 23);
             lblStat1Title.TabIndex = 1;
-            lblStat1Title.Text = "Doanh thu tháng này";
+            lblStat1Title.Text = "Doanh thu tháng";
             lblStat1Title.Click += lblStat1Title_Click;
             // 
             // lblStat1Value
             // 
-            lblStat1Value.Font = new Font("Arial", 20F, FontStyle.Bold);
+            lblStat1Value.AutoSize = true;
+            lblStat1Value.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblStat1Value.ForeColor = Color.White;
-            lblStat1Value.Location = new Point(15, 127);
+            lblStat1Value.Location = new Point(15, 45);
             lblStat1Value.Name = "lblStat1Value";
-            lblStat1Value.Size = new Size(171, 53);
+            lblStat1Value.Size = new Size(120, 46);
             lblStat1Value.TabIndex = 2;
             lblStat1Value.Text = "0 VNĐ";
             // 
             // cardStat2
             // 
-            cardStat2.BackColor = Color.FromArgb(251, 176, 64);
+            cardStat2.BackColor = Color.FromArgb(52, 152, 219);
             cardStat2.Controls.Add(lblStat2Icon);
             cardStat2.Controls.Add(lblStat2Title);
             cardStat2.Controls.Add(lblStat2Value);
-            cardStat2.Location = new Point(223, 0);
-            cardStat2.Margin = new Padding(0, 0, 17, 0);
+            cardStat2.Cursor = Cursors.Hand;
+            cardStat2.Location = new Point(295, 0);
+            cardStat2.Margin = new Padding(0, 0, 15, 0);
             cardStat2.Name = "cardStat2";
-            cardStat2.Padding = new Padding(17, 20, 17, 20);
-            cardStat2.Size = new Size(206, 200);
+            cardStat2.Padding = new Padding(15, 12, 15, 12);
+            cardStat2.Size = new Size(280, 120);
             cardStat2.TabIndex = 1;
             // 
             // lblStat2Icon
             // 
             lblStat2Icon.AutoSize = true;
-            lblStat2Icon.Font = new Font("Segoe UI Emoji", 28F, FontStyle.Bold);
-            lblStat2Icon.ForeColor = Color.White;
-            lblStat2Icon.Location = new Point(56, 0);
+            lblStat2Icon.Font = new Font("Segoe UI Emoji", 26F);
+            lblStat2Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
+            lblStat2Icon.Location = new Point(195, 8);
             lblStat2Icon.Name = "lblStat2Icon";
-            lblStat2Icon.Size = new Size(93, 63);
+            lblStat2Icon.Size = new Size(70, 58);
             lblStat2Icon.TabIndex = 0;
             lblStat2Icon.Text = "📦";
             // 
             // lblStat2Title
             // 
-            lblStat2Title.Font = new Font("Arial", 9F);
-            lblStat2Title.ForeColor = Color.FromArgb(200, 255, 255, 255);
-            lblStat2Title.Location = new Point(17, 91);
+            lblStat2Title.AutoSize = true;
+            lblStat2Title.Font = new Font("Segoe UI", 10F);
+            lblStat2Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
+            lblStat2Title.Location = new Point(15, 12);
             lblStat2Title.Name = "lblStat2Title";
-            lblStat2Title.Size = new Size(171, 23);
+            lblStat2Title.Size = new Size(140, 23);
             lblStat2Title.TabIndex = 1;
             lblStat2Title.Text = "Đơn hàng hôm nay";
             // 
             // lblStat2Value
             // 
-            lblStat2Value.Font = new Font("Arial", 20F, FontStyle.Bold);
+            lblStat2Value.AutoSize = true;
+            lblStat2Value.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblStat2Value.ForeColor = Color.White;
-            lblStat2Value.Location = new Point(20, 127);
+            lblStat2Value.Location = new Point(15, 45);
             lblStat2Value.Name = "lblStat2Value";
-            lblStat2Value.Size = new Size(171, 53);
+            lblStat2Value.Size = new Size(100, 46);
             lblStat2Value.TabIndex = 2;
             lblStat2Value.Text = "0 đơn";
             // 
             // cardStat3
             // 
-            cardStat3.BackColor = Color.FromArgb(149, 117, 205);
+            cardStat3.BackColor = Color.FromArgb(155, 89, 182);
             cardStat3.Controls.Add(lblStat3Icon);
             cardStat3.Controls.Add(lblStat3Title);
             cardStat3.Controls.Add(lblStat3Value);
-            cardStat3.Location = new Point(446, 0);
-            cardStat3.Margin = new Padding(0, 0, 17, 0);
+            cardStat3.Cursor = Cursors.Hand;
+            cardStat3.Location = new Point(590, 0);
+            cardStat3.Margin = new Padding(0, 0, 15, 0);
             cardStat3.Name = "cardStat3";
-            cardStat3.Padding = new Padding(17, 20, 17, 20);
-            cardStat3.Size = new Size(238, 200);
+            cardStat3.Padding = new Padding(15, 12, 15, 12);
+            cardStat3.Size = new Size(280, 120);
             cardStat3.TabIndex = 2;
             // 
             // lblStat3Icon
             // 
             lblStat3Icon.AutoSize = true;
-            lblStat3Icon.Font = new Font("Segoe UI Emoji", 28F, FontStyle.Bold);
-            lblStat3Icon.ForeColor = Color.White;
-            lblStat3Icon.Location = new Point(60, 0);
+            lblStat3Icon.Font = new Font("Segoe UI Emoji", 26F);
+            lblStat3Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
+            lblStat3Icon.Location = new Point(195, 8);
             lblStat3Icon.Name = "lblStat3Icon";
-            lblStat3Icon.Size = new Size(93, 63);
+            lblStat3Icon.Size = new Size(70, 58);
             lblStat3Icon.TabIndex = 0;
-            lblStat3Icon.Text = "🛍️";
+            lblStat3Icon.Text = "👗";
             // 
             // lblStat3Title
             // 
-            lblStat3Title.Font = new Font("Arial", 9F);
-            lblStat3Title.ForeColor = Color.FromArgb(200, 255, 255, 255);
-            lblStat3Title.Location = new Point(17, 91);
+            lblStat3Title.AutoSize = true;
+            lblStat3Title.Font = new Font("Segoe UI", 10F);
+            lblStat3Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
+            lblStat3Title.Location = new Point(15, 12);
             lblStat3Title.Name = "lblStat3Title";
-            lblStat3Title.Size = new Size(171, 23);
+            lblStat3Title.Size = new Size(110, 23);
             lblStat3Title.TabIndex = 1;
             lblStat3Title.Text = "Tổng sản phẩm";
             // 
             // lblStat3Value
             // 
-            lblStat3Value.Font = new Font("Arial", 20F, FontStyle.Bold);
+            lblStat3Value.AutoSize = true;
+            lblStat3Value.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblStat3Value.ForeColor = Color.White;
-            lblStat3Value.Location = new Point(10, 127);
+            lblStat3Value.Location = new Point(15, 45);
             lblStat3Value.Name = "lblStat3Value";
-            lblStat3Value.Size = new Size(221, 53);
+            lblStat3Value.Size = new Size(150, 46);
             lblStat3Value.TabIndex = 2;
             lblStat3Value.Text = "0 sản phẩm";
             // 
             // cardStat4
             // 
-            cardStat4.BackColor = Color.FromArgb(220, 53, 69);
+            cardStat4.BackColor = Color.FromArgb(231, 76, 60);
             cardStat4.Controls.Add(lblStat4Icon);
             cardStat4.Controls.Add(lblStat4Title);
             cardStat4.Controls.Add(lblStat4Value);
-            cardStat4.Location = new Point(701, 0);
-            cardStat4.Margin = new Padding(0, 0, 17, 0);
+            cardStat4.Cursor = Cursors.Hand;
+            cardStat4.Location = new Point(885, 0);
+            cardStat4.Margin = new Padding(0, 0, 15, 0);
             cardStat4.Name = "cardStat4";
-            cardStat4.Padding = new Padding(17, 20, 17, 20);
-            cardStat4.Size = new Size(227, 200);
+            cardStat4.Padding = new Padding(15, 12, 15, 12);
+            cardStat4.Size = new Size(280, 120);
             cardStat4.TabIndex = 3;
             // 
             // lblStat4Icon
             // 
             lblStat4Icon.AutoSize = true;
-            lblStat4Icon.Font = new Font("Segoe UI Emoji", 28F, FontStyle.Bold);
-            lblStat4Icon.ForeColor = Color.White;
-            lblStat4Icon.Location = new Point(75, 4);
+            lblStat4Icon.Font = new Font("Segoe UI Emoji", 26F);
+            lblStat4Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
+            lblStat4Icon.Location = new Point(195, 8);
             lblStat4Icon.Name = "lblStat4Icon";
-            lblStat4Icon.Size = new Size(93, 63);
+            lblStat4Icon.Size = new Size(70, 58);
             lblStat4Icon.TabIndex = 0;
             lblStat4Icon.Text = "👥";
             // 
             // lblStat4Title
             // 
-            lblStat4Title.Font = new Font("Arial", 9F);
-            lblStat4Title.ForeColor = Color.FromArgb(200, 255, 255, 255);
-            lblStat4Title.Location = new Point(17, 91);
+            lblStat4Title.AutoSize = true;
+            lblStat4Title.Font = new Font("Segoe UI", 10F);
+            lblStat4Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
+            lblStat4Title.Location = new Point(15, 12);
             lblStat4Title.Name = "lblStat4Title";
-            lblStat4Title.Size = new Size(171, 23);
+            lblStat4Title.Size = new Size(120, 23);
             lblStat4Title.TabIndex = 1;
             lblStat4Title.Text = "Tổng khách hàng";
             // 
             // lblStat4Value
             // 
-            lblStat4Value.Font = new Font("Arial", 20F, FontStyle.Bold);
+            lblStat4Value.AutoSize = true;
+            lblStat4Value.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblStat4Value.ForeColor = Color.White;
-            lblStat4Value.Location = new Point(17, 127);
+            lblStat4Value.Location = new Point(15, 45);
             lblStat4Value.Name = "lblStat4Value";
-            lblStat4Value.Size = new Size(151, 53);
+            lblStat4Value.Size = new Size(120, 46);
             lblStat4Value.TabIndex = 2;
             lblStat4Value.Text = "0 khách";
             // 
             // cardStat5
             // 
-            cardStat5.BackColor = Color.FromArgb(255, 193, 7);
+            cardStat5.BackColor = Color.FromArgb(241, 196, 15);
             cardStat5.Controls.Add(lblStat5Icon);
             cardStat5.Controls.Add(lblStat5Title);
             cardStat5.Controls.Add(lblStat5Value);
-            cardStat5.Location = new Point(945, 0);
+            cardStat5.Cursor = Cursors.Hand;
+            cardStat5.Location = new Point(1180, 0);
             cardStat5.Margin = new Padding(0);
             cardStat5.Name = "cardStat5";
-            cardStat5.Padding = new Padding(17, 20, 17, 20);
-            cardStat5.Size = new Size(232, 200);
+            cardStat5.Padding = new Padding(15, 12, 15, 12);
+            cardStat5.Size = new Size(280, 120);
             cardStat5.TabIndex = 4;
             // 
             // lblStat5Icon
             // 
             lblStat5Icon.AutoSize = true;
-            lblStat5Icon.Font = new Font("Segoe UI Emoji", 28F, FontStyle.Bold);
-            lblStat5Icon.ForeColor = Color.White;
-            lblStat5Icon.Location = new Point(75, 0);
+            lblStat5Icon.Font = new Font("Segoe UI Emoji", 26F);
+            lblStat5Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
+            lblStat5Icon.Location = new Point(195, 8);
             lblStat5Icon.Name = "lblStat5Icon";
-            lblStat5Icon.Size = new Size(93, 63);
+            lblStat5Icon.Size = new Size(70, 58);
             lblStat5Icon.TabIndex = 0;
             lblStat5Icon.Text = "⚠️";
             // 
             // lblStat5Title
             // 
-            lblStat5Title.Font = new Font("Arial", 9F);
-            lblStat5Title.ForeColor = Color.FromArgb(200, 255, 255, 255);
-            lblStat5Title.Location = new Point(17, 91);
+            lblStat5Title.AutoSize = true;
+            lblStat5Title.Font = new Font("Segoe UI", 10F);
+            lblStat5Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
+            lblStat5Title.Location = new Point(15, 12);
             lblStat5Title.Name = "lblStat5Title";
-            lblStat5Title.Size = new Size(171, 23);
+            lblStat5Title.Size = new Size(120, 23);
             lblStat5Title.TabIndex = 1;
             lblStat5Title.Text = "Cảnh báo tồn kho";
             // 
             // lblStat5Value
             // 
-            lblStat5Value.Font = new Font("Arial", 20F, FontStyle.Bold);
+            lblStat5Value.AutoSize = true;
+            lblStat5Value.Font = new Font("Segoe UI", 20F, FontStyle.Bold);
             lblStat5Value.ForeColor = Color.White;
-            lblStat5Value.Location = new Point(3, 127);
+            lblStat5Value.Location = new Point(15, 45);
             lblStat5Value.Name = "lblStat5Value";
-            lblStat5Value.Size = new Size(215, 52);
+            lblStat5Value.Size = new Size(150, 46);
             lblStat5Value.TabIndex = 2;
             lblStat5Value.Text = "0 sản phẩm";
             // 
             // statusStrip
             // 
-            statusStrip.BackColor = Color.FromArgb(240, 240, 240);
+            statusStrip.BackColor = Color.FromArgb(30, 60, 114);
             statusStrip.ImageScalingSize = new Size(20, 20);
             statusStrip.Items.AddRange(new ToolStripItem[] { statusLabel });
             statusStrip.Location = new Point(0, 1023);
             statusStrip.Name = "statusStrip";
             statusStrip.Padding = new Padding(1, 0, 16, 0);
-            statusStrip.Size = new Size(1583, 26);
+            statusStrip.Size = new Size(1583, 30);
             statusStrip.TabIndex = 3;
             statusStrip.Text = "statusStrip";
             // 
             // statusLabel
             // 
+            statusLabel.ForeColor = Color.White;
             statusLabel.Name = "statusLabel";
-            statusLabel.Size = new Size(1354, 20);
+            statusLabel.Size = new Size(1354, 24);
             statusLabel.Spring = true;
-            statusLabel.Text = "Sẵn sàng";
+            statusLabel.Text = "✅ Sẵn sàng";
             statusLabel.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // MainForm

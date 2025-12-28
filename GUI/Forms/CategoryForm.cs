@@ -38,6 +38,9 @@ namespace WinFormsFashionShop.Presentation.Forms
                 picLogo.Visible = false;
             }
 
+            // Apply grid styling
+            UIThemeConstants.ThemeHelper.ApplyGridStyle(grid);
+
             // Wire up event handlers for controls created in Designer
             btnSearch.Click += (s, e) => LoadCategories();
             grid.CellDoubleClick += (s, e) => EditSelectedCategory();

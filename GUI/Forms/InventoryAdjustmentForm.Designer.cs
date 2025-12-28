@@ -28,6 +28,9 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            this.pnlHeader = new System.Windows.Forms.Panel();
+            this.picLogo = new System.Windows.Forms.PictureBox();
+            this.lblTitle = new System.Windows.Forms.Label();
             this.pnlAdd = new System.Windows.Forms.Panel();
             this.lblProduct = new System.Windows.Forms.Label();
             this.txtProductSearch = new System.Windows.Forms.TextBox();
@@ -38,21 +41,59 @@ namespace WinFormsFashionShop.Presentation.Forms
             this.pnlButtons = new System.Windows.Forms.Panel();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
+            this.pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).BeginInit();
             this.pnlAdd.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.grid)).BeginInit();
             this.pnlButtons.SuspendLayout();
             this.SuspendLayout();
             // 
+            // pnlHeader
+            // 
+            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(70, 130, 180);
+            this.pnlHeader.Controls.Add(this.picLogo);
+            this.pnlHeader.Controls.Add(this.lblTitle);
+            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
+            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
+            this.pnlHeader.Margin = new System.Windows.Forms.Padding(0);
+            this.pnlHeader.Name = "pnlHeader";
+            this.pnlHeader.Padding = new System.Windows.Forms.Padding(15, 12, 15, 12);
+            this.pnlHeader.Size = new System.Drawing.Size(900, 60);
+            this.pnlHeader.TabIndex = 0;
+            // 
+            // picLogo
+            // 
+            this.picLogo.Image = GUI.Properties.Resources.Logo_3T;
+            this.picLogo.Location = new System.Drawing.Point(15, 12);
+            this.picLogo.Name = "picLogo";
+            this.picLogo.Size = new System.Drawing.Size(36, 36);
+            this.picLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
+            this.picLogo.TabIndex = 0;
+            this.picLogo.TabStop = false;
+            // 
+            // lblTitle
+            // 
+            this.lblTitle.AutoSize = true;
+            this.lblTitle.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
+            this.lblTitle.Location = new System.Drawing.Point(56, 18);
+            this.lblTitle.Name = "lblTitle";
+            this.lblTitle.Size = new System.Drawing.Size(283, 27);
+            this.lblTitle.TabIndex = 1;
+            this.lblTitle.Text = "📦 NHẬP HÀNG - TỒN KHO";
+            // 
             // pnlAdd
             // 
+            this.pnlAdd.BackColor = System.Drawing.Color.White;
+            this.pnlAdd.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pnlAdd.Controls.Add(this.lblProduct);
             this.pnlAdd.Controls.Add(this.txtProductSearch);
             this.pnlAdd.Controls.Add(this.lblQuantity);
             this.pnlAdd.Controls.Add(this.numQuantity);
             this.pnlAdd.Controls.Add(this.btnAdd);
             this.pnlAdd.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlAdd.Location = new System.Drawing.Point(0, 0);
+            this.pnlAdd.Location = new System.Drawing.Point(0, 60);
             this.pnlAdd.Name = "pnlAdd";
             this.pnlAdd.Padding = new System.Windows.Forms.Padding(15, 10, 15, 10);
             this.pnlAdd.Size = new System.Drawing.Size(900, 70);
@@ -129,56 +170,81 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             this.grid.AllowUserToAddRows = false;
             this.grid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.grid.BackgroundColor = System.Drawing.Color.White;
+            this.grid.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.grid.ColumnHeadersHeight = 32;
             this.grid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grid.Location = new System.Drawing.Point(0, 70);
+            this.grid.EnableHeadersVisualStyles = false;
+            this.grid.Location = new System.Drawing.Point(0, 130);
             this.grid.Name = "grid";
+            this.grid.RowHeadersWidth = 40;
+            this.grid.RowTemplate.Height = 32;
             this.grid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.grid.Size = new System.Drawing.Size(900, 480);
+            this.grid.Size = new System.Drawing.Size(900, 470);
             this.grid.TabIndex = 1;
             // 
             // pnlButtons
             // 
+            this.pnlButtons.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
             this.pnlButtons.Controls.Add(this.btnSave);
             this.pnlButtons.Controls.Add(this.btnRefresh);
             this.pnlButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlButtons.Location = new System.Drawing.Point(0, 550);
+            this.pnlButtons.Location = new System.Drawing.Point(0, 600);
             this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Padding = new System.Windows.Forms.Padding(15, 10, 15, 10);
-            this.pnlButtons.Size = new System.Drawing.Size(900, 50);
+            this.pnlButtons.Padding = new System.Windows.Forms.Padding(12, 10, 12, 10);
+            this.pnlButtons.Size = new System.Drawing.Size(900, 60);
             this.pnlButtons.TabIndex = 2;
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(10, 10);
+            this.btnSave.BackColor = System.Drawing.Color.FromArgb(34, 139, 34);
+            this.btnSave.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnSave.FlatAppearance.BorderSize = 0;
+            this.btnSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(28, 120, 28);
+            this.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnSave.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
+            this.btnSave.ForeColor = System.Drawing.Color.White;
+            this.btnSave.Location = new System.Drawing.Point(12, 12);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(120, 30);
+            this.btnSave.Size = new System.Drawing.Size(140, 35);
             this.btnSave.TabIndex = 0;
-            this.btnSave.Text = "Lưu điều chỉnh";
-            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Text = "💾 Lưu điều chỉnh";
+            this.btnSave.UseVisualStyleBackColor = false;
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(140, 10);
+            this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
+            this.btnRefresh.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnRefresh.FlatAppearance.BorderSize = 0;
+            this.btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(90, 98, 104);
+            this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRefresh.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
+            this.btnRefresh.ForeColor = System.Drawing.Color.White;
+            this.btnRefresh.Location = new System.Drawing.Point(160, 12);
             this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(100, 30);
+            this.btnRefresh.Size = new System.Drawing.Size(120, 35);
             this.btnRefresh.TabIndex = 1;
-            this.btnRefresh.Text = "Làm mới";
-            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Text = "🔄 Làm mới";
+            this.btnRefresh.UseVisualStyleBackColor = false;
             // 
             // InventoryAdjustmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(245, 245, 250);
-            this.ClientSize = new System.Drawing.Size(900, 600);
+            this.ClientSize = new System.Drawing.Size(900, 660);
             this.Controls.Add(this.grid);
             this.Controls.Add(this.pnlButtons);
             this.Controls.Add(this.pnlAdd);
+            this.Controls.Add(this.pnlHeader);
             this.Margin = new System.Windows.Forms.Padding(0);
             this.MinimumSize = new System.Drawing.Size(800, 500);
             this.Name = "InventoryAdjustmentForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Nhập hàng - Cập nhật tồn kho";
+            this.pnlHeader.ResumeLayout(false);
+            this.pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).EndInit();
             this.pnlAdd.ResumeLayout(false);
             this.pnlAdd.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).EndInit();
@@ -189,6 +255,9 @@ namespace WinFormsFashionShop.Presentation.Forms
 
         #endregion
 
+        private System.Windows.Forms.Panel pnlHeader;
+        private System.Windows.Forms.PictureBox picLogo;
+        private System.Windows.Forms.Label lblTitle;
         private System.Windows.Forms.Panel pnlAdd;
         private System.Windows.Forms.Label lblProduct;
         private System.Windows.Forms.TextBox txtProductSearch;

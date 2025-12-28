@@ -34,8 +34,21 @@ namespace WinFormsFashionShop.Presentation.Forms
                 picLogo.Visible = false;
             }
 
+            // Wire up show/hide password button
+            btnShowPassword.Click += OnShowPasswordClicked;
+
             txtPassword.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) OnLoginClicked(s, e); };
+            txtUsername.KeyDown += (s, e) => { if (e.KeyCode == Keys.Enter) txtPassword.Focus(); };
             btnLogin.Click += OnLoginClicked;
+        }
+
+        private bool _passwordVisible = false;
+        
+        private void OnShowPasswordClicked(object? sender, EventArgs e)
+        {
+            _passwordVisible = !_passwordVisible;
+            txtPassword.UseSystemPasswordChar = !_passwordVisible;
+            btnShowPassword.Text = _passwordVisible ? "🙈" : "👁️";
         }
 
         private void OnLoginClicked(object? sender, EventArgs e)
