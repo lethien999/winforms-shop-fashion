@@ -42,8 +42,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             cmbRole = new ComboBox();
             chkIsActive = new CheckBox();
             pnlButtons = new Panel();
-            btnOK = new Button();
             btnCancel = new Button();
+            btnOK = new Button();
             pnlHeader.SuspendLayout();
             pnlContent.SuspendLayout();
             pnlButtons.SuspendLayout();
@@ -56,17 +56,18 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlHeader.Controls.Add(lblHeaderTitle);
             pnlHeader.Dock = DockStyle.Top;
             pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Margin = new Padding(3, 4, 3, 4);
             pnlHeader.Name = "pnlHeader";
-            pnlHeader.Size = new Size(480, 60);
+            pnlHeader.Size = new Size(549, 80);
             pnlHeader.TabIndex = 0;
             // 
             // lblHeaderIcon
             // 
-            lblHeaderIcon.Font = new Font("Segoe UI", 24F, FontStyle.Regular, GraphicsUnit.Point);
+            lblHeaderIcon.Font = new Font("Segoe UI", 24F);
             lblHeaderIcon.ForeColor = Color.White;
-            lblHeaderIcon.Location = new Point(15, 8);
+            lblHeaderIcon.Location = new Point(17, 11);
             lblHeaderIcon.Name = "lblHeaderIcon";
-            lblHeaderIcon.Size = new Size(50, 45);
+            lblHeaderIcon.Size = new Size(57, 60);
             lblHeaderIcon.TabIndex = 0;
             lblHeaderIcon.Text = "👨‍💼";
             lblHeaderIcon.TextAlign = ContentAlignment.MiddleCenter;
@@ -74,11 +75,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             // lblHeaderTitle
             // 
             lblHeaderTitle.AutoSize = true;
-            lblHeaderTitle.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold, GraphicsUnit.Point);
+            lblHeaderTitle.Font = new Font("Segoe UI Semibold", 14F, FontStyle.Bold);
             lblHeaderTitle.ForeColor = Color.White;
-            lblHeaderTitle.Location = new Point(65, 18);
+            lblHeaderTitle.Location = new Point(74, 24);
             lblHeaderTitle.Name = "lblHeaderTitle";
-            lblHeaderTitle.Size = new Size(190, 25);
+            lblHeaderTitle.Size = new Size(253, 32);
             lblHeaderTitle.TabIndex = 1;
             lblHeaderTitle.Text = "Thông tin người dùng";
             // 
@@ -95,81 +96,85 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlContent.Controls.Add(cmbRole);
             pnlContent.Controls.Add(chkIsActive);
             pnlContent.Dock = DockStyle.Fill;
-            pnlContent.Location = new Point(0, 60);
+            pnlContent.Location = new Point(0, 80);
+            pnlContent.Margin = new Padding(3, 4, 3, 4);
             pnlContent.Name = "pnlContent";
-            pnlContent.Padding = new Padding(25, 20, 25, 10);
-            pnlContent.Size = new Size(480, 240);
+            pnlContent.Padding = new Padding(29, 27, 29, 13);
+            pnlContent.Size = new Size(549, 320);
             pnlContent.TabIndex = 1;
             // 
             // lblUsername
             // 
             lblUsername.AutoSize = true;
-            lblUsername.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblUsername.Font = new Font("Segoe UI", 10F);
             lblUsername.ForeColor = Color.FromArgb(64, 64, 64);
-            lblUsername.Location = new Point(25, 20);
+            lblUsername.Location = new Point(29, 27);
             lblUsername.Name = "lblUsername";
-            lblUsername.Size = new Size(130, 19);
+            lblUsername.Size = new Size(161, 23);
             lblUsername.TabIndex = 0;
             lblUsername.Text = "👤  Tên đăng nhập:";
             // 
             // txtUsername
             // 
             txtUsername.BorderStyle = BorderStyle.FixedSingle;
-            txtUsername.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            txtUsername.Location = new Point(170, 17);
+            txtUsername.Font = new Font("Segoe UI", 10F);
+            txtUsername.Location = new Point(194, 23);
+            txtUsername.Margin = new Padding(3, 4, 3, 4);
             txtUsername.Name = "txtUsername";
-            txtUsername.Size = new Size(280, 25);
+            txtUsername.Size = new Size(320, 30);
             txtUsername.TabIndex = 1;
             // 
             // lblFullName
             // 
             lblFullName.AutoSize = true;
-            lblFullName.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblFullName.Font = new Font("Segoe UI", 10F);
             lblFullName.ForeColor = Color.FromArgb(64, 64, 64);
-            lblFullName.Location = new Point(25, 58);
+            lblFullName.Location = new Point(29, 77);
             lblFullName.Name = "lblFullName";
-            lblFullName.Size = new Size(100, 19);
+            lblFullName.Size = new Size(121, 23);
             lblFullName.TabIndex = 2;
             lblFullName.Text = "📋  Họ và tên:";
             // 
             // txtFullName
             // 
             txtFullName.BorderStyle = BorderStyle.FixedSingle;
-            txtFullName.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            txtFullName.Location = new Point(170, 55);
+            txtFullName.Font = new Font("Segoe UI", 10F);
+            txtFullName.Location = new Point(194, 73);
+            txtFullName.Margin = new Padding(3, 4, 3, 4);
             txtFullName.Name = "txtFullName";
-            txtFullName.Size = new Size(280, 25);
+            txtFullName.Size = new Size(320, 30);
             txtFullName.TabIndex = 3;
             // 
             // lblPassword
             // 
             lblPassword.AutoSize = true;
-            lblPassword.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblPassword.Font = new Font("Segoe UI", 10F);
             lblPassword.ForeColor = Color.FromArgb(64, 64, 64);
-            lblPassword.Location = new Point(25, 96);
+            lblPassword.Location = new Point(29, 128);
             lblPassword.Name = "lblPassword";
-            lblPassword.Size = new Size(100, 19);
+            lblPassword.Size = new Size(119, 23);
             lblPassword.TabIndex = 4;
             lblPassword.Text = "🔒  Mật khẩu:";
             // 
             // txtPassword
             // 
             txtPassword.BorderStyle = BorderStyle.FixedSingle;
-            txtPassword.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
-            txtPassword.Location = new Point(170, 93);
+            txtPassword.Font = new Font("Segoe UI", 10F);
+            txtPassword.Location = new Point(194, 124);
+            txtPassword.Margin = new Padding(3, 4, 3, 4);
             txtPassword.Name = "txtPassword";
-            txtPassword.Size = new Size(280, 25);
+            txtPassword.Size = new Size(320, 30);
             txtPassword.TabIndex = 5;
             txtPassword.UseSystemPasswordChar = true;
             // 
             // lblRole
             // 
             lblRole.AutoSize = true;
-            lblRole.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            lblRole.Font = new Font("Segoe UI", 10F);
             lblRole.ForeColor = Color.FromArgb(64, 64, 64);
-            lblRole.Location = new Point(25, 134);
+            lblRole.Location = new Point(29, 179);
             lblRole.Name = "lblRole";
-            lblRole.Size = new Size(80, 19);
+            lblRole.Size = new Size(97, 23);
             lblRole.TabIndex = 6;
             lblRole.Text = "🎭  Vai trò:";
             // 
@@ -177,11 +182,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             cmbRole.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbRole.FlatStyle = FlatStyle.Flat;
-            cmbRole.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            cmbRole.Font = new Font("Segoe UI", 10F);
             cmbRole.FormattingEnabled = true;
-            cmbRole.Location = new Point(170, 131);
+            cmbRole.Location = new Point(194, 175);
+            cmbRole.Margin = new Padding(3, 4, 3, 4);
             cmbRole.Name = "cmbRole";
-            cmbRole.Size = new Size(280, 25);
+            cmbRole.Size = new Size(319, 31);
             cmbRole.TabIndex = 7;
             // 
             // chkIsActive
@@ -189,13 +195,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             chkIsActive.AutoSize = true;
             chkIsActive.Checked = true;
             chkIsActive.CheckState = CheckState.Checked;
-            chkIsActive.Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point);
+            chkIsActive.Font = new Font("Segoe UI", 10F);
             chkIsActive.ForeColor = Color.FromArgb(64, 64, 64);
-            chkIsActive.Location = new Point(170, 175);
+            chkIsActive.Location = new Point(194, 233);
+            chkIsActive.Margin = new Padding(3, 4, 3, 4);
             chkIsActive.Name = "chkIsActive";
-            chkIsActive.Size = new Size(119, 23);
+            chkIsActive.Size = new Size(114, 27);
             chkIsActive.TabIndex = 8;
-            chkIsActive.Text = "✅  Hoạt động";
+            chkIsActive.Text = "Hoạt động";
             chkIsActive.UseVisualStyleBackColor = true;
             // 
             // pnlButtons
@@ -204,27 +211,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlButtons.Controls.Add(btnCancel);
             pnlButtons.Controls.Add(btnOK);
             pnlButtons.Dock = DockStyle.Bottom;
-            pnlButtons.Location = new Point(0, 300);
+            pnlButtons.Location = new Point(0, 400);
+            pnlButtons.Margin = new Padding(3, 4, 3, 4);
             pnlButtons.Name = "pnlButtons";
-            pnlButtons.Size = new Size(480, 60);
+            pnlButtons.Size = new Size(549, 80);
             pnlButtons.TabIndex = 2;
-            // 
-            // btnOK
-            // 
-            btnOK.BackColor = Color.FromArgb(34, 139, 34);
-            btnOK.Cursor = Cursors.Hand;
-            btnOK.DialogResult = DialogResult.OK;
-            btnOK.FlatAppearance.BorderSize = 0;
-            btnOK.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 167, 69);
-            btnOK.FlatStyle = FlatStyle.Flat;
-            btnOK.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point);
-            btnOK.ForeColor = Color.White;
-            btnOK.Location = new Point(240, 12);
-            btnOK.Name = "btnOK";
-            btnOK.Size = new Size(110, 38);
-            btnOK.TabIndex = 9;
-            btnOK.Text = "✓  Lưu";
-            btnOK.UseVisualStyleBackColor = false;
             // 
             // btnCancel
             // 
@@ -234,27 +225,47 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.FlatAppearance.MouseOverBackColor = Color.FromArgb(90, 98, 104);
             btnCancel.FlatStyle = FlatStyle.Flat;
-            btnCancel.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold, GraphicsUnit.Point);
+            btnCancel.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
             btnCancel.ForeColor = Color.White;
-            btnCancel.Location = new Point(360, 12);
+            btnCancel.Location = new Point(411, 16);
+            btnCancel.Margin = new Padding(3, 4, 3, 4);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new Size(110, 38);
+            btnCancel.Size = new Size(126, 51);
             btnCancel.TabIndex = 10;
             btnCancel.Text = "✕  Hủy";
             btnCancel.UseVisualStyleBackColor = false;
             // 
+            // btnOK
+            // 
+            btnOK.BackColor = Color.FromArgb(34, 139, 34);
+            btnOK.Cursor = Cursors.Hand;
+            btnOK.DialogResult = DialogResult.OK;
+            btnOK.FlatAppearance.BorderSize = 0;
+            btnOK.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 167, 69);
+            btnOK.FlatStyle = FlatStyle.Flat;
+            btnOK.Font = new Font("Segoe UI Semibold", 10F, FontStyle.Bold);
+            btnOK.ForeColor = Color.White;
+            btnOK.Location = new Point(274, 16);
+            btnOK.Margin = new Padding(3, 4, 3, 4);
+            btnOK.Name = "btnOK";
+            btnOK.Size = new Size(126, 51);
+            btnOK.TabIndex = 9;
+            btnOK.Text = "✓  Lưu";
+            btnOK.UseVisualStyleBackColor = false;
+            // 
             // UserEditDialog
             // 
             AcceptButton = btnOK;
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = Color.White;
             CancelButton = btnCancel;
-            ClientSize = new Size(480, 360);
+            ClientSize = new Size(549, 480);
             Controls.Add(pnlContent);
             Controls.Add(pnlButtons);
             Controls.Add(pnlHeader);
             FormBorderStyle = FormBorderStyle.FixedDialog;
+            Margin = new Padding(3, 4, 3, 4);
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "UserEditDialog";

@@ -72,9 +72,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblHeaderIcon.Font = new Font("Segoe UI", 26F);
             lblHeaderIcon.ForeColor = Color.White;
-            lblHeaderIcon.Location = new Point(15, 8);
+            lblHeaderIcon.Location = new Point(15, 0);
             lblHeaderIcon.Name = "lblHeaderIcon";
-            lblHeaderIcon.Size = new Size(55, 50);
+            lblHeaderIcon.Size = new Size(55, 61);
             lblHeaderIcon.TabIndex = 0;
             lblHeaderIcon.Text = "📋";
             lblHeaderIcon.TextAlign = ContentAlignment.MiddleCenter;
@@ -271,7 +271,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnCheckPayment.Location = new Point(175, 0);
             btnCheckPayment.Margin = new Padding(3, 4, 3, 4);
             btnCheckPayment.Name = "btnCheckPayment";
-            btnCheckPayment.Size = new Size(175, 42);
+            btnCheckPayment.Size = new Size(216, 42);
             btnCheckPayment.TabIndex = 1;
             btnCheckPayment.Text = "🔄 Kiểm tra thanh toán";
             btnCheckPayment.UseVisualStyleBackColor = false;
@@ -286,7 +286,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnCancelOrder.FlatStyle = FlatStyle.Flat;
             btnCancelOrder.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold);
             btnCancelOrder.ForeColor = Color.White;
-            btnCancelOrder.Location = new Point(360, 0);
+            btnCancelOrder.Location = new Point(397, 0);
             btnCancelOrder.Margin = new Padding(3, 4, 3, 4);
             btnCancelOrder.Name = "btnCancelOrder";
             btnCancelOrder.Size = new Size(130, 42);

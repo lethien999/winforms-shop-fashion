@@ -148,9 +148,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             chkIsActive.Location = new Point(177, 200);
             chkIsActive.Margin = new Padding(3, 4, 3, 4);
             chkIsActive.Name = "chkIsActive";
-            chkIsActive.Size = new Size(147, 27);
+            chkIsActive.Size = new Size(114, 27);
             chkIsActive.TabIndex = 4;
-            chkIsActive.Text = "✅  Hoạt động";
+            chkIsActive.Text = "Hoạt động";
             chkIsActive.UseVisualStyleBackColor = true;
             // 
             // pnlButtons

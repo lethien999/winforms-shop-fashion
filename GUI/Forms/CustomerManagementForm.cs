@@ -25,6 +25,62 @@ namespace WinFormsFashionShop.Presentation.Forms
             InitializeComponent();
             InitializeControls();
             LoadCustomers();
+
+            // Enable keyboard shortcuts
+            this.KeyPreview = true;
+            this.KeyDown += CustomerManagementForm_KeyDown;
+        }
+
+        private void CustomerManagementForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F5:
+                    // F5: Refresh data
+                    LoadCustomers();
+                    e.Handled = true;
+                    break;
+                case Keys.F2:
+                    // F2: Edit selected
+                    if (btnEdit.Enabled)
+                        EditSelectedCustomer();
+                    e.Handled = true;
+                    break;
+                case Keys.Delete:
+                    // Ctrl+Delete: Delete selected (with Ctrl for safety)
+                    if (e.Control && btnDelete.Visible && btnDelete.Enabled)
+                        DeleteSelectedCustomer();
+                    e.Handled = true;
+                    break;
+                case Keys.Insert:
+                    // Insert: Add new
+                    if (btnAdd.Enabled)
+                        AddCustomer();
+                    e.Handled = true;
+                    break;
+                case Keys.Escape:
+                    // Esc: Close form
+                    this.Close();
+                    e.Handled = true;
+                    break;
+                case Keys.F:
+                    // Ctrl+F: Focus search
+                    if (e.Control)
+                    {
+                        txtSearch.Focus();
+                        txtSearch.SelectAll();
+                        e.Handled = true;
+                    }
+                    break;
+                case Keys.Enter:
+                    // Enter in search: Search
+                    if (txtSearch.Focused)
+                    {
+                        LoadCustomers();
+                        e.Handled = true;
+                    }
+                    break;
+            }
         }
 
         private void InitializeControls()

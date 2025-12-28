@@ -93,7 +93,7 @@ namespace WinFormsFashionShop.Presentation.Forms
                     try
                     {
                         var row = gridRecentOrders.Rows[e.RowIndex];
-                        
+
                         // Try to get OrderDTO from row Tag first (most reliable)
                         if (row.Tag is OrderDTO order)
                         {
@@ -104,7 +104,7 @@ namespace WinFormsFashionShop.Presentation.Forms
 
                         // Fallback: Try to get OrderCode from cell
                         string? orderCode = null;
-                        
+
                         // Try by column name first
                         if (gridRecentOrders.Columns["OrderCode"] != null)
                         {
@@ -228,15 +228,15 @@ namespace WinFormsFashionShop.Presentation.Forms
         {
             var originalColor = card.BackColor;
             var hoverColor = ControlPaint.Light(originalColor, 0.3f);
-            
+
             card.Cursor = Cursors.Hand;
-            
+
             // Add hover effects to the card
-            card.MouseEnter += (s, e) => 
+            card.MouseEnter += (s, e) =>
             {
                 card.BackColor = hoverColor;
             };
-            card.MouseLeave += (s, e) => 
+            card.MouseLeave += (s, e) =>
             {
                 // Only reset if mouse is not over any child control
                 var mousePos = card.PointToClient(Cursor.Position);
@@ -250,7 +250,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             {
                 ctrl.Cursor = Cursors.Hand;
                 ctrl.Click += handler;
-                
+
                 // Forward hover events from child controls
                 ctrl.MouseEnter += (s, e) => card.BackColor = hoverColor;
                 ctrl.MouseLeave += (s, e) =>
@@ -444,6 +444,11 @@ namespace WinFormsFashionShop.Presentation.Forms
         }
 
         private void lblStat1Title_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void statusLabel_Click(object sender, EventArgs e)
         {
 
         }

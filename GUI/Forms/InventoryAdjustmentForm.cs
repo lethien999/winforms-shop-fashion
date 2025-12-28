@@ -26,6 +26,49 @@ namespace WinFormsFashionShop.Presentation.Forms
             InitializeComponent();
             InitializeControls();
             LoadInventory();
+
+            // Enable keyboard shortcuts
+            this.KeyPreview = true;
+            this.KeyDown += InventoryAdjustmentForm_KeyDown;
+        }
+
+        private void InventoryAdjustmentForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F12:
+                    // F12: Save adjustments
+                    btnSave.PerformClick();
+                    e.Handled = true;
+                    break;
+                case Keys.F5:
+                    // F5: Refresh
+                    btnRefresh.PerformClick();
+                    e.Handled = true;
+                    break;
+                case Keys.Escape:
+                    // Esc: Close form
+                    this.Close();
+                    e.Handled = true;
+                    break;
+                case Keys.F:
+                    // Ctrl+F: Focus search
+                    if (e.Control)
+                    {
+                        txtProductSearch.Focus();
+                        txtProductSearch.SelectAll();
+                        e.Handled = true;
+                    }
+                    break;
+                case Keys.Enter:
+                    // Enter in search field: Add item
+                    if (txtProductSearch.Focused || numQuantity.Focused)
+                    {
+                        btnAdd.PerformClick();
+                        e.Handled = true;
+                    }
+                    break;
+            }
         }
 
         private void InitializeControls()

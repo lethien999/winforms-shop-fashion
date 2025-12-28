@@ -23,6 +23,55 @@ namespace WinFormsFashionShop.Presentation.Forms
             InitializeComponent();
             InitializeControls();
             LoadOrders();
+
+            // Enable keyboard shortcuts
+            this.KeyPreview = true;
+            this.KeyDown += OrderManagementForm_KeyDown;
+        }
+
+        private void OrderManagementForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F5:
+                    // F5: Refresh data
+                    txtSearch?.Clear();
+                    dtpFrom!.Value = DateTime.Now.AddDays(-30);
+                    dtpTo!.Value = DateTime.Now;
+                    LoadOrders();
+                    e.Handled = true;
+                    break;
+                case Keys.Enter:
+                    // Enter: View detail if grid focused
+                    if (gridOrders!.Focused || !txtSearch!.Focused)
+                    {
+                        ViewOrderDetail();
+                        e.Handled = true;
+                    }
+                    break;
+                case Keys.Escape:
+                    // Esc: Close form
+                    this.Close();
+                    e.Handled = true;
+                    break;
+                case Keys.F:
+                    // Ctrl+F: Focus search
+                    if (e.Control)
+                    {
+                        txtSearch!.Focus();
+                        txtSearch.SelectAll();
+                        e.Handled = true;
+                    }
+                    break;
+                case Keys.P:
+                    // Ctrl+P: Print
+                    if (e.Control)
+                    {
+                        PrintOrder();
+                        e.Handled = true;
+                    }
+                    break;
+            }
         }
 
         /// <summary>

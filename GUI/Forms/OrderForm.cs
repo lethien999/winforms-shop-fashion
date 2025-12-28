@@ -39,6 +39,55 @@ namespace WinFormsFashionShop.Presentation.Forms
             InitializeComponent();
             InitializeControls();
             LoadCustomers();
+            
+            // Enable keyboard shortcuts
+            this.KeyPreview = true;
+            this.KeyDown += OrderForm_KeyDown;
+        }
+
+        /// <summary>
+        /// Handles keyboard shortcuts for POS workflow
+        /// F12 = Save/Pay, Escape = Cancel, F1 = Focus search
+        /// </summary>
+        private void OrderForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F12:
+                    // Quick pay shortcut
+                    btnSaveOrder.PerformClick();
+                    e.Handled = true;
+                    break;
+                case Keys.Escape:
+                    // Cancel/Close
+                    if (string.IsNullOrEmpty(txtProductSearch.Text))
+                    {
+                        btnCancel.PerformClick();
+                    }
+                    else
+                    {
+                        txtProductSearch.Clear();
+                        txtProductSearch.Focus();
+                    }
+                    e.Handled = true;
+                    break;
+                case Keys.F1:
+                    // Focus product search
+                    txtProductSearch.Focus();
+                    txtProductSearch.SelectAll();
+                    e.Handled = true;
+                    break;
+                case Keys.F2:
+                    // Focus customer
+                    cmbCustomer.Focus();
+                    e.Handled = true;
+                    break;
+                case Keys.F3:
+                    // Open product selection dialog
+                    OpenProductSelectionDialog();
+                    e.Handled = true;
+                    break;
+            }
         }
 
         private void InitializeControls()

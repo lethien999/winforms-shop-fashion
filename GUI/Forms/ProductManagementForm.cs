@@ -27,6 +27,54 @@ namespace WinFormsFashionShop.Presentation.Forms
             InitializeComponent();
             InitializeControls();
             LoadProducts();
+
+            // Enable keyboard shortcuts
+            this.KeyPreview = true;
+            this.KeyDown += ProductManagementForm_KeyDown;
+        }
+
+        private void ProductManagementForm_KeyDown(object? sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F5:
+                    // F5: Refresh data
+                    LoadProducts();
+                    e.Handled = true;
+                    break;
+                case Keys.F2:
+                    // F2: Edit selected
+                    if (btnEdit.Enabled)
+                        EditSelectedProduct();
+                    e.Handled = true;
+                    break;
+                case Keys.Delete:
+                    // Delete: Delete selected (with Ctrl for safety)
+                    if (e.Control && btnDelete.Enabled)
+                        DeleteSelectedProduct();
+                    e.Handled = true;
+                    break;
+                case Keys.Insert:
+                    // Insert: Add new
+                    if (btnAdd.Enabled)
+                        AddProduct();
+                    e.Handled = true;
+                    break;
+                case Keys.Escape:
+                    // Esc: Close form
+                    this.Close();
+                    e.Handled = true;
+                    break;
+                case Keys.F:
+                    // Ctrl+F: Focus search
+                    if (e.Control)
+                    {
+                        txtSearch.Focus();
+                        txtSearch.SelectAll();
+                        e.Handled = true;
+                    }
+                    break;
+            }
         }
 
         private void InitializeControls()

@@ -91,8 +91,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlSearch
             // 
-            pnlSearch.BackColor = Color.White;
-            pnlSearch.BorderStyle = BorderStyle.FixedSingle;
+            pnlSearch.BackColor = Color.FromArgb(248, 249, 250);
+            pnlSearch.BorderStyle = BorderStyle.None;
             pnlSearch.Controls.Add(btnRefresh);
             pnlSearch.Controls.Add(btnSearch);
             pnlSearch.Controls.Add(dtpTo);
@@ -105,8 +105,8 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlSearch.Location = new Point(0, 60);
             pnlSearch.Margin = new Padding(0);
             pnlSearch.Name = "pnlSearch";
-            pnlSearch.Padding = new Padding(12, 10, 12, 10);
-            pnlSearch.Size = new Size(1000, 70);
+            pnlSearch.Padding = new Padding(15, 12, 15, 12);
+            pnlSearch.Size = new Size(1000, 65);
             pnlSearch.TabIndex = 1;
             // 
             // btnRefresh
@@ -114,12 +114,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnRefresh.BackColor = Color.FromArgb(108, 117, 125);
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.FlatStyle = FlatStyle.Flat;
-            btnRefresh.Font = new Font("Arial", 9F, FontStyle.Bold);
+            btnRefresh.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnRefresh.ForeColor = Color.White;
-            btnRefresh.Location = new Point(871, 9);
+            btnRefresh.Location = new Point(890, 12);
             btnRefresh.Margin = new Padding(0);
+            btnRefresh.Cursor = Cursors.Hand;
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(98, 28);
+            btnRefresh.Size = new Size(95, 36);
             btnRefresh.TabIndex = 7;
             btnRefresh.Text = "🔄 Làm mới";
             btnRefresh.UseVisualStyleBackColor = false;
@@ -129,12 +130,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnSearch.BackColor = Color.FromArgb(0, 123, 255);
             btnSearch.FlatAppearance.BorderSize = 0;
             btnSearch.FlatStyle = FlatStyle.Flat;
-            btnSearch.Font = new Font("Arial", 9F, FontStyle.Bold);
+            btnSearch.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             btnSearch.ForeColor = Color.White;
-            btnSearch.Location = new Point(771, 10);
+            btnSearch.Location = new Point(790, 12);
             btnSearch.Margin = new Padding(0);
+            btnSearch.Cursor = Cursors.Hand;
             btnSearch.Name = "btnSearch";
-            btnSearch.Size = new Size(88, 28);
+            btnSearch.Size = new Size(90, 36);
             btnSearch.TabIndex = 6;
             btnSearch.Text = "🔍 Tìm";
             btnSearch.UseVisualStyleBackColor = false;
@@ -180,12 +182,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             // txtSearch
             // 
             txtSearch.BorderStyle = BorderStyle.FixedSingle;
-            txtSearch.Font = new Font("Arial", 9F);
-            txtSearch.Location = new Point(94, 18);
+            txtSearch.Font = new Font("Segoe UI", 10F);
+            txtSearch.Location = new Point(94, 14);
             txtSearch.Margin = new Padding(0);
             txtSearch.Name = "txtSearch";
             txtSearch.PlaceholderText = "Nhập mã đơn hàng...";
-            txtSearch.Size = new Size(210, 25);
+            txtSearch.Size = new Size(210, 30);
             txtSearch.TabIndex = 1;
             // 
             // lblSearch
@@ -221,18 +223,18 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlButtons
             // 
-            pnlButtons.BackColor = Color.FromArgb(240, 240, 240);
-            pnlButtons.BorderStyle = BorderStyle.FixedSingle;
+            pnlButtons.BackColor = Color.FromArgb(248, 249, 250);
+            pnlButtons.BorderStyle = BorderStyle.None;
             pnlButtons.Controls.Add(lblInfo);
             pnlButtons.Controls.Add(btnCancelOrder);
             pnlButtons.Controls.Add(btnPrint);
             pnlButtons.Controls.Add(btnViewDetail);
             pnlButtons.Dock = DockStyle.Bottom;
-            pnlButtons.Location = new Point(0, 660);
+            pnlButtons.Location = new Point(0, 650);
             pnlButtons.Margin = new Padding(0);
             pnlButtons.Name = "pnlButtons";
-            pnlButtons.Padding = new Padding(12, 8, 12, 8);
-            pnlButtons.Size = new Size(1000, 60);
+            pnlButtons.Padding = new Padding(15, 10, 15, 10);
+            pnlButtons.Size = new Size(1000, 70);
             pnlButtons.TabIndex = 3;
             // 
             // lblInfo
@@ -254,12 +256,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnCancelOrder.BackColor = Color.FromArgb(220, 53, 69);
             btnCancelOrder.FlatAppearance.BorderSize = 0;
             btnCancelOrder.FlatStyle = FlatStyle.Flat;
-            btnCancelOrder.Font = new Font("Arial", 9F, FontStyle.Bold);
+            btnCancelOrder.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnCancelOrder.ForeColor = Color.White;
-            btnCancelOrder.Location = new Point(350, 12);
+            btnCancelOrder.Location = new Point(335, 14);
             btnCancelOrder.Margin = new Padding(0);
+            btnCancelOrder.Cursor = Cursors.Hand;
             btnCancelOrder.Name = "btnCancelOrder";
-            btnCancelOrder.Size = new Size(140, 35);
+            btnCancelOrder.Size = new Size(130, 42);
             btnCancelOrder.TabIndex = 2;
             btnCancelOrder.Text = "❌ Hủy đơn";
             btnCancelOrder.UseVisualStyleBackColor = false;
@@ -270,12 +273,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnPrint.BackColor = Color.FromArgb(34, 139, 34);
             btnPrint.FlatAppearance.BorderSize = 0;
             btnPrint.FlatStyle = FlatStyle.Flat;
-            btnPrint.Font = new Font("Arial", 9F, FontStyle.Bold);
+            btnPrint.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnPrint.ForeColor = Color.White;
-            btnPrint.Location = new Point(200, 12);
+            btnPrint.Location = new Point(175, 14);
             btnPrint.Margin = new Padding(0);
+            btnPrint.Cursor = Cursors.Hand;
             btnPrint.Name = "btnPrint";
-            btnPrint.Size = new Size(140, 35);
+            btnPrint.Size = new Size(150, 42);
             btnPrint.TabIndex = 1;
             btnPrint.Text = "🖨️ In hóa đơn";
             btnPrint.UseVisualStyleBackColor = false;
@@ -286,12 +290,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnViewDetail.BackColor = Color.FromArgb(0, 123, 255);
             btnViewDetail.FlatAppearance.BorderSize = 0;
             btnViewDetail.FlatStyle = FlatStyle.Flat;
-            btnViewDetail.Font = new Font("Arial", 9F, FontStyle.Bold);
+            btnViewDetail.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnViewDetail.ForeColor = Color.White;
-            btnViewDetail.Location = new Point(50, 12);
+            btnViewDetail.Location = new Point(15, 14);
             btnViewDetail.Margin = new Padding(0);
+            btnViewDetail.Cursor = Cursors.Hand;
             btnViewDetail.Name = "btnViewDetail";
-            btnViewDetail.Size = new Size(140, 35);
+            btnViewDetail.Size = new Size(150, 42);
             btnViewDetail.TabIndex = 0;
             btnViewDetail.Text = "👁️ Xem chi tiết";
             btnViewDetail.UseVisualStyleBackColor = false;

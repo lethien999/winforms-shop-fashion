@@ -28,229 +28,232 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            this.pnlHeader = new System.Windows.Forms.Panel();
-            this.picLogo = new System.Windows.Forms.PictureBox();
-            this.lblTitle = new System.Windows.Forms.Label();
-            this.pnlAdd = new System.Windows.Forms.Panel();
-            this.lblProduct = new System.Windows.Forms.Label();
-            this.txtProductSearch = new System.Windows.Forms.TextBox();
-            this.lblQuantity = new System.Windows.Forms.Label();
-            this.numQuantity = new System.Windows.Forms.NumericUpDown();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.grid = new System.Windows.Forms.DataGridView();
-            this.pnlButtons = new System.Windows.Forms.Panel();
-            this.btnSave = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
-            this.pnlHeader.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).BeginInit();
-            this.pnlAdd.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.grid)).BeginInit();
-            this.pnlButtons.SuspendLayout();
-            this.SuspendLayout();
+            pnlHeader = new Panel();
+            picLogo = new PictureBox();
+            lblTitle = new Label();
+            pnlAdd = new Panel();
+            lblProduct = new Label();
+            txtProductSearch = new TextBox();
+            lblQuantity = new Label();
+            numQuantity = new NumericUpDown();
+            btnAdd = new Button();
+            grid = new DataGridView();
+            pnlButtons = new Panel();
+            btnSave = new Button();
+            btnRefresh = new Button();
+            pnlHeader.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).BeginInit();
+            pnlAdd.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numQuantity).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)grid).BeginInit();
+            pnlButtons.SuspendLayout();
+            SuspendLayout();
             // 
             // pnlHeader
             // 
-            this.pnlHeader.BackColor = System.Drawing.Color.FromArgb(70, 130, 180);
-            this.pnlHeader.Controls.Add(this.picLogo);
-            this.pnlHeader.Controls.Add(this.lblTitle);
-            this.pnlHeader.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlHeader.Location = new System.Drawing.Point(0, 0);
-            this.pnlHeader.Margin = new System.Windows.Forms.Padding(0);
-            this.pnlHeader.Name = "pnlHeader";
-            this.pnlHeader.Padding = new System.Windows.Forms.Padding(15, 12, 15, 12);
-            this.pnlHeader.Size = new System.Drawing.Size(900, 60);
-            this.pnlHeader.TabIndex = 0;
+            pnlHeader.BackColor = Color.FromArgb(70, 130, 180);
+            pnlHeader.Controls.Add(picLogo);
+            pnlHeader.Controls.Add(lblTitle);
+            pnlHeader.Dock = DockStyle.Top;
+            pnlHeader.Location = new Point(0, 0);
+            pnlHeader.Margin = new Padding(0);
+            pnlHeader.Name = "pnlHeader";
+            pnlHeader.Padding = new Padding(17, 16, 17, 16);
+            pnlHeader.Size = new Size(1029, 80);
+            pnlHeader.TabIndex = 0;
             // 
             // picLogo
             // 
-            this.picLogo.Image = GUI.Properties.Resources.Logo_3T;
-            this.picLogo.Location = new System.Drawing.Point(15, 12);
-            this.picLogo.Name = "picLogo";
-            this.picLogo.Size = new System.Drawing.Size(36, 36);
-            this.picLogo.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
-            this.picLogo.TabIndex = 0;
-            this.picLogo.TabStop = false;
+            picLogo.Image = GUI.Properties.Resources.Logo_3T;
+            picLogo.Location = new Point(17, 16);
+            picLogo.Margin = new Padding(3, 4, 3, 4);
+            picLogo.Name = "picLogo";
+            picLogo.Size = new Size(41, 48);
+            picLogo.SizeMode = PictureBoxSizeMode.Zoom;
+            picLogo.TabIndex = 0;
+            picLogo.TabStop = false;
             // 
             // lblTitle
             // 
-            this.lblTitle.AutoSize = true;
-            this.lblTitle.Font = new System.Drawing.Font("Arial", 14F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.ForeColor = System.Drawing.Color.White;
-            this.lblTitle.Location = new System.Drawing.Point(56, 18);
-            this.lblTitle.Name = "lblTitle";
-            this.lblTitle.Size = new System.Drawing.Size(283, 27);
-            this.lblTitle.TabIndex = 1;
-            this.lblTitle.Text = "📦 NHẬP HÀNG - TỒN KHO";
+            lblTitle.AutoSize = true;
+            lblTitle.Font = new Font("Arial", 14F, FontStyle.Bold);
+            lblTitle.ForeColor = Color.White;
+            lblTitle.Location = new Point(64, 24);
+            lblTitle.Name = "lblTitle";
+            lblTitle.Size = new Size(322, 29);
+            lblTitle.TabIndex = 1;
+            lblTitle.Text = "📦 NHẬP HÀNG - TỒN KHO";
             // 
             // pnlAdd
             // 
-            this.pnlAdd.BackColor = System.Drawing.Color.White;
-            this.pnlAdd.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.pnlAdd.Controls.Add(this.lblProduct);
-            this.pnlAdd.Controls.Add(this.txtProductSearch);
-            this.pnlAdd.Controls.Add(this.lblQuantity);
-            this.pnlAdd.Controls.Add(this.numQuantity);
-            this.pnlAdd.Controls.Add(this.btnAdd);
-            this.pnlAdd.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnlAdd.Location = new System.Drawing.Point(0, 60);
-            this.pnlAdd.Name = "pnlAdd";
-            this.pnlAdd.Padding = new System.Windows.Forms.Padding(15, 10, 15, 10);
-            this.pnlAdd.Size = new System.Drawing.Size(900, 70);
-            this.pnlAdd.TabIndex = 0;
+            pnlAdd.BackColor = Color.FromArgb(248, 249, 250);
+            pnlAdd.Controls.Add(lblProduct);
+            pnlAdd.Controls.Add(txtProductSearch);
+            pnlAdd.Controls.Add(lblQuantity);
+            pnlAdd.Controls.Add(numQuantity);
+            pnlAdd.Controls.Add(btnAdd);
+            pnlAdd.Dock = DockStyle.Top;
+            pnlAdd.Location = new Point(0, 80);
+            pnlAdd.Margin = new Padding(3, 4, 3, 4);
+            pnlAdd.Name = "pnlAdd";
+            pnlAdd.Padding = new Padding(17, 20, 17, 20);
+            pnlAdd.Size = new Size(1029, 107);
+            pnlAdd.TabIndex = 0;
             // 
             // lblProduct
             // 
-            this.lblProduct.AutoSize = true;
-            this.lblProduct.Location = new System.Drawing.Point(15, 25);
-            this.lblProduct.Name = "lblProduct";
-            this.lblProduct.Size = new System.Drawing.Size(62, 15);
-            this.lblProduct.TabIndex = 0;
-            this.lblProduct.Text = "Sản phẩm:";
+            lblProduct.AutoSize = true;
+            lblProduct.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblProduct.Location = new Point(0, 33);
+            lblProduct.Name = "lblProduct";
+            lblProduct.Size = new Size(124, 23);
+            lblProduct.TabIndex = 0;
+            lblProduct.Text = "📦 Sản phẩm:";
             // 
             // txtProductSearch
             // 
-            this.txtProductSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.txtProductSearch.Location = new System.Drawing.Point(90, 22);
-            this.txtProductSearch.Name = "txtProductSearch";
-            this.txtProductSearch.PlaceholderText = "Nhập mã hoặc tên sản phẩm...";
-            this.txtProductSearch.Size = new Size(450, 23);
-            this.txtProductSearch.TabIndex = 1;
+            txtProductSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            txtProductSearch.BorderStyle = BorderStyle.FixedSingle;
+            txtProductSearch.Font = new Font("Segoe UI", 11F);
+            txtProductSearch.Location = new Point(126, 29);
+            txtProductSearch.Margin = new Padding(3, 4, 3, 4);
+            txtProductSearch.Name = "txtProductSearch";
+            txtProductSearch.PlaceholderText = "🔍 Nhập mã hoặc tên sản phẩm...";
+            txtProductSearch.Size = new Size(491, 32);
+            txtProductSearch.TabIndex = 1;
             // 
             // lblQuantity
             // 
-            this.lblQuantity.AutoSize = true;
-            this.lblQuantity.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            this.lblQuantity.Location = new System.Drawing.Point(560, 25);
-            this.lblQuantity.Name = "lblQuantity";
-            this.lblQuantity.Size = new System.Drawing.Size(90, 15);
-            this.lblQuantity.TabIndex = 2;
-            this.lblQuantity.Text = "Số lượng nhập:";
+            lblQuantity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblQuantity.AutoSize = true;
+            lblQuantity.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblQuantity.Location = new Point(631, 33);
+            lblQuantity.Name = "lblQuantity";
+            lblQuantity.Size = new Size(117, 23);
+            lblQuantity.TabIndex = 2;
+            lblQuantity.Text = "📥 Số lượng:";
             // 
             // numQuantity
             // 
-            this.numQuantity.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            this.numQuantity.Location = new System.Drawing.Point(660, 22);
-            this.numQuantity.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.numQuantity.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.numQuantity.Name = "numQuantity";
-            this.numQuantity.Size = new Size(100, 23);
-            this.numQuantity.TabIndex = 3;
-            this.numQuantity.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            numQuantity.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            numQuantity.Font = new Font("Segoe UI", 11F);
+            numQuantity.Location = new Point(754, 29);
+            numQuantity.Margin = new Padding(3, 4, 3, 4);
+            numQuantity.Maximum = new decimal(new int[] { 10000, 0, 0, 0 });
+            numQuantity.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            numQuantity.Name = "numQuantity";
+            numQuantity.Size = new Size(114, 32);
+            numQuantity.TabIndex = 3;
+            numQuantity.TextAlign = HorizontalAlignment.Center;
+            numQuantity.Value = new decimal(new int[] { 1, 0, 0, 0 });
             // 
             // btnAdd
             // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)(System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right));
-            this.btnAdd.BackColor = System.Drawing.Color.FromArgb(0, 123, 255);
-            this.btnAdd.FlatAppearance.BorderSize = 0;
-            this.btnAdd.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(0, 105, 217);
-            this.btnAdd.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAdd.ForeColor = System.Drawing.Color.White;
-            this.btnAdd.Location = new System.Drawing.Point(775, 20);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(110, 28);
-            this.btnAdd.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnAdd.TabIndex = 4;
-            this.btnAdd.Text = "Thêm";
-            this.btnAdd.UseVisualStyleBackColor = true;
+            btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnAdd.BackColor = Color.FromArgb(0, 123, 255);
+            btnAdd.Cursor = Cursors.Hand;
+            btnAdd.FlatAppearance.BorderSize = 0;
+            btnAdd.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 105, 217);
+            btnAdd.FlatStyle = FlatStyle.Flat;
+            btnAdd.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnAdd.ForeColor = Color.White;
+            btnAdd.Location = new Point(886, 24);
+            btnAdd.Margin = new Padding(3, 4, 3, 4);
+            btnAdd.Name = "btnAdd";
+            btnAdd.Size = new Size(126, 53);
+            btnAdd.TabIndex = 4;
+            btnAdd.Text = "➕ Thêm";
+            btnAdd.UseVisualStyleBackColor = true;
             // 
             // grid
             // 
-            this.grid.AllowUserToAddRows = false;
-            this.grid.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.grid.BackgroundColor = System.Drawing.Color.White;
-            this.grid.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.grid.ColumnHeadersHeight = 32;
-            this.grid.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grid.EnableHeadersVisualStyles = false;
-            this.grid.Location = new System.Drawing.Point(0, 130);
-            this.grid.Name = "grid";
-            this.grid.RowHeadersWidth = 40;
-            this.grid.RowTemplate.Height = 32;
-            this.grid.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.grid.Size = new System.Drawing.Size(900, 470);
-            this.grid.TabIndex = 1;
+            grid.AllowUserToAddRows = false;
+            grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            grid.BackgroundColor = Color.White;
+            grid.BorderStyle = BorderStyle.None;
+            grid.ColumnHeadersHeight = 32;
+            grid.Dock = DockStyle.Fill;
+            grid.EnableHeadersVisualStyles = false;
+            grid.Location = new Point(0, 187);
+            grid.Margin = new Padding(3, 4, 3, 4);
+            grid.Name = "grid";
+            grid.RowHeadersWidth = 40;
+            grid.RowTemplate.Height = 32;
+            grid.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            grid.Size = new Size(1029, 600);
+            grid.TabIndex = 1;
             // 
             // pnlButtons
             // 
-            this.pnlButtons.BackColor = System.Drawing.Color.FromArgb(240, 240, 240);
-            this.pnlButtons.Controls.Add(this.btnSave);
-            this.pnlButtons.Controls.Add(this.btnRefresh);
-            this.pnlButtons.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlButtons.Location = new System.Drawing.Point(0, 600);
-            this.pnlButtons.Name = "pnlButtons";
-            this.pnlButtons.Padding = new System.Windows.Forms.Padding(12, 10, 12, 10);
-            this.pnlButtons.Size = new System.Drawing.Size(900, 60);
-            this.pnlButtons.TabIndex = 2;
+            pnlButtons.BackColor = Color.FromArgb(248, 249, 250);
+            pnlButtons.Controls.Add(btnSave);
+            pnlButtons.Controls.Add(btnRefresh);
+            pnlButtons.Dock = DockStyle.Bottom;
+            pnlButtons.Location = new Point(0, 787);
+            pnlButtons.Margin = new Padding(3, 4, 3, 4);
+            pnlButtons.Name = "pnlButtons";
+            pnlButtons.Padding = new Padding(17, 16, 17, 16);
+            pnlButtons.Size = new Size(1029, 93);
+            pnlButtons.TabIndex = 2;
             // 
             // btnSave
             // 
-            this.btnSave.BackColor = System.Drawing.Color.FromArgb(34, 139, 34);
-            this.btnSave.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnSave.FlatAppearance.BorderSize = 0;
-            this.btnSave.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(28, 120, 28);
-            this.btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSave.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            this.btnSave.ForeColor = System.Drawing.Color.White;
-            this.btnSave.Location = new System.Drawing.Point(12, 12);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(140, 35);
-            this.btnSave.TabIndex = 0;
-            this.btnSave.Text = "💾 Lưu điều chỉnh";
-            this.btnSave.UseVisualStyleBackColor = false;
+            btnSave.BackColor = Color.FromArgb(34, 139, 34);
+            btnSave.Cursor = Cursors.Hand;
+            btnSave.FlatAppearance.BorderSize = 0;
+            btnSave.FlatAppearance.MouseOverBackColor = Color.FromArgb(28, 120, 28);
+            btnSave.FlatStyle = FlatStyle.Flat;
+            btnSave.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnSave.ForeColor = Color.White;
+            btnSave.Location = new Point(17, 19);
+            btnSave.Margin = new Padding(3, 4, 3, 4);
+            btnSave.Name = "btnSave";
+            btnSave.Size = new Size(183, 56);
+            btnSave.TabIndex = 0;
+            btnSave.Text = "💾 Lưu điều chỉnh (F12)";
+            btnSave.UseVisualStyleBackColor = false;
             // 
             // btnRefresh
             // 
-            this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
-            this.btnRefresh.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnRefresh.FlatAppearance.BorderSize = 0;
-            this.btnRefresh.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(90, 98, 104);
-            this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRefresh.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            this.btnRefresh.ForeColor = System.Drawing.Color.White;
-            this.btnRefresh.Location = new System.Drawing.Point(160, 12);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(120, 35);
-            this.btnRefresh.TabIndex = 1;
-            this.btnRefresh.Text = "🔄 Làm mới";
-            this.btnRefresh.UseVisualStyleBackColor = false;
+            btnRefresh.BackColor = Color.FromArgb(108, 117, 125);
+            btnRefresh.Cursor = Cursors.Hand;
+            btnRefresh.FlatAppearance.BorderSize = 0;
+            btnRefresh.FlatAppearance.MouseOverBackColor = Color.FromArgb(90, 98, 104);
+            btnRefresh.FlatStyle = FlatStyle.Flat;
+            btnRefresh.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnRefresh.ForeColor = Color.White;
+            btnRefresh.Location = new Point(211, 19);
+            btnRefresh.Margin = new Padding(3, 4, 3, 4);
+            btnRefresh.Name = "btnRefresh";
+            btnRefresh.Size = new Size(149, 56);
+            btnRefresh.TabIndex = 1;
+            btnRefresh.Text = "🔄 Làm mới (F5)";
+            btnRefresh.UseVisualStyleBackColor = false;
             // 
             // InventoryAdjustmentForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(245, 245, 250);
-            this.ClientSize = new System.Drawing.Size(900, 660);
-            this.Controls.Add(this.grid);
-            this.Controls.Add(this.pnlButtons);
-            this.Controls.Add(this.pnlAdd);
-            this.Controls.Add(this.pnlHeader);
-            this.Margin = new System.Windows.Forms.Padding(0);
-            this.MinimumSize = new System.Drawing.Size(800, 500);
-            this.Name = "InventoryAdjustmentForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Nhập hàng - Cập nhật tồn kho";
-            this.pnlHeader.ResumeLayout(false);
-            this.pnlHeader.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.picLogo)).EndInit();
-            this.pnlAdd.ResumeLayout(false);
-            this.pnlAdd.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.numQuantity)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.grid)).EndInit();
-            this.pnlButtons.ResumeLayout(false);
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleMode = AutoScaleMode.Font;
+            BackColor = Color.FromArgb(245, 245, 250);
+            ClientSize = new Size(1029, 880);
+            Controls.Add(grid);
+            Controls.Add(pnlButtons);
+            Controls.Add(pnlAdd);
+            Controls.Add(pnlHeader);
+            Margin = new Padding(0);
+            MinimumSize = new Size(912, 651);
+            Name = "InventoryAdjustmentForm";
+            StartPosition = FormStartPosition.CenterParent;
+            Text = "Nhập hàng - Cập nhật tồn kho";
+            pnlHeader.ResumeLayout(false);
+            pnlHeader.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)picLogo).EndInit();
+            pnlAdd.ResumeLayout(false);
+            pnlAdd.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numQuantity).EndInit();
+            ((System.ComponentModel.ISupportInitialize)grid).EndInit();
+            pnlButtons.ResumeLayout(false);
+            ResumeLayout(false);
         }
 
         #endregion

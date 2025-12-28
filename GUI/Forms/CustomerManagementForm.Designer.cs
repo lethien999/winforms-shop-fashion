@@ -93,27 +93,28 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlSearch
             // 
-            pnlSearch.BackColor = Color.White;
-            pnlSearch.BorderStyle = BorderStyle.FixedSingle;
+            pnlSearch.BackColor = Color.FromArgb(248, 249, 250);
+            pnlSearch.BorderStyle = BorderStyle.None;
             pnlSearch.Controls.Add(txtSearch);
             pnlSearch.Controls.Add(btnSearch);
             pnlSearch.Dock = DockStyle.Top;
             pnlSearch.Location = new Point(0, 60);
             pnlSearch.Margin = new Padding(0);
             pnlSearch.Name = "pnlSearch";
-            pnlSearch.Padding = new Padding(12, 10, 12, 10);
-            pnlSearch.Size = new Size(1000, 70);
+            pnlSearch.Padding = new Padding(15, 12, 15, 12);
+            pnlSearch.Size = new Size(1000, 60);
             pnlSearch.TabIndex = 0;
             // 
             // txtSearch
             // 
             txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-            txtSearch.Font = new Font("Arial", 10F);
-            txtSearch.Location = new Point(12, 18);
+            txtSearch.BorderStyle = BorderStyle.FixedSingle;
+            txtSearch.Font = new Font("Segoe UI", 11F);
+            txtSearch.Location = new Point(15, 12);
             txtSearch.Margin = new Padding(0);
             txtSearch.Name = "txtSearch";
-            txtSearch.PlaceholderText = "Tìm theo tên/SĐT...";
-            txtSearch.Size = new Size(820, 28);
+            txtSearch.PlaceholderText = "🔍 Tìm theo tên, số điện thoại, email...";
+            txtSearch.Size = new Size(800, 32);
             txtSearch.TabIndex = 0;
             // 
             // btnSearch
@@ -123,15 +124,15 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnSearch.FlatAppearance.BorderSize = 0;
             btnSearch.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 105, 217);
             btnSearch.FlatStyle = FlatStyle.Flat;
-            btnSearch.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSearch.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnSearch.ForeColor = Color.White;
-            btnSearch.Location = new Point(840, 18);
+            btnSearch.Location = new Point(825, 10);
             btnSearch.Margin = new Padding(0);
             btnSearch.Name = "btnSearch";
-            btnSearch.Size = new Size(148, 28);
+            btnSearch.Size = new Size(160, 36);
             btnSearch.Cursor = Cursors.Hand;
             btnSearch.TabIndex = 1;
-            btnSearch.Text = "Tìm kiếm";
+            btnSearch.Text = "🔍 Tìm kiếm (Ctrl+F)";
             btnSearch.UseVisualStyleBackColor = false;
             // 
             // splitContainer
@@ -187,28 +188,32 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // lblHistory
             // 
+            lblHistory.BackColor = Color.FromArgb(70, 130, 180);
             lblHistory.Dock = DockStyle.Top;
-            lblHistory.Font = new Font("Arial", 10F, FontStyle.Bold);
+            lblHistory.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblHistory.ForeColor = Color.White;
             lblHistory.Location = new Point(0, 0);
             lblHistory.Name = "lblHistory";
-            lblHistory.Size = new Size(498, 28);
+            lblHistory.Padding = new Padding(10, 0, 0, 0);
+            lblHistory.Size = new Size(498, 32);
             lblHistory.TabIndex = 1;
-            lblHistory.Text = "Lịch sử mua hàng:";
+            lblHistory.Text = "📋 Lịch sử mua hàng:";
             lblHistory.TextAlign = ContentAlignment.MiddleLeft;
             // 
             // pnlButtons
             // 
+            pnlButtons.BackColor = Color.FromArgb(248, 249, 250);
             pnlButtons.Controls.Add(btnAdd);
             pnlButtons.Controls.Add(btnEdit);
             pnlButtons.Controls.Add(btnDelete);
             pnlButtons.Controls.Add(btnViewHistory);
             pnlButtons.Controls.Add(btnRefresh);
             pnlButtons.Dock = DockStyle.Bottom;
-            pnlButtons.Location = new Point(0, 660);
+            pnlButtons.Location = new Point(0, 650);
             pnlButtons.Margin = new Padding(0);
             pnlButtons.Name = "pnlButtons";
-            pnlButtons.Padding = new Padding(12, 8, 12, 8);
-            pnlButtons.Size = new Size(1000, 60);
+            pnlButtons.Padding = new Padding(15, 10, 15, 10);
+            pnlButtons.Size = new Size(1000, 70);
             pnlButtons.TabIndex = 2;
             // 
             // btnAdd
@@ -218,12 +223,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnAdd.FlatAppearance.BorderSize = 0;
             btnAdd.FlatAppearance.MouseOverBackColor = Color.FromArgb(28, 120, 28);
             btnAdd.FlatStyle = FlatStyle.Flat;
-            btnAdd.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnAdd.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnAdd.ForeColor = Color.White;
-            btnAdd.Location = new Point(12, 12);
+            btnAdd.Location = new Point(15, 14);
             btnAdd.Margin = new Padding(0);
             btnAdd.Name = "btnAdd";
-            btnAdd.Size = new Size(120, 35);
+            btnAdd.Size = new Size(130, 42);
             btnAdd.TabIndex = 0;
             btnAdd.Text = "➕ Thêm mới";
             btnAdd.UseVisualStyleBackColor = false;
@@ -235,14 +240,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnEdit.FlatAppearance.BorderSize = 0;
             btnEdit.FlatAppearance.MouseOverBackColor = Color.FromArgb(0, 105, 217);
             btnEdit.FlatStyle = FlatStyle.Flat;
-            btnEdit.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnEdit.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnEdit.ForeColor = Color.White;
-            btnEdit.Location = new Point(138, 12);
+            btnEdit.Location = new Point(155, 14);
             btnEdit.Margin = new Padding(0);
             btnEdit.Name = "btnEdit";
-            btnEdit.Size = new Size(100, 35);
+            btnEdit.Size = new Size(110, 42);
             btnEdit.TabIndex = 1;
-            btnEdit.Text = "✏️ Sửa";
+            btnEdit.Text = "✏️ Sửa (F2)";
             btnEdit.UseVisualStyleBackColor = false;
             // 
             // btnDelete
@@ -252,12 +257,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnDelete.FlatAppearance.BorderSize = 0;
             btnDelete.FlatAppearance.MouseOverBackColor = Color.FromArgb(200, 35, 51);
             btnDelete.FlatStyle = FlatStyle.Flat;
-            btnDelete.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnDelete.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnDelete.ForeColor = Color.White;
-            btnDelete.Location = new Point(244, 12);
+            btnDelete.Location = new Point(275, 14);
             btnDelete.Margin = new Padding(0);
             btnDelete.Name = "btnDelete";
-            btnDelete.Size = new Size(100, 35);
+            btnDelete.Size = new Size(100, 42);
             btnDelete.TabIndex = 2;
             btnDelete.Text = "🗑️ Xóa";
             btnDelete.UseVisualStyleBackColor = false;
@@ -269,12 +274,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnViewHistory.FlatAppearance.BorderSize = 0;
             btnViewHistory.FlatAppearance.MouseOverBackColor = Color.FromArgb(19, 140, 160);
             btnViewHistory.FlatStyle = FlatStyle.Flat;
-            btnViewHistory.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnViewHistory.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnViewHistory.ForeColor = Color.White;
-            btnViewHistory.Location = new Point(350, 12);
+            btnViewHistory.Location = new Point(385, 14);
             btnViewHistory.Margin = new Padding(0);
             btnViewHistory.Name = "btnViewHistory";
-            btnViewHistory.Size = new Size(120, 35);
+            btnViewHistory.Size = new Size(130, 42);
             btnViewHistory.TabIndex = 3;
             btnViewHistory.Text = "📋 Lịch sử";
             btnViewHistory.UseVisualStyleBackColor = false;
@@ -286,14 +291,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.FlatAppearance.MouseOverBackColor = Color.FromArgb(90, 98, 104);
             btnRefresh.FlatStyle = FlatStyle.Flat;
-            btnRefresh.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnRefresh.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnRefresh.ForeColor = Color.White;
-            btnRefresh.Location = new Point(476, 12);
+            btnRefresh.Location = new Point(525, 14);
             btnRefresh.Margin = new Padding(0);
             btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(120, 35);
+            btnRefresh.Size = new Size(130, 42);
             btnRefresh.TabIndex = 4;
-            btnRefresh.Text = "🔄 Làm mới";
+            btnRefresh.Text = "🔄 Làm mới (F5)";
             btnRefresh.UseVisualStyleBackColor = false;
             // 
             // CustomerManagementForm

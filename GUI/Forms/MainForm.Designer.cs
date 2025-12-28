@@ -128,7 +128,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(7, 3, 0, 3);
-            menuStrip.Size = new Size(1583, 30);
+            menuStrip.Size = new Size(1583, 24);
             menuStrip.TabIndex = 0;
             menuStrip.Text = "menuStrip";
             // 
@@ -139,7 +139,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlHeader.Controls.Add(lblWelcome);
             pnlHeader.Controls.Add(lblUserInfo);
             pnlHeader.Dock = DockStyle.Top;
-            pnlHeader.Location = new Point(0, 30);
+            pnlHeader.Location = new Point(0, 24);
             pnlHeader.Margin = new Padding(3, 4, 3, 4);
             pnlHeader.Name = "pnlHeader";
             pnlHeader.Padding = new Padding(30, 25, 30, 25);
@@ -164,7 +164,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblWelcome.ForeColor = Color.White;
             lblWelcome.Location = new Point(120, 18);
             lblWelcome.Name = "lblWelcome";
-            lblWelcome.Size = new Size(356, 50);
+            lblWelcome.Size = new Size(315, 50);
             lblWelcome.TabIndex = 1;
             lblWelcome.Text = "✨ Fashion Shop";
             // 
@@ -190,11 +190,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlDashboard.Controls.Add(pnlQuickActions);
             pnlDashboard.Controls.Add(pnlStatsCards);
             pnlDashboard.Dock = DockStyle.Fill;
-            pnlDashboard.Location = new Point(0, 150);
+            pnlDashboard.Location = new Point(0, 144);
             pnlDashboard.Margin = new Padding(3, 4, 3, 4);
             pnlDashboard.Name = "pnlDashboard";
-            pnlDashboard.Padding = new Padding(25, 25, 25, 25);
-            pnlDashboard.Size = new Size(1583, 873);
+            pnlDashboard.Padding = new Padding(25);
+            pnlDashboard.Size = new Size(1583, 879);
             pnlDashboard.TabIndex = 2;
             // 
             // pnlRecentOrders
@@ -204,11 +204,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlRecentOrders.Controls.Add(gridRecentOrders);
             pnlRecentOrders.Controls.Add(lblRecentOrders);
             pnlRecentOrders.Dock = DockStyle.Fill;
-            pnlRecentOrders.Location = new Point(25, 380);
+            pnlRecentOrders.Location = new Point(25, 375);
             pnlRecentOrders.Margin = new Padding(0);
             pnlRecentOrders.Name = "pnlRecentOrders";
             pnlRecentOrders.Padding = new Padding(20, 15, 20, 20);
-            pnlRecentOrders.Size = new Size(1533, 380);
+            pnlRecentOrders.Size = new Size(1533, 479);
             pnlRecentOrders.TabIndex = 2;
             // 
             // gridRecentOrders
@@ -282,7 +282,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblRecentOrders.ForeColor = Color.FromArgb(45, 52, 54);
             lblRecentOrders.Location = new Point(20, 12);
             lblRecentOrders.Name = "lblRecentOrders";
-            lblRecentOrders.Size = new Size(262, 32);
+            lblRecentOrders.Size = new Size(265, 32);
             lblRecentOrders.TabIndex = 0;
             lblRecentOrders.Text = "📋 Đơn hàng gần đây";
             // 
@@ -292,7 +292,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlQuickActions.Controls.Add(pnlActionsFlow);
             pnlQuickActions.Controls.Add(lblQuickActions);
             pnlQuickActions.Dock = DockStyle.Top;
-            pnlQuickActions.Location = new Point(25, 165);
+            pnlQuickActions.Location = new Point(25, 160);
             pnlQuickActions.Margin = new Padding(3, 4, 3, 4);
             pnlQuickActions.Name = "pnlQuickActions";
             pnlQuickActions.Padding = new Padding(0, 0, 0, 15);
@@ -334,9 +334,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction1Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction1Icon.ForeColor = Color.FromArgb(46, 204, 113);
-            lblAction1Icon.Location = new Point(0, 5);
+            lblAction1Icon.Location = new Point(3, 0);
             lblAction1Icon.Name = "lblAction1Icon";
-            lblAction1Icon.Size = new Size(200, 60);
+            lblAction1Icon.Size = new Size(200, 70);
             lblAction1Icon.TabIndex = 0;
             lblAction1Icon.Text = "📝";
             lblAction1Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -380,9 +380,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction2Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction2Icon.ForeColor = Color.FromArgb(155, 89, 182);
-            lblAction2Icon.Location = new Point(0, 5);
+            lblAction2Icon.Location = new Point(3, 0);
             lblAction2Icon.Name = "lblAction2Icon";
-            lblAction2Icon.Size = new Size(200, 60);
+            lblAction2Icon.Size = new Size(200, 70);
             lblAction2Icon.TabIndex = 0;
             lblAction2Icon.Text = "👗";
             lblAction2Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -426,9 +426,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction3Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction3Icon.ForeColor = Color.FromArgb(52, 152, 219);
-            lblAction3Icon.Location = new Point(0, 5);
+            lblAction3Icon.Location = new Point(3, 0);
             lblAction3Icon.Name = "lblAction3Icon";
-            lblAction3Icon.Size = new Size(200, 60);
+            lblAction3Icon.Size = new Size(200, 70);
             lblAction3Icon.TabIndex = 0;
             lblAction3Icon.Text = "📋";
             lblAction3Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -472,9 +472,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction4Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction4Icon.ForeColor = Color.FromArgb(231, 76, 60);
-            lblAction4Icon.Location = new Point(0, 5);
+            lblAction4Icon.Location = new Point(0, 0);
             lblAction4Icon.Name = "lblAction4Icon";
-            lblAction4Icon.Size = new Size(200, 60);
+            lblAction4Icon.Size = new Size(200, 70);
             lblAction4Icon.TabIndex = 0;
             lblAction4Icon.Text = "👥";
             lblAction4Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -518,9 +518,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction5Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction5Icon.ForeColor = Color.FromArgb(241, 196, 15);
-            lblAction5Icon.Location = new Point(0, 5);
+            lblAction5Icon.Location = new Point(0, 0);
             lblAction5Icon.Name = "lblAction5Icon";
-            lblAction5Icon.Size = new Size(200, 60);
+            lblAction5Icon.Size = new Size(200, 70);
             lblAction5Icon.TabIndex = 0;
             lblAction5Icon.Text = "📦";
             lblAction5Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -564,9 +564,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction6Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction6Icon.ForeColor = Color.FromArgb(30, 60, 114);
-            lblAction6Icon.Location = new Point(0, 5);
+            lblAction6Icon.Location = new Point(3, 0);
             lblAction6Icon.Name = "lblAction6Icon";
-            lblAction6Icon.Size = new Size(200, 60);
+            lblAction6Icon.Size = new Size(200, 70);
             lblAction6Icon.TabIndex = 0;
             lblAction6Icon.Text = "📊";
             lblAction6Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -601,7 +601,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             cardAction7.Controls.Add(lblAction7Desc);
             cardAction7.Cursor = Cursors.Hand;
             cardAction7.Location = new Point(1290, 0);
-            cardAction7.Margin = new Padding(0, 0, 0, 0);
+            cardAction7.Margin = new Padding(0);
             cardAction7.Name = "cardAction7";
             cardAction7.Size = new Size(200, 145);
             cardAction7.TabIndex = 6;
@@ -610,9 +610,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             lblAction7Icon.Font = new Font("Segoe UI Emoji", 32F);
             lblAction7Icon.ForeColor = Color.FromArgb(142, 68, 173);
-            lblAction7Icon.Location = new Point(0, 5);
+            lblAction7Icon.Location = new Point(0, 0);
             lblAction7Icon.Name = "lblAction7Icon";
-            lblAction7Icon.Size = new Size(200, 60);
+            lblAction7Icon.Size = new Size(200, 70);
             lblAction7Icon.TabIndex = 0;
             lblAction7Icon.Text = "⚙️";
             lblAction7Icon.TextAlign = ContentAlignment.MiddleCenter;
@@ -646,7 +646,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblQuickActions.ForeColor = Color.FromArgb(45, 52, 54);
             lblQuickActions.Location = new Point(0, 0);
             lblQuickActions.Name = "lblQuickActions";
-            lblQuickActions.Size = new Size(210, 32);
+            lblQuickActions.Size = new Size(230, 32);
             lblQuickActions.TabIndex = 0;
             lblQuickActions.Text = "⚡ Thao tác nhanh";
             // 
@@ -663,7 +663,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlStatsCards.Margin = new Padding(0);
             pnlStatsCards.Name = "pnlStatsCards";
             pnlStatsCards.Padding = new Padding(0, 0, 0, 15);
-            pnlStatsCards.Size = new Size(1533, 140);
+            pnlStatsCards.Size = new Size(1533, 135);
             pnlStatsCards.TabIndex = 0;
             pnlStatsCards.WrapContents = false;
             // 
@@ -686,9 +686,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat1Icon.AutoSize = true;
             lblStat1Icon.Font = new Font("Segoe UI Emoji", 26F);
             lblStat1Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
-            lblStat1Icon.Location = new Point(195, 8);
+            lblStat1Icon.Location = new Point(200, 0);
             lblStat1Icon.Name = "lblStat1Icon";
-            lblStat1Icon.Size = new Size(70, 58);
+            lblStat1Icon.Size = new Size(85, 58);
             lblStat1Icon.TabIndex = 0;
             lblStat1Icon.Text = "💰";
             // 
@@ -699,7 +699,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat1Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
             lblStat1Title.Location = new Point(15, 12);
             lblStat1Title.Name = "lblStat1Title";
-            lblStat1Title.Size = new Size(130, 23);
+            lblStat1Title.Size = new Size(142, 23);
             lblStat1Title.TabIndex = 1;
             lblStat1Title.Text = "Doanh thu tháng";
             lblStat1Title.Click += lblStat1Title_Click;
@@ -711,7 +711,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat1Value.ForeColor = Color.White;
             lblStat1Value.Location = new Point(15, 45);
             lblStat1Value.Name = "lblStat1Value";
-            lblStat1Value.Size = new Size(120, 46);
+            lblStat1Value.Size = new Size(124, 46);
             lblStat1Value.TabIndex = 2;
             lblStat1Value.Text = "0 VNĐ";
             // 
@@ -734,9 +734,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat2Icon.AutoSize = true;
             lblStat2Icon.Font = new Font("Segoe UI Emoji", 26F);
             lblStat2Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
-            lblStat2Icon.Location = new Point(195, 8);
+            lblStat2Icon.Location = new Point(195, 0);
             lblStat2Icon.Name = "lblStat2Icon";
-            lblStat2Icon.Size = new Size(70, 58);
+            lblStat2Icon.Size = new Size(85, 58);
             lblStat2Icon.TabIndex = 0;
             lblStat2Icon.Text = "📦";
             // 
@@ -747,7 +747,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat2Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
             lblStat2Title.Location = new Point(15, 12);
             lblStat2Title.Name = "lblStat2Title";
-            lblStat2Title.Size = new Size(140, 23);
+            lblStat2Title.Size = new Size(158, 23);
             lblStat2Title.TabIndex = 1;
             lblStat2Title.Text = "Đơn hàng hôm nay";
             // 
@@ -758,7 +758,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat2Value.ForeColor = Color.White;
             lblStat2Value.Location = new Point(15, 45);
             lblStat2Value.Name = "lblStat2Value";
-            lblStat2Value.Size = new Size(100, 46);
+            lblStat2Value.Size = new Size(113, 46);
             lblStat2Value.TabIndex = 2;
             lblStat2Value.Text = "0 đơn";
             // 
@@ -781,9 +781,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat3Icon.AutoSize = true;
             lblStat3Icon.Font = new Font("Segoe UI Emoji", 26F);
             lblStat3Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
-            lblStat3Icon.Location = new Point(195, 8);
+            lblStat3Icon.Location = new Point(195, 0);
             lblStat3Icon.Name = "lblStat3Icon";
-            lblStat3Icon.Size = new Size(70, 58);
+            lblStat3Icon.Size = new Size(85, 58);
             lblStat3Icon.TabIndex = 0;
             lblStat3Icon.Text = "👗";
             // 
@@ -794,7 +794,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat3Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
             lblStat3Title.Location = new Point(15, 12);
             lblStat3Title.Name = "lblStat3Title";
-            lblStat3Title.Size = new Size(110, 23);
+            lblStat3Title.Size = new Size(129, 23);
             lblStat3Title.TabIndex = 1;
             lblStat3Title.Text = "Tổng sản phẩm";
             // 
@@ -805,7 +805,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat3Value.ForeColor = Color.White;
             lblStat3Value.Location = new Point(15, 45);
             lblStat3Value.Name = "lblStat3Value";
-            lblStat3Value.Size = new Size(150, 46);
+            lblStat3Value.Size = new Size(202, 46);
             lblStat3Value.TabIndex = 2;
             lblStat3Value.Text = "0 sản phẩm";
             // 
@@ -828,9 +828,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat4Icon.AutoSize = true;
             lblStat4Icon.Font = new Font("Segoe UI Emoji", 26F);
             lblStat4Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
-            lblStat4Icon.Location = new Point(195, 8);
+            lblStat4Icon.Location = new Point(195, 0);
             lblStat4Icon.Name = "lblStat4Icon";
-            lblStat4Icon.Size = new Size(70, 58);
+            lblStat4Icon.Size = new Size(85, 58);
             lblStat4Icon.TabIndex = 0;
             lblStat4Icon.Text = "👥";
             // 
@@ -841,7 +841,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat4Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
             lblStat4Title.Location = new Point(15, 12);
             lblStat4Title.Name = "lblStat4Title";
-            lblStat4Title.Size = new Size(120, 23);
+            lblStat4Title.Size = new Size(143, 23);
             lblStat4Title.TabIndex = 1;
             lblStat4Title.Text = "Tổng khách hàng";
             // 
@@ -852,7 +852,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat4Value.ForeColor = Color.White;
             lblStat4Value.Location = new Point(15, 45);
             lblStat4Value.Name = "lblStat4Value";
-            lblStat4Value.Size = new Size(120, 46);
+            lblStat4Value.Size = new Size(142, 46);
             lblStat4Value.TabIndex = 2;
             lblStat4Value.Text = "0 khách";
             // 
@@ -875,9 +875,9 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat5Icon.AutoSize = true;
             lblStat5Icon.Font = new Font("Segoe UI Emoji", 26F);
             lblStat5Icon.ForeColor = Color.FromArgb(60, 255, 255, 255);
-            lblStat5Icon.Location = new Point(195, 8);
+            lblStat5Icon.Location = new Point(195, 0);
             lblStat5Icon.Name = "lblStat5Icon";
-            lblStat5Icon.Size = new Size(70, 58);
+            lblStat5Icon.Size = new Size(85, 58);
             lblStat5Icon.TabIndex = 0;
             lblStat5Icon.Text = "⚠️";
             // 
@@ -888,7 +888,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat5Title.ForeColor = Color.FromArgb(220, 255, 255, 255);
             lblStat5Title.Location = new Point(15, 12);
             lblStat5Title.Name = "lblStat5Title";
-            lblStat5Title.Size = new Size(120, 23);
+            lblStat5Title.Size = new Size(148, 23);
             lblStat5Title.TabIndex = 1;
             lblStat5Title.Text = "Cảnh báo tồn kho";
             // 
@@ -899,7 +899,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             lblStat5Value.ForeColor = Color.White;
             lblStat5Value.Location = new Point(15, 45);
             lblStat5Value.Name = "lblStat5Value";
-            lblStat5Value.Size = new Size(150, 46);
+            lblStat5Value.Size = new Size(202, 46);
             lblStat5Value.TabIndex = 2;
             lblStat5Value.Text = "0 sản phẩm";
             // 
@@ -911,7 +911,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             statusStrip.Location = new Point(0, 1023);
             statusStrip.Name = "statusStrip";
             statusStrip.Padding = new Padding(1, 0, 16, 0);
-            statusStrip.Size = new Size(1583, 30);
+            statusStrip.Size = new Size(1583, 26);
             statusStrip.TabIndex = 3;
             statusStrip.Text = "statusStrip";
             // 
@@ -919,10 +919,11 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             statusLabel.ForeColor = Color.White;
             statusLabel.Name = "statusLabel";
-            statusLabel.Size = new Size(1354, 24);
+            statusLabel.Size = new Size(1527, 20);
             statusLabel.Spring = true;
-            statusLabel.Text = "✅ Sẵn sàng";
+            statusLabel.Text = "Sẵn sàng";
             statusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            statusLabel.Click += statusLabel_Click;
             // 
             // MainForm
             // 
@@ -953,19 +954,12 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlQuickActions.PerformLayout();
             pnlActionsFlow.ResumeLayout(false);
             cardAction1.ResumeLayout(false);
-            cardAction1.PerformLayout();
             cardAction2.ResumeLayout(false);
-            cardAction2.PerformLayout();
             cardAction3.ResumeLayout(false);
-            cardAction3.PerformLayout();
             cardAction4.ResumeLayout(false);
-            cardAction4.PerformLayout();
             cardAction5.ResumeLayout(false);
-            cardAction5.PerformLayout();
             cardAction6.ResumeLayout(false);
-            cardAction6.PerformLayout();
             cardAction7.ResumeLayout(false);
-            cardAction7.PerformLayout();
             pnlStatsCards.ResumeLayout(false);
             cardStat1.ResumeLayout(false);
             cardStat1.PerformLayout();

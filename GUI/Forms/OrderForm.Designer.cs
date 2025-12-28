@@ -222,7 +222,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // splitContainer.Panel2
             // 
             splitContainer.Panel2.Controls.Add(pnlProductImage);
-            splitContainer.Size = new Size(1100, 430);
+            splitContainer.Size = new Size(1100, 460);
             splitContainer.SplitterDistance = 750;
             splitContainer.SplitterWidth = 5;
             splitContainer.TabIndex = 2;
@@ -242,7 +242,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             gridOrderItems.Name = "gridOrderItems";
             gridOrderItems.RowHeadersWidth = 40;
             gridOrderItems.RowTemplate.Height = 32;
-            gridOrderItems.Size = new Size(750, 430);
+            gridOrderItems.Size = new Size(750, 460);
             gridOrderItems.TabIndex = 0;
             // 
             // pnlProductImage
@@ -256,7 +256,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlProductImage.Margin = new Padding(0);
             pnlProductImage.Name = "pnlProductImage";
             pnlProductImage.Padding = new Padding(15);
-            pnlProductImage.Size = new Size(345, 430);
+            pnlProductImage.Size = new Size(345, 460);
             pnlProductImage.TabIndex = 0;
             // 
             // picProductImage
@@ -267,7 +267,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             picProductImage.Location = new Point(15, 45);
             picProductImage.Margin = new Padding(0);
             picProductImage.Name = "picProductImage";
-            picProductImage.Size = new Size(313, 368);
+            picProductImage.Size = new Size(313, 398);
             picProductImage.SizeMode = PictureBoxSizeMode.Zoom;
             picProductImage.TabIndex = 1;
             picProductImage.TabStop = false;
@@ -285,6 +285,7 @@ namespace WinFormsFashionShop.Presentation.Forms
             // 
             // pnlTotal
             // 
+            pnlTotal.BackColor = Color.FromArgb(248, 249, 250);
             pnlTotal.Controls.Add(lblPaymentMethod);
             pnlTotal.Controls.Add(cmbPaymentMethod);
             pnlTotal.Controls.Add(lblDiscount);
@@ -295,84 +296,87 @@ namespace WinFormsFashionShop.Presentation.Forms
             pnlTotal.Controls.Add(btnSaveOrder);
             pnlTotal.Controls.Add(btnCancel);
             pnlTotal.Dock = DockStyle.Bottom;
-            pnlTotal.Location = new Point(0, 620);
+            pnlTotal.Location = new Point(0, 650);
             pnlTotal.Margin = new Padding(0);
             pnlTotal.Name = "pnlTotal";
-            pnlTotal.Padding = new Padding(15);
-            pnlTotal.Size = new Size(1100, 130);
+            pnlTotal.Padding = new Padding(20);
+            pnlTotal.Size = new Size(1100, 100);
             pnlTotal.TabIndex = 3;
             // 
             // lblPaymentMethod
             // 
             lblPaymentMethod.AutoSize = true;
-            lblPaymentMethod.Font = new Font("Arial", 10F);
+            lblPaymentMethod.Font = new Font("Segoe UI", 10F);
             lblPaymentMethod.Location = new Point(20, 55);
             lblPaymentMethod.Name = "lblPaymentMethod";
-            lblPaymentMethod.Size = new Size(193, 19);
+            lblPaymentMethod.Size = new Size(130, 23);
             lblPaymentMethod.TabIndex = 7;
-            lblPaymentMethod.Text = "Phương thức thanh toán:";
+            lblPaymentMethod.Text = "💳 Thanh toán:";
             // 
             // cmbPaymentMethod
             // 
             cmbPaymentMethod.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbPaymentMethod.Font = new Font("Arial", 10F);
+            cmbPaymentMethod.Font = new Font("Segoe UI", 10F);
             cmbPaymentMethod.FormattingEnabled = true;
-            cmbPaymentMethod.Location = new Point(216, 52);
+            cmbPaymentMethod.Location = new Point(130, 52);
             cmbPaymentMethod.Margin = new Padding(0);
             cmbPaymentMethod.Name = "cmbPaymentMethod";
-            cmbPaymentMethod.Size = new Size(250, 27);
+            cmbPaymentMethod.Size = new Size(180, 31);
             cmbPaymentMethod.TabIndex = 8;
             // 
             // lblDiscount
             // 
             lblDiscount.AutoSize = true;
-            lblDiscount.Font = new Font("Arial", 10F);
-            lblDiscount.Location = new Point(20, 20);
+            lblDiscount.Font = new Font("Segoe UI", 10F);
+            lblDiscount.Location = new Point(20, 22);
             lblDiscount.Name = "lblDiscount";
-            lblDiscount.Size = new Size(111, 19);
+            lblDiscount.Size = new Size(111, 23);
             lblDiscount.TabIndex = 0;
             lblDiscount.Text = "Giảm giá (%):";
             // 
             // txtDiscountPercent
             // 
-            txtDiscountPercent.Font = new Font("Arial", 10F);
-            txtDiscountPercent.Location = new Point(130, 17);
+            txtDiscountPercent.Font = new Font("Segoe UI", 10F);
+            txtDiscountPercent.Location = new Point(127, 19);
             txtDiscountPercent.Margin = new Padding(0);
             txtDiscountPercent.Name = "txtDiscountPercent";
-            txtDiscountPercent.Size = new Size(100, 27);
+            txtDiscountPercent.Size = new Size(70, 30);
             txtDiscountPercent.TabIndex = 1;
             txtDiscountPercent.Text = "0";
             // 
             // lblDiscountAmount
             // 
             lblDiscountAmount.AutoSize = true;
-            lblDiscountAmount.Font = new Font("Arial", 10F);
-            lblDiscountAmount.Location = new Point(250, 20);
+            lblDiscountAmount.Font = new Font("Segoe UI", 10F);
+            lblDiscountAmount.Location = new Point(200, 22);
             lblDiscountAmount.Name = "lblDiscountAmount";
-            lblDiscountAmount.Size = new Size(130, 19);
+            lblDiscountAmount.Size = new Size(105, 23);
             lblDiscountAmount.TabIndex = 2;
-            lblDiscountAmount.Text = "Giảm giá (VNĐ):";
+            lblDiscountAmount.Text = "Giảm (VNĐ):";
             // 
             // txtDiscountAmount
             // 
-            txtDiscountAmount.Font = new Font("Arial", 10F);
-            txtDiscountAmount.Location = new Point(383, 17);
+            txtDiscountAmount.Font = new Font("Segoe UI", 10F);
+            txtDiscountAmount.Location = new Point(310, 19);
             txtDiscountAmount.Margin = new Padding(0);
             txtDiscountAmount.Name = "txtDiscountAmount";
-            txtDiscountAmount.Size = new Size(150, 27);
+            txtDiscountAmount.Size = new Size(120, 30);
             txtDiscountAmount.TabIndex = 3;
             txtDiscountAmount.Text = "0";
             // 
             // lblTotal
             // 
-            lblTotal.AutoSize = true;
-            lblTotal.Font = new Font("Arial", 14F, FontStyle.Bold);
-            lblTotal.ForeColor = Color.Red;
-            lblTotal.Location = new Point(20, 95);
+            lblTotal.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            lblTotal.BackColor = Color.FromArgb(220, 53, 69);
+            lblTotal.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            lblTotal.ForeColor = Color.White;
+            lblTotal.Location = new Point(540, 20);
             lblTotal.Name = "lblTotal";
-            lblTotal.Size = new Size(207, 29);
+            lblTotal.Padding = new Padding(10, 5, 10, 5);
+            lblTotal.Size = new Size(300, 55);
             lblTotal.TabIndex = 4;
-            lblTotal.Text = "Tổng tiền: 0 VNĐ";
+            lblTotal.Text = "💰 TỔNG: 0 VNĐ";
+            lblTotal.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // btnSaveOrder
             // 
@@ -380,16 +384,16 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnSaveOrder.BackColor = Color.FromArgb(34, 139, 34);
             btnSaveOrder.Cursor = Cursors.Hand;
             btnSaveOrder.FlatAppearance.BorderSize = 0;
-            btnSaveOrder.FlatAppearance.MouseOverBackColor = Color.FromArgb(28, 120, 28);
+            btnSaveOrder.FlatAppearance.MouseOverBackColor = Color.FromArgb(40, 167, 69);
             btnSaveOrder.FlatStyle = FlatStyle.Flat;
-            btnSaveOrder.Font = new Font("Arial", 11F, FontStyle.Bold);
+            btnSaveOrder.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnSaveOrder.ForeColor = Color.White;
-            btnSaveOrder.Location = new Point(755, 20);
+            btnSaveOrder.Location = new Point(855, 15);
             btnSaveOrder.Margin = new Padding(0);
             btnSaveOrder.Name = "btnSaveOrder";
-            btnSaveOrder.Size = new Size(185, 45);
+            btnSaveOrder.Size = new Size(130, 65);
             btnSaveOrder.TabIndex = 5;
-            btnSaveOrder.Text = "💾 Lưu hóa đơn";
+            btnSaveOrder.Text = "💾 THANH TOÁN\n(F12)";
             btnSaveOrder.UseVisualStyleBackColor = false;
             // 
             // btnCancel
@@ -400,14 +404,14 @@ namespace WinFormsFashionShop.Presentation.Forms
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.FlatAppearance.MouseOverBackColor = Color.FromArgb(90, 98, 104);
             btnCancel.FlatStyle = FlatStyle.Flat;
-            btnCancel.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnCancel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
             btnCancel.ForeColor = Color.White;
-            btnCancel.Location = new Point(950, 20);
+            btnCancel.Location = new Point(995, 15);
             btnCancel.Margin = new Padding(0);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new Size(100, 45);
+            btnCancel.Size = new Size(90, 65);
             btnCancel.TabIndex = 6;
-            btnCancel.Text = "❌ Hủy";
+            btnCancel.Text = "❌ HỦY\n(Esc)";
             btnCancel.UseVisualStyleBackColor = false;
             // 
             // OrderForm
