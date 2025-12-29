@@ -188,21 +188,16 @@ jobs:
       continue-on-error: true
       
     - name: Create release packages
+      id: create_packages
+      shell: pwsh
       run: |
         $version = "${{ needs.version.outputs.version }}"
         $date = Get-Date -Format "yyyyMMdd"
         $commitHash = "${{ github.sha }}"
         $buildNumber = "${{ github.run_number }}"
         
-        # Create version info
-        $versionInfo = @"
-Version: $version
-Build Date: $date
-Build Number: $buildNumber
-Commit: $commitHash
-Runtime: ${{ env.RUNTIME }}
-.NET Version: ${{ env.DOTNET_VERSION }}
-"@
+        # Create version info (avoid heredoc for YAML compatibility)
+        $versionInfo = "Version: $version`nBuild Date: $date`nBuild Number: $buildNumber`nCommit: $commitHash`nRuntime: ${{ env.RUNTIME }}`n.NET Version: ${{ env.DOTNET_VERSION }}"
         
         # Package 1: Full Package (Self-contained)
         Write-Host "Creating full package..." -ForegroundColor Cyan
@@ -215,7 +210,7 @@ Runtime: ${{ env.RUNTIME }}
         Copy-Item -Path "./README.md" -Destination "./release-package/" -Force
         $versionInfo | Out-File -FilePath "./release-package/VERSION.txt" -Encoding UTF8
         Compress-Archive -Path "./release-package/*" -DestinationPath "./$packageName.zip" -Force
-        echo "PACKAGE_FULL=$packageName.zip" >> $env:GITHUB_ENV
+        echo "package_full=$packageName.zip" >> $env:GITHUB_OUTPUT
         
         # Package 2: Single File Package
         Write-Host "Creating single-file package..." -ForegroundColor Cyan
@@ -226,7 +221,7 @@ Runtime: ${{ env.RUNTIME }}
         Copy-Item -Path "./README.md" -Destination "./release-package-single/" -Force
         $versionInfo | Out-File -FilePath "./release-package-single/VERSION.txt" -Encoding UTF8
         Compress-Archive -Path "./release-package-single/*" -DestinationPath "./$singlePackageName.zip" -Force
-        echo "PACKAGE_SINGLE=$singlePackageName.zip" >> $env:GITHUB_ENV
+        echo "package_single=$singlePackageName.zip" >> $env:GITHUB_OUTPUT
         
         # Package 3: ClickOnce Package (if available)
         if (Test-Path "./publish/ClickOnce/setup.exe") {
@@ -242,7 +237,7 @@ Runtime: ${{ env.RUNTIME }}
           Copy-Item -Path "./README.md" -Destination "./release-package-clickonce/" -Force
           $versionInfo | Out-File -FilePath "./release-package-clickonce/VERSION.txt" -Encoding UTF8
           Compress-Archive -Path "./release-package-clickonce/*" -DestinationPath "./$clickOncePackageName.zip" -Force
-          echo "PACKAGE_CLICKONCE=$clickOncePackageName.zip" >> $env:GITHUB_ENV
+          echo "package_clickonce=$clickOncePackageName.zip" >> $env:GITHUB_OUTPUT
         }
         
     - name: Upload release artifacts
@@ -250,9 +245,9 @@ Runtime: ${{ env.RUNTIME }}
       with:
         name: release-packages-v${{ needs.version.outputs.version }}
         path: |
-          ${{ env.PACKAGE_FULL }}
-          ${{ env.PACKAGE_SINGLE }}
-          ${{ env.PACKAGE_CLICKONCE }}
+          ${{ steps.create_packages.outputs.package_full }}
+          ${{ steps.create_packages.outputs.package_single }}
+          ${{ steps.create_packages.outputs.package_clickonce }}
         if-no-files-found: error
         retention-days: 30
 
