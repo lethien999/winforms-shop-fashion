@@ -1,0 +1,389 @@
+# ============================================================================
+# Build/Release Workflow - Inspired by OpenBuilds/action-electron-build
+# ============================================================================
+# 
+# Workflow này hoạt động giống như electron-builder action:
+# - Build app trên MỌI push
+# - Tự động release khi push tag v*.*.* (ví dụ: v1.0.0)
+# - Tạo draft release để review trước khi publish
+#
+# Cách sử dụng:
+# 1. Build thường: Push code lên bất kỳ branch nào
+# 2. Release: 
+#    - Update version trong code (nếu cần)
+#    - git commit -am "Release v1.0.0"
+#    - git tag v1.0.0
+#    - git push && git push --tags
+# ============================================================================
+
+name: Build/Release
+
+on:
+  push:
+    branches: [ main, develop, master ]
+    tags:
+      - 'v*.*.*'  # Trigger release on version tags
+  pull_request:
+    branches: [ main, develop, master ]
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      create_release:
+        description: 'Create a release (even without tag)?'
+        type: boolean
+        default: false
+      version:
+        description: 'Version number (only if create_release is true)'
+        default: '1.0.0'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  RUNTIME: 'win-x64'
+  SOLUTION_FILE: 'WinFormsFashionShop.sln'
+
+jobs:
+  # ============================================================================
+  # Job 1: Build (runs on every push)
+  # ============================================================================
+  build:
+    name: Build
+    runs-on: windows-latest
+    timeout-minutes: 20
+    
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+      is_release: ${{ steps.get_version.outputs.is_release }}
+      is_prerelease: ${{ steps.get_version.outputs.is_prerelease }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for tags
+        
+    - name: Determine version and release type
+      id: get_version
+      shell: pwsh
+      run: |
+        $isRelease = "false"
+        $isPrerelease = "false"
+        $version = "0.0.0"
+        
+        # Check if this is a tag push
+        if ("${{ github.ref }}" -match "^refs/tags/v(.+)$") {
+          $version = $matches[1]
+          $isRelease = "true"
+          
+          # Check for prerelease indicators
+          if ($version -match "(alpha|beta|rc|preview)") {
+            $isPrerelease = "true"
+          }
+          Write-Host "✅ Tag detected: v$version (prerelease: $isPrerelease)"
+        }
+        # Check if manual dispatch with release flag
+        elseif ("${{ github.event.inputs.create_release }}" -eq "true") {
+          $version = "${{ github.event.inputs.version }}"
+          $isRelease = "true"
+          Write-Host "✅ Manual release: v$version"
+        }
+        else {
+          # Just a regular build
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $version = "0.0.0-dev.$shortSha"
+          Write-Host "📦 Development build: $version"
+        }
+        
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "is_release=$isRelease" >> $env:GITHUB_OUTPUT
+        echo "is_prerelease=$isPrerelease" >> $env:GITHUB_OUTPUT
+        
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+      
+    - name: Build solution
+      run: |
+        dotnet build ${{ env.SOLUTION_FILE }} `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --no-restore `
+          -p:Version=${{ steps.get_version.outputs.version }}
+      
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-output
+        path: |
+          GUI/bin/${{ env.BUILD_CONFIGURATION }}/net8.0-windows/
+          API/bin/${{ env.BUILD_CONFIGURATION }}/net8.0/
+        if-no-files-found: warn
+        retention-days: 7
+
+  # ============================================================================
+  # Job 2: Package & Release (only runs on tags or manual release)
+  # ============================================================================
+  release:
+    name: Package & Release
+    runs-on: windows-latest
+    needs: build
+    timeout-minutes: 30
+    
+    # Only run if this is a release (tag push or manual trigger)
+    if: needs.build.outputs.is_release == 'true'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore ${{ env.SOLUTION_FILE }}
+      
+    # -------------------------------------------------------------------------
+    # Publish Applications
+    # -------------------------------------------------------------------------
+    - name: Publish WinForms App (Full - Self-contained)
+      run: |
+        dotnet publish GUI/GUI.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/full `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:PublishSingleFile=false `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:Version=${{ needs.build.outputs.version }}
+          
+    - name: Publish WinForms App (Portable - Single File)
+      run: |
+        dotnet publish GUI/GUI.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/portable `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:PublishSingleFile=true `
+          -p:IncludeNativeLibrariesForSelfExtract=true `
+          -p:EnableCompressionInSingleFile=true `
+          -p:Version=${{ needs.build.outputs.version }}
+          
+    - name: Publish API Server
+      run: |
+        dotnet publish API/API.csproj `
+          --configuration ${{ env.BUILD_CONFIGURATION }} `
+          --output ./publish/api `
+          --self-contained true `
+          --runtime ${{ env.RUNTIME }} `
+          -p:Version=${{ needs.build.outputs.version }}
+          
+    # -------------------------------------------------------------------------
+    # Create Release Packages
+    # -------------------------------------------------------------------------
+    - name: Create release packages
+      id: package
+      shell: pwsh
+      run: |
+        $version = "${{ needs.build.outputs.version }}"
+        $date = Get-Date -Format "yyyy-MM-dd"
+        $commitHash = "${{ github.sha }}".Substring(0, 7)
+        
+        Write-Host "📦 Creating packages for v$version..." -ForegroundColor Cyan
+        
+        # Version info file
+        $versionInfo = @"
+        WinForms Fashion Shop Management System
+        ========================================
+        Version: $version
+        Build Date: $date
+        Commit: $commitHash
+        Runtime: ${{ env.RUNTIME }}
+        .NET: ${{ env.DOTNET_VERSION }}
+        "@
+        
+        # -----------------------------------------------------------------------
+        # Package 1: Full Package (recommended for first-time install)
+        # -----------------------------------------------------------------------
+        $fullPackageName = "WinFormsFashionShop-v$version-full-win64"
+        Write-Host "Creating $fullPackageName.zip..." -ForegroundColor Green
+        
+        New-Item -ItemType Directory -Path "./packages/full" -Force | Out-Null
+        Copy-Item -Path "./publish/full/*" -Destination "./packages/full/" -Recurse -Force
+        
+        # Include API server
+        New-Item -ItemType Directory -Path "./packages/full/PaymentAPI" -Force | Out-Null
+        Copy-Item -Path "./publish/api/*" -Destination "./packages/full/PaymentAPI/" -Recurse -Force
+        
+        # Include database script and docs
+        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./packages/full/" -Force
+        Copy-Item -Path "./README.md" -Destination "./packages/full/" -Force
+        Copy-Item -Path "./PUBLISH_GUIDE.md" -Destination "./packages/full/" -Force -ErrorAction SilentlyContinue
+        $versionInfo | Out-File -FilePath "./packages/full/VERSION.txt" -Encoding UTF8
+        
+        Compress-Archive -Path "./packages/full/*" -DestinationPath "./$fullPackageName.zip" -Force
+        
+        # -----------------------------------------------------------------------
+        # Package 2: Portable Package (single executable)
+        # -----------------------------------------------------------------------
+        $portablePackageName = "WinFormsFashionShop-v$version-portable-win64"
+        Write-Host "Creating $portablePackageName.zip..." -ForegroundColor Green
+        
+        New-Item -ItemType Directory -Path "./packages/portable" -Force | Out-Null
+        Copy-Item -Path "./publish/portable/GUI.exe" -Destination "./packages/portable/WinFormsFashionShop.exe" -Force
+        Copy-Item -Path "./Database/CreateDatabase.sql" -Destination "./packages/portable/" -Force
+        Copy-Item -Path "./README.md" -Destination "./packages/portable/" -Force
+        $versionInfo | Out-File -FilePath "./packages/portable/VERSION.txt" -Encoding UTF8
+        
+        Compress-Archive -Path "./packages/portable/*" -DestinationPath "./$portablePackageName.zip" -Force
+        
+        # -----------------------------------------------------------------------
+        # Package 3: API Only (for server deployment)
+        # -----------------------------------------------------------------------
+        $apiPackageName = "WinFormsFashionShop-PaymentAPI-v$version-win64"
+        Write-Host "Creating $apiPackageName.zip..." -ForegroundColor Green
+        
+        New-Item -ItemType Directory -Path "./packages/api" -Force | Out-Null
+        Copy-Item -Path "./publish/api/*" -Destination "./packages/api/" -Recurse -Force
+        $versionInfo | Out-File -FilePath "./packages/api/VERSION.txt" -Encoding UTF8
+        
+        Compress-Archive -Path "./packages/api/*" -DestinationPath "./$apiPackageName.zip" -Force
+        
+        # Output file names for release step
+        echo "full_package=$fullPackageName.zip" >> $env:GITHUB_OUTPUT
+        echo "portable_package=$portablePackageName.zip" >> $env:GITHUB_OUTPUT
+        echo "api_package=$apiPackageName.zip" >> $env:GITHUB_OUTPUT
+        
+        # List created packages
+        Write-Host "`n✅ Packages created:" -ForegroundColor Cyan
+        Get-ChildItem -Path "./*.zip" | ForEach-Object {
+          $size = [math]::Round($_.Length / 1MB, 2)
+          Write-Host "  - $($_.Name) ($size MB)" -ForegroundColor White
+        }
+        
+    # -------------------------------------------------------------------------
+    # Upload Artifacts
+    # -------------------------------------------------------------------------
+    - name: Upload release packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-v${{ needs.build.outputs.version }}
+        path: |
+          ./*.zip
+        if-no-files-found: error
+        retention-days: 90
+        
+    # -------------------------------------------------------------------------
+    # Create GitHub Release (Draft by default for review)
+    # -------------------------------------------------------------------------
+    - name: Generate release notes
+      id: release_notes
+      shell: pwsh
+      run: |
+        $version = "${{ needs.build.outputs.version }}"
+        $date = Get-Date -Format "yyyy-MM-dd"
+        $commitHash = "${{ github.sha }}".Substring(0, 7)
+        $isPrerelease = "${{ needs.build.outputs.is_prerelease }}"
+        
+        $releaseType = if ($isPrerelease -eq "true") { "🚧 Pre-release" } else { "🚀 Stable Release" }
+        
+        $notes = @"
+        # WinForms Fashion Shop v$version
+        
+        $releaseType | Released on $date
+        
+        ## 📥 Downloads
+        
+        | Package | Description | Recommended For |
+        |---------|-------------|-----------------|
+        | **full-win64.zip** | Complete package with API server | First-time installation |
+        | **portable-win64.zip** | Single executable file | Quick testing, USB drive |
+        | **PaymentAPI-win64.zip** | Payment API server only | Server deployment |
+        
+        ## 🚀 Quick Start
+        
+        1. Download the **full** package (recommended)
+        2. Extract to your preferred location
+        3. Run ``CreateDatabase.sql`` on SQL Server
+        4. Configure ``DatabaseConfig.cs`` (see README.md)
+        5. Run ``GUI.exe`` to start the application
+        
+        ## 📋 What's Included
+        
+        - ✅ WinForms POS Application
+        - ✅ Payment API Server (PayOS/VietQR integration)
+        - ✅ Database creation script
+        - ✅ Documentation
+        
+        ## 🔧 System Requirements
+        
+        - Windows 10/11 (64-bit)
+        - SQL Server 2019+ or SQL Server Express
+        - Internet connection (for PayOS payment)
+        
+        ## 📝 Full Changelog
+        
+        **Commit:** ``$commitHash``
+        
+        See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) for detailed documentation.
+        
+        ---
+        *Built with .NET 8.0 | [Report Issues](https://github.com/${{ github.repository }}/issues)*
+        "@
+        
+        $notes | Out-File -FilePath "./RELEASE_NOTES.md" -Encoding UTF8
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        name: v${{ needs.build.outputs.version }}
+        body_path: ./RELEASE_NOTES.md
+        draft: true  # Create as draft for review (like electron-builder)
+        prerelease: ${{ needs.build.outputs.is_prerelease == 'true' }}
+        files: |
+          ${{ steps.package.outputs.full_package }}
+          ${{ steps.package.outputs.portable_package }}
+          ${{ steps.package.outputs.api_package }}
+        fail_on_unmatched_files: true
+        generate_release_notes: true  # Auto-generate changelog from commits
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Release summary
+      shell: pwsh
+      run: |
+        Write-Host ""
+        Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+        Write-Host "║              🎉 RELEASE CREATED SUCCESSFULLY! 🎉               ║" -ForegroundColor Cyan
+        Write-Host "╠════════════════════════════════════════════════════════════════╣" -ForegroundColor Cyan
+        Write-Host "║  Version:  v${{ needs.build.outputs.version }}" -ForegroundColor White
+        Write-Host "║  Status:   DRAFT (review and publish manually)" -ForegroundColor Yellow
+        Write-Host "║  URL:      https://github.com/${{ github.repository }}/releases" -ForegroundColor White
+        Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host "📝 Next steps:" -ForegroundColor Yellow
+        Write-Host "   1. Go to GitHub Releases page" -ForegroundColor White
+        Write-Host "   2. Review the draft release" -ForegroundColor White
+        Write-Host "   3. Edit release notes if needed" -ForegroundColor White
+        Write-Host "   4. Click 'Publish release' when ready" -ForegroundColor White

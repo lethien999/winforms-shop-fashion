@@ -36,7 +36,7 @@ Hệ thống quản lý bán hàng (POS - Point of Sale) cho shop thời trang �
 ### Thư viện chính
 - **BCrypt.Net-Next** - Hash mật khẩu
 - **Microsoft.Data.SqlClient** - SQL Server client
-- **payOS** (v1.0.2) - Tích hợp thanh toán PayOS/VietQR
+- **payOS** (v2.0.1) - Tích hợp thanh toán PayOS/VietQR (sử dụng PayOSClient API mới)
 - **QRCoder** (v1.7.0) - Tạo QR code cho thanh toán
 - **Swashbuckle.AspNetCore** (v6.5.0) - Swagger/OpenAPI cho API
 
@@ -73,13 +73,15 @@ winforms-shop-fashion/
 │   ├── Composition/
 │   │   └── ServicesComposition.cs # Dependency injection setup
 │   ├── Constants/
-│   │   └── ApplicationConstants.cs # OrderStatus, PaymentMethod, etc.
+│   │   └── ApplicationConstants.cs # OrderStatus, PaymentMethod, UserRole, etc.
 │   ├── Mappers/                   # Entity <-> DTO mappers
 │   └── Services/                  # Business services
 │       ├── OrderService.cs         # Logic xử lý đơn hàng
 │       ├── ProductService.cs       # Logic quản lý sản phẩm
 │       ├── InventoryService.cs     # Logic quản lý tồn kho
 │       ├── AuthService.cs          # Xác thực người dùng
+│       ├── ReportService.cs        # Báo cáo doanh thu
+│       ├── DashboardService.cs     # Dashboard statistics
 │       └── ...
 │
 ├── DAO/                           # Data Access Layer
@@ -87,10 +89,12 @@ winforms-shop-fashion/
 │   │   ├── Order.cs
 │   │   ├── Product.cs
 │   │   ├── Customer.cs
+│   │   ├── PaymentTransaction.cs  # Entity tracking giao dịch PayOS
 │   │   └── ...
 │   ├── Repositories/              # Repository implementations
-│   │   ├── OrderRepository.cs
+│   │   ├── OrderRepository.cs     # Bao gồm ProcessPayOSWebhook
 │   │   ├── ProductRepository.cs
+│   │   ├── PaymentTransactionRepository.cs
 │   │   └── ...
 │   ├── ApplicationDbContext.cs    # EF Core DbContext (chỉ dùng migrations)
 │   └── DatabaseConfig.cs          # Connection string (KHÔNG commit)
@@ -105,19 +109,33 @@ winforms-shop-fashion/
 │   │   ├── MainForm.cs            # Form chính
 │   │   ├── LoginForm.cs           # Form đăng nhập
 │   │   ├── OrderForm.cs           # Form lập hóa đơn
+│   │   ├── OrderManagementForm.cs # Quản lý đơn hàng
 │   │   ├── ProductManagementForm.cs
+│   │   ├── InventoryAdjustmentForm.cs # Điều chỉnh tồn kho
+│   │   ├── ReportForm.cs          # Báo cáo
 │   │   ├── QRCodePaymentDialog.cs # Dialog hiển thị QR code
 │   │   └── ...
 │   ├── Controllers/               # UI Controllers
 │   ├── Helpers/                   # Helper classes
 │   │   ├── PayOSConfig.cs         # Cấu hình PayOS
+│   │   ├── ApiConfig.cs           # Cấu hình API URL
+│   │   ├── PrintHelper.cs         # In hóa đơn
 │   │   └── ...
-│   └── Services/                  # UI Services
-│       └── PaymentApiClientWithRetry.cs # Client gọi API
+│   ├── Services/                  # UI Services
+│   │   ├── PaymentApiClientWithRetry.cs # Client gọi API với retry
+│   │   ├── PayOSDirectClient.cs   # Client gọi PayOS trực tiếp
+│   │   └── PayOSService.cs        # Service xử lý PayOS
+│   └── Config/                    # Config files (runtime)
+│       ├── api.config.json        # API URL config
+│       └── payos.config.json      # PayOS credentials
 │
 ├── Database/
 │   ├── CreateDatabase.sql         # Script tạo database và tables
 │   └── GenerateBCryptHash.cs     # Tool tạo BCrypt hash
+│
+├── Scripts/                       # PowerShell scripts
+│   ├── Publish-ClickOnce.ps1      # Script publish ClickOnce
+│   └── Start-PaymentServices.ps1  # Script khởi động API services
 │
 ├── Images/                        # Thư mục lưu hình ảnh
 │   ├── Products/                  # Hình sản phẩm
@@ -245,8 +263,19 @@ public static string ConnectionString { get; set; } =
    - Vào menu: **Quản trị** → **Cấu hình PayOS**
    - Nhập Client ID, API Key, Checksum Key
    - Config được lưu tại: `GUI/bin/Debug/net8.0-windows/Config/payos.config.json`
+   
+4. **Cấu hình API URL cho WinForms app (tùy chọn):**
+   - Mặc định API URL là `https://localhost:7000`
+   - Để thay đổi, tạo file `GUI/bin/Debug/net8.0-windows/Config/api.config.json`:
+```json
+{
+  "Api": {
+    "BaseUrl": "https://localhost:7000"
+  }
+}
+```
 
-4. **Cấu hình cho API:**
+5. **Cấu hình cho API:**
    - Copy `API/appsettings.example.json` thành `API/appsettings.json`
    - Mở `API/appsettings.json` và cập nhật:
 ```json
@@ -301,7 +330,7 @@ cd API
 dotnet run
 ```
 
-API sẽ chạy tại: `https://localhost:5001` hoặc `http://localhost:5000`
+API sẽ chạy tại: `https://localhost:7000` (hoặc cấu hình trong `GUI/Config/api.config.json`)
 
 **Lưu ý:** 
 - API phải chạy trước khi WinForms app sử dụng tính năng thanh toán VietQR
@@ -324,8 +353,8 @@ API sẽ chạy tại: `https://localhost:5001` hoặc `http://localhost:5000`
    - Form chính (MainForm) hiển thị dashboard
 
 2. **API Server:**
-   - Terminal hiển thị: `Now listening on: https://localhost:5001`
-   - Mở browser: `https://localhost:5001/swagger` → Thấy Swagger UI
+   - Terminal hiển thị: `Now listening on: https://localhost:7000`
+   - Mở browser: `https://localhost:7000/swagger` → Thấy Swagger UI
 
 ---
 
@@ -620,9 +649,9 @@ Sau khi đăng nhập, bạn thấy:
 
 **Cách khắc phục:**
 1. Kiểm tra API đang chạy:
-   - Mở browser: `https://localhost:5001/swagger` → Phải thấy Swagger UI
-2. Kiểm tra URL trong `GUI/Services/PaymentApiClientWithRetry.cs`:
-   - BaseUrl phải là: `https://localhost:5001` (hoặc port API đang chạy)
+   - Mở browser: `https://localhost:7000/swagger` → Phải thấy Swagger UI
+2. Kiểm tra URL trong `GUI/Helpers/ApiConfig.cs` hoặc file config `GUI/Config/api.config.json`:
+   - BaseUrl phải là: `https://localhost:7000` (hoặc port API đang chạy)
 3. Restart API server nếu cần
 
 #### Lỗi: "PayOS API timeout" hoặc "Cannot resolve api.payos.vn"
@@ -700,7 +729,7 @@ SELECT * FROM INFORMATION_SCHEMA.TABLES;
 ### 10.4. Performance
 
 - **API chạy độc lập**: Có thể deploy API lên server riêng, WinForms app gọi qua HTTPS
-- **Logs**: Lỗi được log vào `GUI/Logs/error-YYYYMMDD.log`
+- **Logs**: Lỗi được log vào `GUI/bin/[Debug|Release]/net8.0-windows/Logs/error-YYYYMMDD.log`
 - **Retry logic**: `PaymentApiClientWithRetry` tự động retry khi gọi API thất bại
 
 ### 10.5. Deployment
@@ -712,9 +741,9 @@ SELECT * FROM INFORMATION_SCHEMA.TABLES;
 ### 10.6. Maintenance
 
 - **Backup database** định kỳ (hàng ngày/tuần)
-- **Kiểm tra logs** thường xuyên: `GUI/Logs/`
+- **Kiểm tra logs** thường xuyên: `GUI/bin/[Debug|Release]/net8.0-windows/Logs/`
 - **Update NuGet packages** định kỳ: `dotnet list package --outdated`
-- **Monitor PayOS webhook**: Kiểm tra `PaymentWebhooks` table trong database
+- **Monitor PayOS webhook**: Kiểm tra logs trong Debug Output hoặc `GUI/Logs/` folder
 
 ### 10.7. Troubleshooting Tips
 
@@ -733,7 +762,7 @@ SELECT * FROM INFORMATION_SCHEMA.TABLES;
 
 ## 11. API Endpoints
 
-### Payment API (Chạy tại: `https://localhost:5001`)
+### Payment API (Chạy tại: `https://localhost:7000`)
 
 #### POST `/api/payment/create`
 Tạo payment link từ PayOS cho đơn hàng mới.
@@ -752,9 +781,11 @@ Tạo payment link từ PayOS cho đơn hàng mới.
 {
   "success": true,
   "data": {
-    "paymentLink": "https://pay.payos.vn/web/...",
+    "orderCode": 6169,
+    "checkoutUrl": "https://pay.payos.vn/web/...",
     "qrCode": "data:image/png;base64,...",
-    "payOSOrderCode": 6169
+    "amount": 100000,
+    "description": "DH ORD202412220001"
   }
 }
 ```
@@ -768,13 +799,28 @@ Recheck trạng thái từ PayOS API (không tạo payment link mới).
 #### POST `/api/payment/webhook`
 Nhận webhook từ PayOS khi thanh toán thành công. (Internal use)
 
+#### PUT `/api/payment/update-payos-code/{orderId}`
+Cập nhật PayOSOrderCode cho order (dùng khi PayOSOrderCode bị NULL).
+
+**Request:**
+```json
+{
+  "payOSOrderCode": 6169
+}
+```
+
+#### POST `/api/payment/sync-payos-codes`
+Sync PayOSOrderCode tự động cho các orders có PayOSOrderCode = NULL.
+
+**Query params:** `?orderId=123` (optional - sync cho 1 order cụ thể)
+
 #### POST `/api/payment/force-update-paid/{orderId}`
 Force update order status = "Paid" (dùng khi PayOS API không kết nối được).
 
 #### GET `/api/payment/debug/{payOSOrderCode}`
-Debug endpoint để kiểm tra trạng thái PayOS trực tiếp.
+Debug endpoint để kiểm tra trạng thái PayOS trực tiếp với phân tích chi tiết.
 
-**Swagger UI:** `https://localhost:5001/swagger`
+**Swagger UI:** `https://localhost:7000/swagger`
 
 ---
 
@@ -783,16 +829,52 @@ Debug endpoint để kiểm tra trạng thái PayOS trực tiếp.
 ### Các bảng chính:
 
 - **Users**: Người dùng hệ thống (Admin, Staff)
+  - Id, Username, PasswordHash, FullName, Role, IsActive, CreatedAt, UpdatedAt
+  
 - **Categories**: Danh mục sản phẩm
+  - Id, CategoryName, Description, IsActive
+  
 - **Products**: Sản phẩm
+  - Id, ProductCode (unique), Name, CategoryId, UnitPrice, Unit, ImagePath, IsActive, CreatedAt, UpdatedAt
+  
 - **Customers**: Khách hàng
+  - Id, CustomerName, Phone, Email, Address, IsActive, CreatedAt, UpdatedAt
+  
 - **Orders**: Đơn hàng/Hóa đơn
+  - Id, OrderCode (unique), PayOSOrderCode (unique khi not null), OrderDate, CustomerId (nullable), UserId
+  - TotalAmount, PaymentMethod, Notes, Status (Pending/Processing/Paid/Failed/Cancelled)
+  - PaidAt (thời gian thanh toán), TransactionId (từ PayOS), PrintedAt (thời gian in)
+  
 - **OrderItems**: Chi tiết đơn hàng
+  - Id, OrderId, ProductId, Quantity, UnitPrice, LineTotal
+  
 - **Inventory**: Tồn kho
+  - Id, ProductId (unique - 1-1 relationship), QuantityInStock, LastUpdated
+
+### Order Status Flow:
+```
+Pending → Processing → Paid     (thanh toán thành công)
+       → Failed                  (thanh toán thất bại)
+       → Cancelled               (đã hủy)
+```
 
 ### Stored Procedures:
 
 - **ProcessPayOSWebhook**: Xử lý webhook từ PayOS (atomic transaction, idempotency)
+  - Được gọi từ `OrderRepository.ProcessPayOSWebhook()`
+  - Update Order status, PaidAt, TransactionId
+  - Đảm bảo idempotency (không xử lý trùng webhook)
+
+### Entity PaymentTransaction (code-side):
+
+Entity `PaymentTransaction` được định nghĩa trong `DAO/Entities/PaymentTransaction.cs` để tracking chi tiết giao dịch PayOS:
+- PayOSOrderCode, PaymentLinkId, Amount, Description
+- Bin, AccountNumber, AccountName, BankName
+- Status (PENDING/PAID/CANCELLED/EXPIRED)
+- CheckoutUrl, QrCode, CreatedAt, ExpiredAt, PaidAt
+- WebhookId, RawData (để debug)
+
+Tùy thuộc vào nhu cầu, có thể tạo bảng tương ứng trong database để lưu trữ chi tiết.
 
 Xem chi tiết schema trong `Database/CreateDatabase.sql`
 
@@ -802,48 +884,73 @@ Xem chi tiết schema trong `Database/CreateDatabase.sql`
 
 ### 13.1. CI/CD Pipeline
 
-Project đã được thiết lập **GitHub Actions** cho CI/CD:
+Project đã được thiết lập **GitHub Actions** cho CI/CD, lấy cảm hứng từ [electron-builder](https://github.com/OpenBuilds/action-electron-build):
 
-#### Continuous Integration (CI)
-- **Workflow:** `.github/workflows/ci.yml`
-- **Trigger:** Tự động chạy khi push code hoặc tạo Pull Request
+#### Build/Release Workflow (Recommended) ⭐
+- **Workflow:** `.github/workflows/build.yml`
+- **Trigger:** 
+  - Build trên MỌI push
+  - Release khi push tag `v*.*.*`
 - **Chức năng:**
   - Build solution với .NET 8.0
-  - Chạy tests (nếu có)
-  - Upload build artifacts
+  - Tự động tạo 3 packages khi release:
+    - Full package (với API server)
+    - Portable package (single executable)
+    - API-only package
+  - Tạo **draft release** để review trước khi publish
 
-#### Continuous Deployment (CD)
-- **Workflow:** `.github/workflows/cd-publish.yml`
-- **Trigger:** 
-  - Khi tạo tag version (ví dụ: `v1.0.0`)
-  - Hoặc trigger thủ công từ GitHub Actions tab
-- **Chức năng:**
-  - Publish WinForms app (self-contained)
-  - Tạo release package (ZIP)
-  - Tạo GitHub Release với download link
+#### CI Workflow
+- **Workflow:** `.github/workflows/ci.yml`
+- **Trigger:** Push code hoặc Pull Request
+- **Chức năng:** Build, quality checks, tests
+
+#### CD Workflow (Legacy)
+- **Workflow:** `.github/workflows/cd.yml`
+- **Trigger:** Tag version hoặc manual
+- **Chức năng:** Publish với ClickOnce support
 
 ### 13.2. Tạo Release
 
-#### Cách 1: Tạo Release từ Tag
+#### Cách 1: Tạo Release từ Tag (Recommended)
 
 ```bash
-# 1. Tạo tag version
-git tag -a v1.0.0 -m "Release version 1.0.0"
+# 1. Commit changes
+git add .
+git commit -m "Release v1.0.0"
 
-# 2. Push tag lên GitHub
-git push origin v1.0.0
+# 2. Tạo tag version
+git tag v1.0.0
+
+# 3. Push code và tag
+git push origin main
+git push --tags
 ```
 
-GitHub Actions sẽ tự động build và tạo release package.
+GitHub Actions sẽ tự động:
+1. Build và tạo packages
+2. Tạo **draft release** trên GitHub
+3. Bạn review và click "Publish release" khi sẵn sàng
 
 #### Cách 2: Trigger thủ công
 
 1. Vào GitHub repository → **Actions** tab
-2. Chọn workflow **CD - Publish WinForms App**
+2. Chọn workflow **Build/Release**
 3. Click **Run workflow**
-4. Nhập version number → **Run workflow**
+4. Chọn options:
+   - `create_release`: true
+   - `version`: 1.0.0
+5. Click **Run workflow**
 
-### 13.3. Đóng gói Ứng dụng
+### 13.3. Version Tags
+
+| Tag Format | Type | Description |
+|------------|------|-------------|
+| `v1.0.0` | Stable | Production release |
+| `v1.0.0-alpha` | Pre-release | Alpha testing |
+| `v1.0.0-beta` | Pre-release | Beta testing |
+| `v1.0.0-rc.1` | Pre-release | Release candidate |
+
+### 13.4. Đóng gói Ứng dụng
 
 Xem chi tiết trong file **[PUBLISH_GUIDE.md](./PUBLISH_GUIDE.md)** để biết:
 
@@ -884,11 +991,11 @@ dotnet publish GUI/GUI.csproj `
 
 Nếu gặp vấn đề, vui lòng:
 1. Kiểm tra phần "Lỗi thường gặp" ở trên
-2. Xem logs trong `GUI/Logs/`
+2. Xem logs trong `GUI/bin/[Debug|Release]/net8.0-windows/Logs/`
 3. Kiểm tra Debug Output trong Visual Studio
 4. Xem [PUBLISH_GUIDE.md](./PUBLISH_GUIDE.md) cho hướng dẫn đóng gói
 5. Tạo issue trên repository (nếu có)
 
 ---
 
-**Tài liệu được cập nhật lần cuối:** 2024-12-22
+**Tài liệu được cập nhật lần cuối:** 2025-12-29

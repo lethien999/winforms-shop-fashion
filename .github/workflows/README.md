@@ -4,14 +4,82 @@ Tài liệu hướng dẫn sử dụng các GitHub Actions workflows cho project
 
 ## 📋 Tổng quan
 
-Project có 2 workflows chính:
+Project có 3 workflows:
 
-1. **CI Workflow** (`.github/workflows/ci.yml`) - Continuous Integration
-2. **CD Workflow** (`.github/workflows/cd-publish.yml`) - Continuous Deployment
+| Workflow | File | Mục đích |
+|----------|------|----------|
+| **Build/Release** ⭐ | `build.yml` | Build trên mọi push, release khi có tag (Recommended) |
+| **CI** | `ci.yml` | Build và quality checks |
+| **CD** | `cd.yml` | Publish và release (legacy) |
+
+---
+
+## 🚀 Build/Release Workflow (Recommended)
+
+**File:** `.github/workflows/build.yml`
+
+Workflow này được thiết kế theo mô hình của [electron-builder](https://github.com/OpenBuilds/action-electron-build):
+- **Build trên MỌI push** - Tự động build và kiểm tra code
+- **Release khi có tag** - Tự động tạo GitHub Release khi push tag `v*.*.*`
+- **Draft release** - Release được tạo ở chế độ draft để review trước khi publish
+
+### 📦 Cách tạo Release mới
+
+```bash
+# 1. Commit changes
+git add .
+git commit -m "Release v1.0.0"
+
+# 2. Create version tag
+git tag v1.0.0
+
+# 3. Push code and tag
+git push origin main
+git push --tags
+```
+
+GitHub Actions sẽ tự động:
+1. Build solution
+2. Tạo 3 packages:
+   - `WinFormsFashionShop-v1.0.0-full-win64.zip` - Full package với API
+   - `WinFormsFashionShop-v1.0.0-portable-win64.zip` - Single executable
+   - `WinFormsFashionShop-PaymentAPI-v1.0.0-win64.zip` - API server only
+3. Tạo **draft release** trên GitHub
+
+### 📝 Publish Release
+
+Sau khi workflow chạy xong:
+
+1. Vào **Releases** page trên GitHub
+2. Tìm draft release mới tạo
+3. Review và chỉnh sửa release notes nếu cần
+4. Click **Publish release**
+
+### 🏷️ Version Tag Format
+
+| Tag | Type | Description |
+|-----|------|-------------|
+| `v1.0.0` | Stable | Production release |
+| `v1.0.0-alpha` | Pre-release | Alpha testing |
+| `v1.0.0-beta` | Pre-release | Beta testing |
+| `v1.0.0-rc.1` | Pre-release | Release candidate |
+
+### ⚙️ Manual Trigger
+
+Bạn cũng có thể trigger workflow thủ công:
+
+1. Vào **Actions** tab
+2. Chọn **Build/Release** workflow
+3. Click **Run workflow**
+4. Chọn options:
+   - `create_release`: true/false
+   - `version`: version number (e.g., 1.0.0)
 
 ---
 
 ## 🔄 CI Workflow - Build and Test
+
+**File:** `.github/workflows/ci.yml`
 
 ### Trigger
 - Tự động chạy khi:
@@ -43,7 +111,11 @@ Project có 2 workflows chính:
 
 ---
 
-## 🚀 CD Workflow - Publish and Release
+## � CD Workflow - Publish and Release (Legacy)
+
+**File:** `.github/workflows/cd.yml`
+
+> ⚠️ **Note:** Workflow này được giữ lại cho backward compatibility. Khuyến khích sử dụng **Build/Release** workflow mới.
 
 ### Trigger
 - Tự động chạy khi:
@@ -239,9 +311,23 @@ Thêm vào `ci.yml`:
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
 - [.NET Publish Documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/)
-- [Semantic Versioning](https://semver.org/)
+- [OpenBuilds/action-electron-build](https://github.com/OpenBuilds/action-electron-build) - Inspiration for build.yml
 
 ---
 
-**Tài liệu được cập nhật:** 2024-12-22
+## 📊 So sánh Workflows
+
+| Feature | build.yml ⭐ | ci.yml | cd.yml |
+|---------|-------------|--------|--------|
+| Build on push | ✅ | ✅ | ❌ |
+| Build on PR | ✅ | ✅ | ❌ |
+| Release on tag | ✅ | ❌ | ✅ |
+| Draft release | ✅ | ❌ | ❌ |
+| Code quality | ❌ | ✅ | ❌ |
+| ClickOnce | ❌ | ❌ | ✅ |
+| Recommended | ⭐ Yes | For CI only | Legacy |
+
+---
+
+**Tài liệu được cập nhật:** 2025-12-29
 
