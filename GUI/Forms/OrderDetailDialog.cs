@@ -17,18 +17,23 @@ namespace WinFormsFashionShop.Presentation.Forms
     /// </summary>
     public partial class OrderDetailDialog : Form
     {
-        private readonly OrderDTO _order;
+        private OrderDTO _order;
         private readonly IOrderService _orderService;
         private readonly ErrorHandlerService _errorHandler;
         private readonly PaymentApiClientWithRetry _apiClient;
 
         public OrderDetailDialog(OrderDTO order)
         {
-            _order = order ?? throw new ArgumentNullException(nameof(order));
+            if (order == null) throw new ArgumentNullException(nameof(order));
+            
             var services = ServicesComposition.Create();
             _orderService = services.OrderService;
             _errorHandler = new ErrorHandlerService();
             _apiClient = new PaymentApiClientWithRetry(ApiConfig.BaseUrl);
+            
+            // Reload order from database to get the latest status
+            _order = _orderService.GetOrderById(order.Id) ?? order;
+            
             InitializeComponent();
             
             // Assign event handlers to buttons (from Designer)

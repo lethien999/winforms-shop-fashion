@@ -308,7 +308,13 @@ namespace WinFormsFashionShop.Presentation.Forms
             }
 
             using var dialog = new OrderDetailDialog(order);
-            dialog.ShowDialog(this);
+            var result = dialog.ShowDialog(this);
+            
+            // Reload order list after dialog closes to reflect any status changes
+            if (result == DialogResult.OK)
+            {
+                LoadOrders();
+            }
         }
 
         /// <summary>

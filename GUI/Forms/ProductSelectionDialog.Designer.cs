@@ -247,10 +247,10 @@ namespace WinFormsFashionShop.Presentation.Forms
             // _lblProductInfo
             // 
             _lblProductInfo.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
-            _lblProductInfo.Font = new Font("Arial", 10F);
-            _lblProductInfo.Location = new Point(175, 45);
+            _lblProductInfo.Font = new Font("Arial", 9F);
+            _lblProductInfo.Location = new Point(175, 15);
             _lblProductInfo.Name = "_lblProductInfo";
-            _lblProductInfo.Size = new Size(710, 95);
+            _lblProductInfo.Size = new Size(710, 125);
             _lblProductInfo.TabIndex = 2;
             _lblProductInfo.Text = "Chọn sản phẩm để xem thông tin";
             // 

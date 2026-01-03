@@ -893,15 +893,26 @@ namespace WinFormsFashionShop.Presentation.Forms
         /// </summary>
         private void ShowOrderDetailAfterCreate(OrderDTO order)
         {
+            // Reload order from database to get latest status (webhook may have updated it)
+            var refreshedOrder = _orderService.GetOrderById(order.Id);
+            if (refreshedOrder == null)
+            {
+                refreshedOrder = order; // Fallback to original order if reload fails
+            }
+
+            var statusText = refreshedOrder.Status == OrderStatus.Paid ? "Đã thanh toán" :
+                            refreshedOrder.Status == OrderStatus.Cancelled ? "Đã hủy" : "Chờ thanh toán";
+            
             var message = $"Hóa đơn đã được tạo thành công!\n\n" +
-                         $"Mã đơn: {order.OrderCode}\n" +
-                         $"Tổng tiền: {order.TotalAmount:N0} VNĐ\n" +
-                         $"Phương thức: {order.PaymentMethod}\n\n" +
+                         $"Mã đơn: {refreshedOrder.OrderCode}\n" +
+                         $"Tổng tiền: {refreshedOrder.TotalAmount:N0} VNĐ\n" +
+                         $"Phương thức: {refreshedOrder.PaymentMethod}\n" +
+                         $"Trạng thái: {statusText}\n\n" +
                          $"Bạn có muốn xem chi tiết hóa đơn không?";
 
             if (_errorHandler.ShowConfirmation(message, "Hóa đơn đã tạo"))
             {
-                using var dialog = new OrderDetailDialog(order);
+                using var dialog = new OrderDetailDialog(refreshedOrder);
                 dialog.ShowDialog(this);
             }
         }

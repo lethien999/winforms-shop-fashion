@@ -342,11 +342,8 @@ namespace WinFormsFashionShop.Presentation.Forms
                                 stock // Stock (column 5)
                 );
 
-                            if (rowIndex >= 0 && rowIndex < _gridProducts.Rows.Count)
-                            {
-                var row = _gridProducts.Rows[rowIndex];
-                row.Tag = product;
-                            }
+                            // Always set Tag for the newly added row
+                            _gridProducts.Rows[rowIndex].Tag = product;
                         }
                         catch (Exception addEx)
                         {
@@ -362,6 +359,15 @@ namespace WinFormsFashionShop.Presentation.Forms
                         // Log error for individual product but continue with others
                         System.Diagnostics.Debug.WriteLine($"Error loading product {product?.ProductCode}: {ex.Message}");
                     }
+                }
+
+                // Auto-select first row after populating grid
+                if (_gridProducts.Rows.Count > 0)
+                {
+                    _gridProducts.ClearSelection();
+                    _gridProducts.Rows[0].Selected = true;
+                    _gridProducts.CurrentCell = _gridProducts.Rows[0].Cells[0];
+                    UpdateProductDetail();
                 }
             }
             catch (Exception ex)
@@ -396,7 +402,18 @@ namespace WinFormsFashionShop.Presentation.Forms
             var selectedRow = _gridProducts.SelectedRows[0];
             var product = selectedRow.Tag as ProductDTO;
 
-            if (product == null) return;
+            // If Tag is null, try to get product from filtered list by row index
+            if (product == null && selectedRow.Index >= 0 && selectedRow.Index < _filteredProducts.Count)
+            {
+                product = _filteredProducts[selectedRow.Index];
+            }
+
+            if (product == null)
+            {
+                _picProductImage.Image = null;
+                _lblProductInfo.Text = "Không thể tải thông tin sản phẩm";
+                return;
+            }
 
             // Load product image
             if (!string.IsNullOrWhiteSpace(product.ImagePath))
@@ -428,10 +445,10 @@ namespace WinFormsFashionShop.Presentation.Forms
             var inventory = _inventoryService.GetInventoryByProductId(product.Id);
             var stock = inventory?.QuantityInStock ?? 0;
 
-            _lblProductInfo.Text = $"Mã SP: {product.ProductCode}\n\n" +
-                                  $"Tên: {product.Name}\n\n" +
-                                  $"Danh mục: {GetCategoryName(product.CategoryId)}\n\n" +
-                                  $"Giá: {product.UnitPrice:N0} VNĐ\n\n" +
+            _lblProductInfo.Text = $"Mã SP: {product.ProductCode}\n" +
+                                  $"Tên: {product.Name}\n" +
+                                  $"Danh mục: {GetCategoryName(product.CategoryId)}\n" +
+                                  $"Giá: {product.UnitPrice:N0} VNĐ\n" +
                                   $"Tồn kho: {stock}";
         }
 

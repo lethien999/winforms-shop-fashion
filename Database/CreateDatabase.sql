@@ -428,6 +428,171 @@ END
 GO
 
 -- ============================================================================
+-- BƯỚC 11: TẠO BẢNG PAYMENTTRANSACTIONS (Giao dịch thanh toán PayOS)
+-- ============================================================================
+PRINT '';
+PRINT '========================================';
+PRINT 'BƯỚC 11: Tạo bảng PaymentTransactions';
+PRINT '========================================';
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'PaymentTransactions')
+BEGIN
+    CREATE TABLE PaymentTransactions (
+        Id INT PRIMARY KEY IDENTITY(1,1),
+        OrderId INT NOT NULL,                              -- FK -> Orders.Id
+        PayOSOrderCode BIGINT NOT NULL,                    -- Mã đơn từ PayOS (unique)
+        PaymentLinkId NVARCHAR(100) NULL,                  -- Payment Link ID từ PayOS
+        Amount INT NOT NULL,                               -- Số tiền thanh toán
+        Description NVARCHAR(100) NULL,                    -- Nội dung chuyển khoản
+        Bin NVARCHAR(20) NULL,                             -- Mã BIN ngân hàng
+        AccountNumber NVARCHAR(50) NULL,                   -- Số tài khoản nhận
+        AccountName NVARCHAR(100) NULL,                    -- Tên tài khoản nhận
+        BankName NVARCHAR(100) NULL,                       -- Tên ngân hàng
+        Currency NVARCHAR(10) NULL DEFAULT 'VND',          -- Mã tiền tệ
+        Status NVARCHAR(20) NULL DEFAULT 'PENDING',        -- PENDING, PAID, CANCELLED, EXPIRED
+        CheckoutUrl NVARCHAR(500) NULL,                    -- URL thanh toán
+        QrCode NVARCHAR(MAX) NULL,                         -- QR Code data
+        CreatedAt DATETIME NOT NULL DEFAULT GETDATE(),     -- Thời gian tạo
+        ExpiredAt DATETIME NULL,                           -- Thời gian hết hạn
+        PaidAt DATETIME NULL,                              -- Thời gian thanh toán
+        UpdatedAt DATETIME NULL,                           -- Lần cập nhật cuối
+        Reference NVARCHAR(100) NULL,                      -- Mã reference từ ngân hàng
+        TransactionDateTime NVARCHAR(50) NULL,             -- Thời gian giao dịch từ webhook
+        WebhookId NVARCHAR(100) NULL,                      -- ID webhook đã xử lý
+        RawData NVARCHAR(MAX) NULL,                        -- Raw JSON từ PayOS
+        Source NVARCHAR(20) NULL DEFAULT 'API',            -- Nguồn: API, GUI, WEBHOOK
+        IpAddress NVARCHAR(50) NULL,                       -- IP address
+        FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE CASCADE
+    );
+    
+    -- Index cho truy vấn nhanh theo PayOSOrderCode
+    CREATE UNIQUE NONCLUSTERED INDEX IX_PaymentTransactions_PayOSOrderCode 
+    ON PaymentTransactions(PayOSOrderCode);
+    
+    -- Index cho truy vấn theo OrderId
+    CREATE INDEX IX_PaymentTransactions_OrderId ON PaymentTransactions(OrderId);
+    
+    -- Index cho truy vấn theo Status
+    CREATE INDEX IX_PaymentTransactions_Status ON PaymentTransactions(Status);
+    
+    PRINT '✓ Bảng PaymentTransactions đã được tạo thành công!';
+END
+ELSE
+BEGIN
+    PRINT '✓ Bảng PaymentTransactions đã tồn tại.';
+END
+GO
+
+-- ============================================================================
+-- BƯỚC 12: TẠO STORED PROCEDURE XPROCESS WEBHOOK PAYOS
+-- ============================================================================
+PRINT '';
+PRINT '========================================';
+PRINT 'BƯỚC 12: Tạo Stored Procedure ProcessPayOSWebhook';
+PRINT '========================================';
+
+IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'ProcessPayOSWebhook')
+    DROP PROCEDURE ProcessPayOSWebhook;
+GO
+
+CREATE PROCEDURE ProcessPayOSWebhook
+    @WebhookId NVARCHAR(100),              -- ID webhook từ PayOS (để check idempotency)
+    @PayOSOrderCode INT,                   -- Mã đơn hàng PayOS
+    @Code NVARCHAR(10),                    -- Code từ PayOS ('00' = thành công)
+    @Amount INT,                           -- Số tiền từ webhook
+    @Reference NVARCHAR(100) = NULL,       -- Reference từ PayOS
+    @PaymentLinkId NVARCHAR(100) = NULL,   -- PaymentLinkId từ PayOS
+    @RawData NVARCHAR(MAX) = NULL,         -- Dữ liệu webhook gốc (JSON)
+    @IPAddress NVARCHAR(50) = NULL,        -- IP address gửi webhook
+    @UserAgent NVARCHAR(500) = NULL        -- User agent
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @OrderId INT = NULL;
+    DECLARE @OldStatus NVARCHAR(20) = NULL;
+    DECLARE @NewStatus NVARCHAR(20) = NULL;
+    DECLARE @OldAmount DECIMAL(18,2) = NULL;
+    DECLARE @TransactionId NVARCHAR(100) = NULL;
+    DECLARE @ErrorMessage NVARCHAR(500) = NULL;
+
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        -- BƯỚC 1: Kiểm tra code = '00' (thành công)
+        IF @Code != '00'
+        BEGIN
+            COMMIT TRANSACTION;
+            SELECT 'Failed' AS Result, 'Code không phải 00' AS Message, NULL AS OrderId, NULL AS CurrentStatus;
+            RETURN -1;
+        END
+
+        -- BƯỚC 2: Tìm Order theo PayOSOrderCode
+        SELECT @OrderId = Id, @OldStatus = Status, @OldAmount = TotalAmount
+        FROM Orders
+        WHERE PayOSOrderCode = @PayOSOrderCode;
+
+        IF @OrderId IS NULL
+        BEGIN
+            COMMIT TRANSACTION;
+            SELECT 'Failed' AS Result, 'Không tìm thấy đơn hàng' AS Message, NULL AS OrderId, NULL AS CurrentStatus;
+            RETURN -2;
+        END
+
+        -- BƯỚC 3: Kiểm tra số tiền khớp
+        IF @Amount != CAST(@OldAmount AS INT)
+        BEGIN
+            COMMIT TRANSACTION;
+            SELECT 'Failed' AS Result, 'Số tiền không khớp' AS Message, @OrderId AS OrderId, @OldStatus AS CurrentStatus;
+            RETURN -3;
+        END
+
+        -- BƯỚC 4: Kiểm tra đã thanh toán chưa (Idempotency)
+        IF @OldStatus = 'Paid' AND EXISTS (SELECT 1 FROM Orders WHERE Id = @OrderId AND PaidAt IS NOT NULL)
+        BEGIN
+            COMMIT TRANSACTION;
+            SELECT 'Success' AS Result, 'Đơn hàng đã thanh toán trước đó' AS Message, @OrderId AS OrderId, @OldStatus AS CurrentStatus;
+            RETURN 0;
+        END
+
+        -- BƯỚC 5: Cập nhật Order - Thanh toán thành công
+        SET @NewStatus = 'Paid';
+        SET @TransactionId = COALESCE(@Reference, @PaymentLinkId, @WebhookId);
+
+        UPDATE Orders
+        SET Status = @NewStatus, PaidAt = GETDATE(), TransactionId = @TransactionId
+        WHERE Id = @OrderId;
+
+        -- BƯỚC 6: Cập nhật PaymentTransactions
+        UPDATE PaymentTransactions
+        SET 
+            Status = 'PAID',
+            PaidAt = GETDATE(),
+            Reference = @Reference,
+            TransactionDateTime = CONVERT(NVARCHAR(50), GETDATE(), 120),
+            WebhookId = @WebhookId,
+            RawData = COALESCE(@RawData, RawData),
+            UpdatedAt = GETDATE()
+        WHERE PayOSOrderCode = @PayOSOrderCode;
+
+        COMMIT TRANSACTION;
+
+        SELECT 'Success' AS Result, 'Thanh toán thành công' AS Message, @OrderId AS OrderId, @NewStatus AS CurrentStatus;
+        RETURN 0;
+
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        SET @ErrorMessage = ERROR_MESSAGE();
+        SELECT 'Error' AS Result, @ErrorMessage AS Message, @OrderId AS OrderId, @OldStatus AS CurrentStatus;
+        RETURN -99;
+    END CATCH
+END
+GO
+
+PRINT '✓ Stored Procedure ProcessPayOSWebhook đã được tạo thành công!';
+GO
+
+-- ============================================================================
 -- HOÀN TẤT
 -- ============================================================================
 PRINT '';
@@ -441,16 +606,13 @@ PRINT '  ✓ Users (Người dùng)';
 PRINT '  ✓ Categories (Danh mục)';
 PRINT '  ✓ Products (Sản phẩm)';
 PRINT '  ✓ Customers (Khách hàng)';
-PRINT '  ✓ Orders (Đơn hàng) - với cột PrintedAt và index PayOSOrderCode';
+PRINT '  ✓ Orders (Đơn hàng)';
 PRINT '  ✓ OrderItems (Chi tiết đơn hàng)';
 PRINT '  ✓ Inventory (Tồn kho)';
+PRINT '  ✓ PaymentTransactions (Giao dịch thanh toán PayOS)';
 PRINT '';
-PRINT 'Lưu ý: Schema đã được cập nhật để khớp với code:';
-PRINT '  - Users.Role: NVARCHAR(50)';
-PRINT '  - Categories.Description: NVARCHAR(500)';
-PRINT '  - Customers.CustomerName: NVARCHAR(100), Address: NVARCHAR(500)';
-PRINT '  - Orders.Notes: NVARCHAR(1000), Status: NVARCHAR(50), thêm PrintedAt';
-PRINT '  - Unique index IX_Orders_PayOSOrderCode với filter IS NOT NULL';
+PRINT 'Stored Procedures:';
+PRINT '  ✓ ProcessPayOSWebhook (Xử lý webhook từ PayOS)';
 PRINT '';
 PRINT 'THÔNG TIN ĐĂNG NHẬP MẶC ĐỊNH:';
 PRINT '  Username: admin';
