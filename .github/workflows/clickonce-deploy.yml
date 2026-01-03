@@ -74,12 +74,17 @@ jobs:
           ${{ runner.os }}-nuget-
           
     - name: Create DatabaseConfig.cs
-      shell: pwsh
+      shell: cmd
       run: |
-        $content = "namespace WinFormsFashionShop.Data`n{`n    public static class DatabaseConfig`n    {`n        public static string ConnectionString { get; set; } = `"Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True`";`n    }`n}"
-        [System.IO.File]::WriteAllText("$PWD\DAO\DatabaseConfig.cs", $content)
-        Write-Host "Created DatabaseConfig.cs:"
-        Get-Content ".\DAO\DatabaseConfig.cs"
+        echo namespace WinFormsFashionShop.Data > DAO\DatabaseConfig.cs
+        echo { >> DAO\DatabaseConfig.cs
+        echo     public static class DatabaseConfig >> DAO\DatabaseConfig.cs
+        echo     { >> DAO\DatabaseConfig.cs
+        echo         public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True"; >> DAO\DatabaseConfig.cs
+        echo     } >> DAO\DatabaseConfig.cs
+        echo } >> DAO\DatabaseConfig.cs
+        echo Created DatabaseConfig.cs:
+        type DAO\DatabaseConfig.cs
         
     - name: Restore dependencies
       run: dotnet restore WinFormsFashionShop.sln
