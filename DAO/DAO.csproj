@@ -20,5 +20,6 @@
   <ItemGroup>
     <!-- Exclude example/template files from compilation -->
     <Compile Remove="DatabaseConfig.example.cs" />
+    <Compile Remove="DatabaseConfig.ci.cs" />
   </ItemGroup>
 </Project>
