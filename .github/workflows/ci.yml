@@ -40,6 +40,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
           
+    - name: Create DatabaseConfig.cs
+      run: copy DAO\DatabaseConfig.ci.cs DAO\DatabaseConfig.cs
+      shell: cmd
+        
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
       
@@ -74,6 +78,10 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Create DatabaseConfig.cs
+      run: copy DAO\DatabaseConfig.ci.cs DAO\DatabaseConfig.cs
+      shell: cmd
         
     - name: Restore dependencies
       run: dotnet restore ${{ env.SOLUTION_FILE }}
