@@ -204,77 +204,34 @@ jobs:
         # Copy ClickOnce files
         if (Test-Path $publishDir) {
           Copy-Item -Path "$publishDir\*" -Destination $pagesDir -Recurse -Force
-          Write-Host "✅ Copied ClickOnce files" -ForegroundColor Green
+          Write-Host "Copied ClickOnce files" -ForegroundColor Green
         }
         
-        # Create index.html for easy download
-        $indexHtml = @"
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WinForms Fashion Shop - Download</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-        h1 { color: #4682B4; }
-        .download-btn { 
-            display: inline-block; 
-            background: #4682B4; 
-            color: white; 
-            padding: 15px 30px; 
-            text-decoration: none; 
-            border-radius: 5px; 
-            font-size: 18px;
-            margin: 10px 0;
-        }
-        .download-btn:hover { background: #36648B; }
-        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
-        .version { color: #666; }
-    </style>
-</head>
-<body>
-    <h1>🛍️ WinForms Fashion Shop</h1>
-    <p class="version">Version: $version (Build: $appVersion)</p>
-    
-    <h2>📥 Cài đặt</h2>
-    <p><a href="GUI.application" class="download-btn">Cài đặt / Cập nhật</a></p>
-    
-    <div class="info">
-        <h3>ℹ️ Hướng dẫn</h3>
-        <ol>
-            <li>Click nút <strong>Cài đặt / Cập nhật</strong> ở trên</li>
-            <li>Windows sẽ hỏi xác nhận - chọn <strong>Install</strong></li>
-            <li>Ứng dụng sẽ tự động cài đặt và khởi động</li>
-            <li>Lần sau mở app, nó sẽ tự động kiểm tra và cập nhật phiên bản mới</li>
-        </ol>
-    </div>
-    
-    <div class="info">
-        <h3>⚙️ Yêu cầu hệ thống</h3>
-        <ul>
-            <li>Windows 10/11</li>
-            <li>.NET 8.0 Runtime (sẽ tự động cài nếu chưa có)</li>
-            <li>SQL Server 2019+ hoặc SQL Server Express</li>
-        </ul>
-    </div>
-    
-    <h2>📋 Thông tin đăng nhập mặc định</h2>
-    <ul>
-        <li><strong>Username:</strong> admin</li>
-        <li><strong>Password:</strong> admin123</li>
-    </ul>
-    
-    <hr>
-    <p><small>Build: ${{ github.run_number }} | Commit: ${{ github.sha }}</small></p>
-</body>
-</html>
-"@
-        $indexHtml | Out-File -FilePath "$pagesDir\index.html" -Encoding UTF8
-        Write-Host "✅ Created index.html" -ForegroundColor Green
+        # Create simple index.html using string concatenation (avoids YAML parsing issues)
+        $html = '<!DOCTYPE html><html lang="vi"><head><meta charset="UTF-8">'
+        $html += '<title>WinForms Fashion Shop - Download</title>'
+        $html += '<style>body{font-family:Arial,sans-serif;max-width:800px;margin:50px auto;padding:20px}'
+        $html += 'h1{color:#4682B4}.btn{display:inline-block;background:#4682B4;color:white;padding:15px 30px;'
+        $html += 'text-decoration:none;border-radius:5px;font-size:18px;margin:10px 0}'
+        $html += '.btn:hover{background:#36648B}.info{background:#f5f5f5;padding:15px;border-radius:5px;margin:20px 0}</style></head>'
+        $html += '<body><h1>WinForms Fashion Shop</h1>'
+        $html += "<p>Version: $version (Build: $appVersion)</p>"
+        $html += '<h2>Download</h2><p><a href="GUI.application" class="btn">Install / Update</a></p>'
+        $html += '<div class="info"><h3>Instructions</h3><ol>'
+        $html += '<li>Click Install / Update button above</li>'
+        $html += '<li>Windows will ask for confirmation - click Install</li>'
+        $html += '<li>App will auto-install and launch</li>'
+        $html += '<li>App will auto-check for updates on next launch</li></ol></div>'
+        $html += '<div class="info"><h3>Requirements</h3><ul>'
+        $html += '<li>Windows 10/11</li><li>.NET 8.0 Runtime</li><li>SQL Server 2019+</li></ul></div>'
+        $html += '<h2>Default Login</h2><ul><li>Username: admin</li><li>Password: admin123</li></ul>'
+        $html += '</body></html>'
+        
+        $html | Out-File -FilePath "$pagesDir\index.html" -Encoding UTF8
+        Write-Host "Created index.html" -ForegroundColor Green
         
         # List files
-        Write-Host "`nFiles to deploy:" -ForegroundColor Cyan
+        Write-Host "Files to deploy:" -ForegroundColor Cyan
         Get-ChildItem $pagesDir -Recurse | ForEach-Object { Write-Host "  $_" }
         
     - name: Deploy to GitHub Pages
