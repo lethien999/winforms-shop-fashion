@@ -1,0 +1,304 @@
+name: ClickOnce Deploy to GitHub Pages
+
+# Deploy ClickOnce to GitHub Pages for auto-update
+# Trigger: Git tags (v*.*.*) or manual dispatch
+# Output: ClickOnce files on gh-pages branch
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  BUILD_CONFIGURATION: 'Release'
+  GITHUB_PAGES_URL: 'https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}'
+
+jobs:
+  deploy-clickonce:
+    name: Build and Deploy ClickOnce
+    runs-on: windows-latest
+    
+    permissions:
+      contents: write
+      pages: write
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Extract version
+      id: version
+      shell: pwsh
+      run: |
+        if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+          $version = "${{ github.event.inputs.version }}"
+        } elseif ("${{ github.ref }}" -match "refs/tags/v(.+)") {
+          $version = $matches[1]
+        } else {
+          $version = "1.0.0"
+        }
+        
+        # Convert to 4-part version for ClickOnce
+        $parts = $version -split '\.'
+        $major = if ($parts.Length -gt 0) { $parts[0] } else { "1" }
+        $minor = if ($parts.Length -gt 1) { $parts[1] } else { "0" }
+        $build = if ($parts.Length -gt 2) { $parts[2] } else { "0" }
+        $revision = "${{ github.run_number }}"
+        
+        $appVersion = "$major.$minor.$build.$revision"
+        
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+        echo "app_version=$appVersion" >> $env:GITHUB_OUTPUT
+        echo "Version: $version, AppVersion: $appVersion"
+        
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Restore dependencies
+      run: dotnet restore WinFormsFashionShop.sln
+      
+    - name: Update ClickOnce settings for GitHub Pages
+      shell: pwsh
+      run: |
+        $csprojPath = ".\GUI\GUI.csproj"
+        $csprojContent = Get-Content $csprojPath -Raw
+        $appVersion = "${{ steps.version.outputs.app_version }}"
+        $updateUrl = "${{ env.GITHUB_PAGES_URL }}/"
+        
+        Write-Host "Updating ClickOnce settings..." -ForegroundColor Cyan
+        Write-Host "  Version: $appVersion" -ForegroundColor Green
+        Write-Host "  UpdateUrl: $updateUrl" -ForegroundColor Green
+        
+        # Update ApplicationVersion
+        $csprojContent = $csprojContent -replace '<ApplicationVersion>.*?</ApplicationVersion>', "<ApplicationVersion>$appVersion</ApplicationVersion>"
+        
+        # Update PublishUrl to local folder
+        $csprojContent = $csprojContent -replace '<PublishUrl>.*?</PublishUrl>', '<PublishUrl>.\publish\ClickOnce\</PublishUrl>'
+        
+        # Enable web update from GitHub Pages
+        $csprojContent = $csprojContent -replace '<InstallFrom>.*?</InstallFrom>', '<InstallFrom>Web</InstallFrom>'
+        $csprojContent = $csprojContent -replace '<UpdateEnabled>.*?</UpdateEnabled>', '<UpdateEnabled>true</UpdateEnabled>'
+        $csprojContent = $csprojContent -replace '<UpdateMode>.*?</UpdateMode>', '<UpdateMode>Foreground</UpdateMode>'
+        $csprojContent = $csprojContent -replace '<IsWebBootstrapper>.*?</IsWebBootstrapper>', '<IsWebBootstrapper>true</IsWebBootstrapper>'
+        
+        # Add UpdateUrl if not exists, or update it
+        if ($csprojContent -match '<UpdateUrl>') {
+          $csprojContent = $csprojContent -replace '<UpdateUrl>.*?</UpdateUrl>', "<UpdateUrl>$updateUrl</UpdateUrl>"
+        } else {
+          # Insert after UpdateEnabled
+          $csprojContent = $csprojContent -replace '(<UpdateEnabled>.*?</UpdateEnabled>)', "`$1`n    <UpdateUrl>$updateUrl</UpdateUrl>"
+        }
+        
+        # Add InstallUrl if not exists
+        if ($csprojContent -match '<InstallUrl>') {
+          $csprojContent = $csprojContent -replace '<InstallUrl>.*?</InstallUrl>', "<InstallUrl>$updateUrl</InstallUrl>"
+        } else {
+          $csprojContent = $csprojContent -replace '(<UpdateUrl>.*?</UpdateUrl>)', "`$1`n    <InstallUrl>$updateUrl</InstallUrl>"
+        }
+        
+        Set-Content -Path $csprojPath -Value $csprojContent -NoNewline
+        Write-Host "✅ ClickOnce settings updated" -ForegroundColor Green
+        
+    - name: Build solution
+      run: dotnet build WinFormsFashionShop.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      
+    - name: Find MSBuild
+      id: msbuild
+      shell: pwsh
+      run: |
+        $msbuildPaths = @(
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles}\Microsoft Visual Studio\2022\Community\MSBuild\Current\Bin\MSBuild.exe",
+          "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2022\BuildTools\MSBuild\Current\Bin\MSBuild.exe"
+        )
+        
+        $msbuildPath = $msbuildPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+        
+        if (-not $msbuildPath) {
+          # Try vswhere
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            $installPath = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -property installationPath
+            if ($installPath) {
+              $msbuildPath = Join-Path $installPath "MSBuild\Current\Bin\MSBuild.exe"
+            }
+          }
+        }
+        
+        if ($msbuildPath -and (Test-Path $msbuildPath)) {
+          echo "path=$msbuildPath" >> $env:GITHUB_OUTPUT
+          echo "found=true" >> $env:GITHUB_OUTPUT
+          Write-Host "✅ MSBuild found: $msbuildPath" -ForegroundColor Green
+        } else {
+          echo "found=false" >> $env:GITHUB_OUTPUT
+          Write-Host "❌ MSBuild not found" -ForegroundColor Red
+        }
+        
+    - name: Publish ClickOnce
+      if: steps.msbuild.outputs.found == 'true'
+      shell: pwsh
+      run: |
+        $msbuildPath = "${{ steps.msbuild.outputs.path }}"
+        $appVersion = "${{ steps.version.outputs.app_version }}"
+        $updateUrl = "${{ env.GITHUB_PAGES_URL }}/"
+        
+        Write-Host "Publishing ClickOnce..." -ForegroundColor Cyan
+        Write-Host "  MSBuild: $msbuildPath" -ForegroundColor Gray
+        Write-Host "  Version: $appVersion" -ForegroundColor Gray
+        Write-Host "  UpdateUrl: $updateUrl" -ForegroundColor Gray
+        
+        & $msbuildPath GUI\GUI.csproj `
+          /t:Publish `
+          /p:Configuration=${{ env.BUILD_CONFIGURATION }} `
+          /p:PublishDir=.\publish\ClickOnce\ `
+          /p:ApplicationVersion=$appVersion `
+          /p:UpdateUrl=$updateUrl `
+          /p:InstallUrl=$updateUrl `
+          /p:InstallFrom=Web `
+          /p:UpdateEnabled=true `
+          /p:UpdateMode=Foreground `
+          /p:IsWebBootstrapper=true `
+          /p:PublishProtocol=FileSystem
+          
+        if ($LASTEXITCODE -eq 0) {
+          Write-Host "✅ ClickOnce publish completed" -ForegroundColor Green
+        } else {
+          Write-Host "❌ ClickOnce publish failed" -ForegroundColor Red
+          exit 1
+        }
+        
+    - name: Prepare GitHub Pages content
+      if: steps.msbuild.outputs.found == 'true'
+      shell: pwsh
+      run: |
+        $version = "${{ steps.version.outputs.version }}"
+        $appVersion = "${{ steps.version.outputs.app_version }}"
+        $publishDir = ".\publish\ClickOnce"
+        $pagesDir = ".\gh-pages-content"
+        
+        Write-Host "Preparing GitHub Pages content..." -ForegroundColor Cyan
+        
+        # Create pages directory
+        New-Item -ItemType Directory -Path $pagesDir -Force | Out-Null
+        
+        # Copy ClickOnce files
+        if (Test-Path $publishDir) {
+          Copy-Item -Path "$publishDir\*" -Destination $pagesDir -Recurse -Force
+          Write-Host "✅ Copied ClickOnce files" -ForegroundColor Green
+        }
+        
+        # Create index.html for easy download
+        $indexHtml = @"
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WinForms Fashion Shop - Download</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #4682B4; }
+        .download-btn { 
+            display: inline-block; 
+            background: #4682B4; 
+            color: white; 
+            padding: 15px 30px; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        .download-btn:hover { background: #36648B; }
+        .info { background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        .version { color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🛍️ WinForms Fashion Shop</h1>
+    <p class="version">Version: $version (Build: $appVersion)</p>
+    
+    <h2>📥 Cài đặt</h2>
+    <p><a href="GUI.application" class="download-btn">Cài đặt / Cập nhật</a></p>
+    
+    <div class="info">
+        <h3>ℹ️ Hướng dẫn</h3>
+        <ol>
+            <li>Click nút <strong>Cài đặt / Cập nhật</strong> ở trên</li>
+            <li>Windows sẽ hỏi xác nhận - chọn <strong>Install</strong></li>
+            <li>Ứng dụng sẽ tự động cài đặt và khởi động</li>
+            <li>Lần sau mở app, nó sẽ tự động kiểm tra và cập nhật phiên bản mới</li>
+        </ol>
+    </div>
+    
+    <div class="info">
+        <h3>⚙️ Yêu cầu hệ thống</h3>
+        <ul>
+            <li>Windows 10/11</li>
+            <li>.NET 8.0 Runtime (sẽ tự động cài nếu chưa có)</li>
+            <li>SQL Server 2019+ hoặc SQL Server Express</li>
+        </ul>
+    </div>
+    
+    <h2>📋 Thông tin đăng nhập mặc định</h2>
+    <ul>
+        <li><strong>Username:</strong> admin</li>
+        <li><strong>Password:</strong> admin123</li>
+    </ul>
+    
+    <hr>
+    <p><small>Build: ${{ github.run_number }} | Commit: ${{ github.sha }}</small></p>
+</body>
+</html>
+"@
+        $indexHtml | Out-File -FilePath "$pagesDir\index.html" -Encoding UTF8
+        Write-Host "✅ Created index.html" -ForegroundColor Green
+        
+        # List files
+        Write-Host "`nFiles to deploy:" -ForegroundColor Cyan
+        Get-ChildItem $pagesDir -Recurse | ForEach-Object { Write-Host "  $_" }
+        
+    - name: Deploy to GitHub Pages
+      if: steps.msbuild.outputs.found == 'true'
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./gh-pages-content
+        publish_branch: gh-pages
+        force_orphan: true
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        commit_message: 'Deploy ClickOnce v${{ steps.version.outputs.version }}'
+        
+    - name: Summary
+      if: steps.msbuild.outputs.found == 'true'
+      run: |
+        echo "## ✅ ClickOnce Deployed to GitHub Pages" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "**Version:** ${{ steps.version.outputs.version }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "**App Version:** ${{ steps.version.outputs.app_version }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "### 📥 Download URL" >> $env:GITHUB_STEP_SUMMARY
+        echo "${{ env.GITHUB_PAGES_URL }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "" >> $env:GITHUB_STEP_SUMMARY
+        echo "### 🔄 Auto-Update" >> $env:GITHUB_STEP_SUMMARY
+        echo "Ứng dụng sẽ tự động kiểm tra và cập nhật từ GitHub Pages." >> $env:GITHUB_STEP_SUMMARY

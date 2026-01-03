@@ -10,21 +10,25 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <PublishUrl>publish\ClickOnce\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
+    <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
+    <UpdateInterval>1</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdatePeriodically>true</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.0</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <IsWebBootstrapper>true</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <GenerateManifests>true</GenerateManifests>
     <SignManifests>false</SignManifests>
+    
+    <!-- Auto-update from GitHub Pages (set by CI/CD) -->
+    <UpdateUrl></UpdateUrl>
+    <InstallUrl></InstallUrl>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BUS\BUS.csproj" />
