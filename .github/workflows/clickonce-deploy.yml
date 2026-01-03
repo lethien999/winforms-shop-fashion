@@ -73,20 +73,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
           
-    - name: Create DatabaseConfig.cs
+    - name: Create DatabaseConfig.cs from example
       shell: pwsh
       run: |
-        $lines = @(
-          'namespace WinFormsFashionShop.Data',
-          '{',
-          '    public static class DatabaseConfig',
-          '    {',
-          '        public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True";',
-          '    }',
-          '}'
-        )
-        $lines -join "`r`n" | Out-File -FilePath ".\DAO\DatabaseConfig.cs" -Encoding UTF8
-        Write-Host "Created DatabaseConfig.cs for build"
+        Copy-Item -Path ".\DAO\DatabaseConfig.example.cs" -Destination ".\DAO\DatabaseConfig.cs" -Force
+        Write-Host "Created DatabaseConfig.cs from example file"
         Get-Content ".\DAO\DatabaseConfig.cs"
         
     - name: Restore dependencies
