@@ -20,6 +20,9 @@ on:
         required: false
         default: true
 
+permissions:
+  contents: write
+
 env:
   DOTNET_VERSION: '8.0.x'
   BUILD_CONFIGURATION: 'Release'

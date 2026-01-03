@@ -35,6 +35,9 @@ on:
         description: 'Version number (only if create_release is true)'
         default: '1.0.0'
 
+permissions:
+  contents: write
+
 env:
   DOTNET_VERSION: '8.0.x'
   BUILD_CONFIGURATION: 'Release'
