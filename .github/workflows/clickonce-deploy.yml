@@ -73,18 +73,9 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
           
-    - name: Create DatabaseConfig.cs
+    - name: Create DatabaseConfig.cs from CI template
+      run: copy DAO\DatabaseConfig.ci.cs DAO\DatabaseConfig.cs
       shell: cmd
-      run: |
-        echo namespace WinFormsFashionShop.Data > DAO\DatabaseConfig.cs
-        echo { >> DAO\DatabaseConfig.cs
-        echo     public static class DatabaseConfig >> DAO\DatabaseConfig.cs
-        echo     { >> DAO\DatabaseConfig.cs
-        echo         public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True"; >> DAO\DatabaseConfig.cs
-        echo     } >> DAO\DatabaseConfig.cs
-        echo } >> DAO\DatabaseConfig.cs
-        echo Created DatabaseConfig.cs:
-        type DAO\DatabaseConfig.cs
         
     - name: Restore dependencies
       run: dotnet restore WinFormsFashionShop.sln
