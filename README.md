@@ -97,7 +97,9 @@ winforms-shop-fashion/
 │   │   ├── PaymentTransactionRepository.cs
 │   │   └── ...
 │   ├── ApplicationDbContext.cs    # EF Core DbContext (chỉ dùng migrations)
-│   └── DatabaseConfig.cs          # Connection string (KHÔNG commit)
+│   ├── DatabaseConfig.cs          # Connection string (KHÔNG commit)
+│   ├── DatabaseConfig.example.cs  # Template cho connection string
+│   └── DatabaseConfig.ci.cs       # Config cho CI/CD build
 │
 ├── DTO/                           # Data Transfer Objects
 │   ├── OrderDTO.cs
@@ -130,12 +132,17 @@ winforms-shop-fashion/
 │       └── payos.config.json      # PayOS credentials
 │
 ├── Database/
-│   ├── CreateDatabase.sql         # Script tạo database và tables
-│   └── GenerateBCryptHash.cs     # Tool tạo BCrypt hash
+│   └── CreateDatabase.sql         # Script tạo database và tables
 │
 ├── Scripts/                       # PowerShell scripts
 │   ├── Publish-ClickOnce.ps1      # Script publish ClickOnce
 │   └── Start-PaymentServices.ps1  # Script khởi động API services
+│
+├── .github/workflows/             # GitHub Actions CI/CD
+│   ├── build.yml                  # Build/Release workflow (recommended)
+│   ├── ci.yml                     # CI - Build and Test
+│   ├── cd.yml                     # CD - Publish and Release
+│   └── clickonce-deploy.yml       # ClickOnce deploy to GitHub Pages
 │
 ├── Images/                        # Thư mục lưu hình ảnh
 │   ├── Products/                  # Hình sản phẩm
@@ -899,6 +906,15 @@ Project đã được thiết lập **GitHub Actions** cho CI/CD, lấy cảm h�
     - API-only package
   - Tạo **draft release** để review trước khi publish
 
+#### ClickOnce Deploy Workflow (Auto-Update) 🚀
+- **Workflow:** `.github/workflows/clickonce-deploy.yml`
+- **Trigger:** Tag `v*.*.*` hoặc manual dispatch
+- **Chức năng:**
+  - Build ClickOnce deployment package
+  - Deploy lên GitHub Pages
+  - Hỗ trợ **auto-update** cho end users
+- **Download URL:** `https://<username>.github.io/<repo>/`
+
 #### CI Workflow
 - **Workflow:** `.github/workflows/ci.yml`
 - **Trigger:** Push code hoặc Pull Request
@@ -998,4 +1014,4 @@ Nếu gặp vấn đề, vui lòng:
 
 ---
 
-**Tài liệu được cập nhật lần cuối:** 2025-12-29
+**Tài liệu được cập nhật lần cuối:** 2026-01-04
