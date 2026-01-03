@@ -76,17 +76,18 @@ jobs:
     - name: Create DatabaseConfig.cs
       shell: pwsh
       run: |
-        $configContent = @'
-namespace WinFormsFashionShop.Data
-{
-    public static class DatabaseConfig
-    {
-        public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True";
-    }
-}
-'@
-        $configContent | Out-File -FilePath ".\DAO\DatabaseConfig.cs" -Encoding UTF8
+        $lines = @(
+          'namespace WinFormsFashionShop.Data',
+          '{',
+          '    public static class DatabaseConfig',
+          '    {',
+          '        public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True";',
+          '    }',
+          '}'
+        )
+        $lines -join "`r`n" | Out-File -FilePath ".\DAO\DatabaseConfig.cs" -Encoding UTF8
         Write-Host "Created DatabaseConfig.cs for build"
+        Get-Content ".\DAO\DatabaseConfig.cs"
         
     - name: Restore dependencies
       run: dotnet restore WinFormsFashionShop.sln
