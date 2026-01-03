@@ -76,9 +76,30 @@ jobs:
     - name: Create DatabaseConfig.cs from example
       shell: pwsh
       run: |
-        Copy-Item -Path ".\DAO\DatabaseConfig.example.cs" -Destination ".\DAO\DatabaseConfig.cs" -Force
-        Write-Host "Created DatabaseConfig.cs from example file"
-        Get-Content ".\DAO\DatabaseConfig.cs"
+        Write-Host "Current directory: $(Get-Location)"
+        Write-Host "Listing DAO folder:"
+        Get-ChildItem -Path ".\DAO\" -Name
+        
+        if (Test-Path ".\DAO\DatabaseConfig.example.cs") {
+          Write-Host "Found DatabaseConfig.example.cs"
+          Copy-Item -Path ".\DAO\DatabaseConfig.example.cs" -Destination ".\DAO\DatabaseConfig.cs" -Force
+          Write-Host "Created DatabaseConfig.cs"
+          Write-Host "Content:"
+          Get-Content ".\DAO\DatabaseConfig.cs"
+        } else {
+          Write-Host "DatabaseConfig.example.cs not found, creating new file..."
+          @"
+namespace WinFormsFashionShop.Data
+{
+    public static class DatabaseConfig
+    {
+        public static string ConnectionString { get; set; } = "Data Source=localhost;Initial Catalog=WinFormsFashionShopDb;Integrated Security=True;Trust Server Certificate=True";
+    }
+}
+"@ | Set-Content -Path ".\DAO\DatabaseConfig.cs" -Encoding UTF8
+          Write-Host "Created new DatabaseConfig.cs"
+          Get-Content ".\DAO\DatabaseConfig.cs"
+        }
         
     - name: Restore dependencies
       run: dotnet restore WinFormsFashionShop.sln
